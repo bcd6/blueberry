@@ -18,6 +18,4 @@ samples, guidance on mobile development, and a full API reference.
 
 fvm flutter run -d windows 
 
-fvm flutter run -d Edge
-
-fvm flutter build windows && flutter build web
+fvm flutter build windows

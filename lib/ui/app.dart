@@ -7,7 +7,6 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsFlutterBinding.ensureInitialized();
     setWindowMinSize(const Size(1920, 1080));
 
     return MaterialApp(

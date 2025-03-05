@@ -302,6 +302,12 @@
       "languageVersion": "3.2"
     },
     {
+      "name": "nested",
+      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/nested-1.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "package_config",
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/package_config-2.1.1",
       "packageUri": "lib/",
@@ -364,6 +370,12 @@
     {
       "name": "pool",
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/pool-1.5.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "provider",
+      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/provider-6.1.2",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -524,7 +536,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-03-05T09:59:27.943297Z",
+  "generated": "2025-03-05T10:05:11.417045Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///C:/Users/youqing/fvm/versions/3.29.0",

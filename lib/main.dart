@@ -4,15 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:provider/provider.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  final appState = AppState();
-  await appState.loadConfig();
 
   runApp(
     ChangeNotifierProvider(
-      create: (context) => appState,
+      create: (context) => AppState(),
       child: Phoenix(child: App()),
     ),
   );

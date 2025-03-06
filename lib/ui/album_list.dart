@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:blueberry/ui/album_play.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
@@ -44,9 +45,6 @@ class _AlbumListState extends State<AlbumList> {
 
   void _onScroll() {
     final position = scrollController.position;
-    debugPrint(
-      'Scroll position: ${position.pixels}/${position.maxScrollExtent}',
-    );
 
     if (position.pixels >= position.maxScrollExtent * 0.8) {
       final appState = context.read<AppState>();
@@ -115,7 +113,14 @@ class _AlbumListState extends State<AlbumList> {
                         File(album.coverPath),
                         fit: BoxFit.cover,
                       ),
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AlbumPlay(album: album),
+                          ),
+                        );
+                      },
                       onSecondaryTap: () => resetApp(context),
                     ),
                   );

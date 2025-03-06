@@ -8,7 +8,7 @@ import '../domain/album.dart';
 
 class AppState extends ChangeNotifier {
   Config? _config;
-  List<Album> _albums = [];
+  final List<Album> _albums = [];
   static const String configPath = 'D:\\~\\album';
   static const String configFileName = '~.json';
   static const String coverFileName = 'cover.jpg';
@@ -76,11 +76,19 @@ class AppState extends ChangeNotifier {
   Future<Album?> _processDirectory(Directory dir, Album? parentAlbum) async {
     final coverFile = File('${dir.path}\\$coverFileName');
 
-    if (await _isValidAlbumDirectory(dir, coverFile)) {
-      final album = _createAlbum(dir, coverFile);
-      _albums.add(album);
-      debugPrint('Found album: ${album.name} at ${dir.path}');
-      return album;
+    if (await coverFile.exists()) {
+      final files = await _getValidFiles(dir);
+      if (files.isNotEmpty) {
+        final album = Album(
+          path: dir.path,
+          name: dir.path.split('\\').last,
+          coverPath: coverFile.path,
+          files: files,
+        );
+        _albums.add(album);
+        debugPrint('Found album: ${album.name} with ${files.length} files');
+        return album;
+      }
     }
 
     return parentAlbum;
@@ -89,7 +97,7 @@ class AppState extends ChangeNotifier {
   Future<void> _scanSubdirectories(Directory dir, Album? parentAlbum) async {
     await for (final entity in dir.list()) {
       if (entity is Directory) {
-        final subDir = entity as Directory;
+        final subDir = entity;
         if (!await _isEmptyDirectory(subDir)) {
           await _scanDirectory(subDir, parentAlbum: parentAlbum);
         }
@@ -98,35 +106,28 @@ class AppState extends ChangeNotifier {
   }
 
   // Utility methods
-  Future<bool> _isValidAlbumDirectory(Directory dir, File coverFile) async {
-    return await coverFile.exists() && await _hasValidFiles(dir);
-  }
 
   Future<bool> _isEmptyDirectory(Directory dir) async {
     return await dir.list().isEmpty;
   }
 
-  Future<bool> _hasValidFiles(Directory dir) async {
+  Future<List<String>> _getValidFiles(Directory dir) async {
+    List<String> files = [];
     try {
       await for (final entity in dir.list()) {
         if (entity is File && _isValidFileType(entity.path)) {
-          return true;
+          files.add(entity.path);
         }
       }
     } catch (e) {
-      debugPrint('Error checking files in ${dir.path}: $e');
+      debugPrint('Error listing files in ${dir.path}: $e');
     }
-    return false;
+    return files;
   }
 
   bool _isValidFileType(String path) {
     final extension = path.toLowerCase();
     return validFileTypes.any((type) => extension.endsWith(type));
-  }
-
-  Album _createAlbum(Directory dir, File coverFile) {
-    final albumName = dir.path.split('\\').last;
-    return Album(path: dir.path, name: albumName, coverPath: coverFile.path);
   }
 
   // State management

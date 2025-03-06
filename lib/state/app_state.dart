@@ -80,11 +80,26 @@ class AppState extends ChangeNotifier {
     if (await coverFile.exists()) {
       final files = await _getValidFiles(dir);
       if (files.isNotEmpty) {
-        // Separate CUE files and regular audio files
+        // First get CUE files
         final cueFiles =
             files.where((f) => f.toLowerCase().endsWith('.cue')).toList();
+
+        // Find files that match CUE file names
+        final cueMatchFiles =
+            files
+                .where(
+                  (f) => cueFiles.any(
+                    (c) => f.toLowerCase().contains(
+                      path.basenameWithoutExtension(c).toLowerCase(),
+                    ),
+                  ),
+                )
+                .toList();
+
+        // Get audio files excluding CUE files and their matching audio files
         final audioFiles = files.where(
-          (f) => !f.toLowerCase().endsWith('.cue'),
+          (f) =>
+              !f.toLowerCase().endsWith('.cue') && !cueMatchFiles.contains(f),
         );
 
         // Create regular tracks playlist
@@ -96,20 +111,27 @@ class AppState extends ChangeNotifier {
                 )
                 .toList();
 
-        final defaultPlaylist = Playlist(name: 'Files', tracks: regularTracks);
+        // Only create playlist if there are regular tracks
+        final playlists = <Playlist>[];
+        if (regularTracks.isNotEmpty) {
+          playlists.add(Playlist(name: 'Files', tracks: regularTracks));
+        }
 
+        // Create album if there are any tracks or CUE files
         if (regularTracks.isNotEmpty || cueFiles.isNotEmpty) {
           final album = Album(
             folderPath: dir.path,
             name: dir.path.split('\\').last,
             coverPath: coverFile.path,
-            playlists: [defaultPlaylist],
+            playlists: playlists,
             cueFiles: cueFiles,
           );
           _albums.add(album);
-          debugPrint(
-            'Found album: ${album.name} with ${cueFiles.length} CUE files',
-          );
+          debugPrint('''
+Found album: ${album.name}
+  CUE files: ${cueFiles.length}
+  Regular tracks: ${regularTracks.length}
+  CUE matched files: ${cueMatchFiles.length}''');
           return album;
         }
       }

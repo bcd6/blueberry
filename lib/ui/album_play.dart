@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:blueberry/service/audio_service.dart';
 import 'package:flutter/material.dart';
@@ -17,12 +18,15 @@ class _AlbumPlayState extends State<AlbumPlay> {
   bool _isPlaying = false;
   // Update initial volume
   double _volume = 0.6;
-  bool _isSpinning = false;
 
   // Add new state variables
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
   Map<String, Duration> _trackDurations = {};
+
+  // Add StreamSubscription variables
+  late final StreamSubscription _positionSubscription;
+  late final StreamSubscription _durationSubscription;
 
   @override
   void initState() {
@@ -30,14 +34,14 @@ class _AlbumPlayState extends State<AlbumPlay> {
     // Set initial volume
     _audioService.setVolume(_volume);
     _loadTrackDurations();
-    // Add position and duration listeners
-    _audioService.positionStream.listen((position) {
-      if (_currentTrackIndex != null) {
+    // Store stream subscriptions
+    _positionSubscription = _audioService.positionStream.listen((position) {
+      if (_currentTrackIndex != null && mounted) {
         setState(() => _currentPosition = position);
       }
     });
-    _audioService.durationStream.listen((duration) {
-      if (duration != null) {
+    _durationSubscription = _audioService.durationStream.listen((duration) {
+      if (duration != null && mounted) {
         setState(() => _totalDuration = duration);
       }
     });
@@ -68,6 +72,10 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   @override
   void dispose() async {
+    // Cancel stream subscriptions
+    await _positionSubscription.cancel();
+    await _durationSubscription.cancel();
+
     // Stop playback
     if (_isPlaying) {
       await _audioService.stop();
@@ -231,7 +239,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                       ),
                                     )
                                     : Text(
-                                      '${index + 1}',
+                                      '-',
                                       style: const TextStyle(
                                         color: Colors.white54,
                                         fontSize: 12,

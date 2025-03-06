@@ -192,6 +192,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                       '${index + 1}',
                                       style: const TextStyle(
                                         color: Colors.white54,
+                                        fontSize: 12,
                                       ),
                                     ),
                             title: Text(

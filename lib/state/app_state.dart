@@ -1,5 +1,4 @@
 import 'package:blueberry/domain/playlist.dart';
-import 'package:blueberry/service/cue_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
@@ -97,10 +96,7 @@ class AppState extends ChangeNotifier {
                 )
                 .toList();
 
-        final defaultPlaylist = Playlist(
-          name: 'Main Playlist',
-          tracks: regularTracks,
-        );
+        final defaultPlaylist = Playlist(name: 'Files', tracks: regularTracks);
 
         if (regularTracks.isNotEmpty || cueFiles.isNotEmpty) {
           final album = Album(

@@ -3,6 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 
 class AudioService {
   final AudioPlayer _player = AudioPlayer();
+  final Map<String, Duration> _durationCache = {};
 
   AudioService() {
     _initPlayer();
@@ -46,10 +47,19 @@ class AudioService {
 
   Future<Duration?> getTrackDuration(String filePath) async {
     try {
-      final player = AudioPlayer();
-      await player.setSource(DeviceFileSource(filePath));
-      final duration = await player.getDuration();
-      await player.dispose();
+      // Check cache first
+      if (_durationCache.containsKey(filePath)) {
+        return _durationCache[filePath];
+      }
+
+      // Use the main player to get duration
+      await _player.setSource(DeviceFileSource(filePath));
+      final duration = await _player.getDuration();
+
+      if (duration != null) {
+        _durationCache[filePath] = duration;
+      }
+
       return duration;
     } catch (e) {
       debugPrint('Error getting duration for $filePath: $e');

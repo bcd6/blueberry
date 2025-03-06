@@ -45,11 +45,15 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   Future<void> _loadTrackDurations() async {
     for (final file in widget.album.files) {
-      final duration = await _audioService.getTrackDuration(file);
-      if (duration != null) {
-        setState(() {
-          _trackDurations[file] = duration;
-        });
+      try {
+        final duration = await _audioService.getTrackDuration(file);
+        if (duration != null && mounted) {
+          setState(() {
+            _trackDurations[file] = duration;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error loading duration for $file: $e');
       }
     }
   }

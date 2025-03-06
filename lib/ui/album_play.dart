@@ -9,6 +9,10 @@ class AlbumPlay extends StatelessWidget {
 
   const AlbumPlay({super.key, required this.album});
 
+  Future<void> _openInExplorer(String path) async {
+    await Process.run('explorer', [path]);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Calculate left panel width based on screen width
@@ -32,11 +36,14 @@ class AlbumPlay extends StatelessWidget {
                     width: leftPanelWidth,
                     height:
                         leftPanelWidth, // Make height equal to width for square container
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: Image.file(
-                        File(album.coverPath),
-                        fit: BoxFit.cover,
+                    child: GestureDetector(
+                      onTap: () => _openInExplorer(album.path),
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Image.file(
+                          File(album.coverPath),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),

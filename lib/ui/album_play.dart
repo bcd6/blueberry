@@ -185,7 +185,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                         value:
                                             _isPlaying
                                                 ? null
-                                                : 0, // null for spinning, 0 for stopped circle
+                                                : 1, // null for spinning, 0 for stopped circle
                                       ),
                                     )
                                     : Text(

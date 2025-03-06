@@ -80,7 +80,7 @@ class AppState extends ChangeNotifier {
       final files = await _getValidFiles(dir);
       if (files.isNotEmpty) {
         final album = Album(
-          path: dir.path,
+          folderPath: dir.path,
           name: dir.path.split('\\').last,
           coverPath: coverFile.path,
           files: files,

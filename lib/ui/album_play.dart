@@ -150,7 +150,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                     height:
                         leftPanelWidth, // Make height equal to width for square container
                     child: GestureDetector(
-                      onTap: () => _openInExplorer(widget.album.path),
+                      onTap: () => _openInExplorer(widget.album.folderPath),
                       child: FittedBox(
                         fit: BoxFit.contain,
                         child: Image.file(

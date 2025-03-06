@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/service/audio_service.dart';
 import 'package:flutter/material.dart';
 import '../domain/album.dart';
@@ -22,18 +23,22 @@ class _AlbumPlayState extends State<AlbumPlay> {
   // Add new state variables
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
-  Map<String, Duration> _trackDurations = {};
 
   // Add StreamSubscription variables
   late final StreamSubscription _positionSubscription;
   late final StreamSubscription _durationSubscription;
+
+  // Add playlist tracking
+  int? _currentPlaylistIndex;
+
+  late final List<Playlist> _playlists;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     // Set initial volume
     _audioService.setVolume(_volume);
-    _loadTrackDurations();
     // Store stream subscriptions
     _positionSubscription = _audioService.positionStream.listen((position) {
       if (_currentTrackIndex != null && mounted) {
@@ -45,21 +50,22 @@ class _AlbumPlayState extends State<AlbumPlay> {
         setState(() => _totalDuration = duration);
       }
     });
+    _loadPlaylists();
   }
 
-  Future<void> _loadTrackDurations() async {
-    for (final file in widget.album.files) {
-      try {
-        final duration = await _audioService.getTrackDuration(file);
-        if (duration != null && mounted) {
-          setState(() {
-            _trackDurations[file] = duration;
-          });
-        }
-      } catch (e) {
-        debugPrint('Error loading duration for $file: $e');
-      }
+  Future<void> _loadPlaylists() async {
+    setState(() => _loading = true);
+
+    // Start with regular playlists
+    _playlists = List.from(widget.album.playlists);
+
+    // Load CUE playlists
+    if (widget.album.cueFiles.isNotEmpty) {
+      final cuePlaylists = await widget.album.loadCuePlaylists();
+      _playlists.addAll(cuePlaylists);
     }
+
+    setState(() => _loading = false);
   }
 
   // Add volume control method
@@ -85,14 +91,20 @@ class _AlbumPlayState extends State<AlbumPlay> {
     super.dispose();
   }
 
-  void _playTrack(int index) async {
-    if (_currentTrackIndex == index && _isPlaying) {
+  void _playTrack(int playlistIndex, int trackIndex) async {
+    final track = _playlists[playlistIndex].tracks[trackIndex];
+
+    if (_currentPlaylistIndex == playlistIndex &&
+        _currentTrackIndex == trackIndex &&
+        _isPlaying) {
       // Pause current track
       await _audioService.pause();
       setState(() {
         _isPlaying = false;
       });
-    } else if (_currentTrackIndex == index && !_isPlaying) {
+    } else if (_currentPlaylistIndex == playlistIndex &&
+        _currentTrackIndex == trackIndex &&
+        !_isPlaying) {
       // Resume current track
       await _audioService.resume();
       setState(() {
@@ -100,13 +112,13 @@ class _AlbumPlayState extends State<AlbumPlay> {
       });
     } else {
       // Play new track
-      final file = widget.album.files[index];
-      await _audioService.playFile(file);
+      await _audioService.playFile(track.path, startFrom: track.startOffset);
       setState(() {
-        _currentTrackIndex = index;
+        _currentPlaylistIndex = playlistIndex;
+        _currentTrackIndex = trackIndex;
         _isPlaying = true;
         _currentPosition = Duration.zero;
-        _totalDuration = _trackDurations[file] ?? Duration.zero;
+        _totalDuration = track.duration ?? Duration.zero;
       });
     }
   }
@@ -128,6 +140,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     // Calculate left panel width based on screen width
     final screenWidth = MediaQuery.of(context).size.width;
     final leftPanelWidth = screenWidth / (1 + goldenRatio);
@@ -210,66 +225,75 @@ class _AlbumPlayState extends State<AlbumPlay> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Tracks',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(color: Colors.white54),
-                    ),
                     Expanded(
                       child: ListView.builder(
-                        itemCount: widget.album.files.length,
-                        itemBuilder: (context, index) {
-                          final fileName =
-                              widget.album.files[index].split('\\').last;
-                          return ListTile(
-                            leading:
-                                _currentTrackIndex == index
-                                    ? SizedBox(
-                                      width: 10,
-                                      height: 10,
+                        itemCount: _playlists.length,
+                        itemBuilder: (context, playlistIndex) {
+                          final playlist = _playlists[playlistIndex];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 24),
+                              Text(
+                                playlist.name,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(color: Colors.white54),
+                              ),
+                              const SizedBox(height: 8),
+                              ...playlist.tracks.asMap().entries.map((entry) {
+                                final trackIndex = entry.key;
+                                final track = entry.value;
+                                final isCurrentTrack =
+                                    _currentPlaylistIndex == playlistIndex &&
+                                    _currentTrackIndex == trackIndex;
+
+                                return ListTile(
+                                  leading: SizedBox(
+                                    width: 10,
+                                    height: 10,
+                                    child: Center(
                                       child: CircularProgressIndicator(
                                         strokeWidth: 1.5,
-                                        color: Colors.blue,
-                                        value: _isPlaying ? null : 1,
-                                      ),
-                                    )
-                                    : SizedBox(
-                                      width: 10,
-                                      height: 10,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1.5,
-                                        color: Colors.white54,
-                                        value: 1,
+                                        color:
+                                            isCurrentTrack
+                                                ? Colors.blue
+                                                : Colors.white54,
+                                        value:
+                                            (isCurrentTrack && _isPlaying)
+                                                ? null
+                                                : 1,
                                       ),
                                     ),
-                            title: Text(
-                              fileName,
-                              style: TextStyle(
-                                color:
-                                    _currentTrackIndex == index
-                                        ? Colors.blue
-                                        : Colors.white,
-                              ),
-                            ),
-                            trailing: Text(
-                              _currentTrackIndex == index
-                                  ? '${_formatDuration(_currentPosition)}/${_formatDuration(_trackDurations[widget.album.files[index]] ?? Duration.zero)}'
-                                  : _formatDuration(
-                                    _trackDurations[widget
-                                            .album
-                                            .files[index]] ??
-                                        Duration.zero,
                                   ),
-                              style: TextStyle(
-                                color:
-                                    _currentTrackIndex == index
-                                        ? Colors.blue
-                                        : Colors.white54,
-                                fontSize: 12,
-                              ),
-                            ),
-                            onTap: () => _playTrack(index),
+                                  title: Text(
+                                    track.title,
+                                    style: TextStyle(
+                                      color:
+                                          isCurrentTrack
+                                              ? Colors.blue
+                                              : Colors.white,
+                                    ),
+                                  ),
+                                  trailing: Text(
+                                    isCurrentTrack
+                                        ? '${_formatDuration(_currentPosition)}/${_formatDuration(track.duration ?? Duration.zero)}'
+                                        : _formatDuration(
+                                          track.duration ?? Duration.zero,
+                                        ),
+                                    style: TextStyle(
+                                      color:
+                                          isCurrentTrack
+                                              ? Colors.blue
+                                              : Colors.white54,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  onTap:
+                                      () =>
+                                          _playTrack(playlistIndex, trackIndex),
+                                );
+                              }).toList(),
+                            ],
                           );
                         },
                       ),

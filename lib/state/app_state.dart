@@ -1,10 +1,12 @@
-import 'dart:math';
-
+import 'package:blueberry/domain/playlist.dart';
+import 'package:blueberry/service/cue_parser.dart';
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as path;
 import 'dart:io';
 import 'dart:convert';
 import '../domain/config.dart';
 import '../domain/album.dart';
+import '../domain/track.dart';
 
 class AppState extends ChangeNotifier {
   Config? _config;
@@ -79,18 +81,43 @@ class AppState extends ChangeNotifier {
     if (await coverFile.exists()) {
       final files = await _getValidFiles(dir);
       if (files.isNotEmpty) {
-        final album = Album(
-          folderPath: dir.path,
-          name: dir.path.split('\\').last,
-          coverPath: coverFile.path,
-          files: files,
+        // Separate CUE files and regular audio files
+        final cueFiles =
+            files.where((f) => f.toLowerCase().endsWith('.cue')).toList();
+        final audioFiles = files.where(
+          (f) => !f.toLowerCase().endsWith('.cue'),
         );
-        _albums.add(album);
-        debugPrint('Found album: ${album.name} with ${files.length} files');
-        return album;
+
+        // Create regular tracks playlist
+        final regularTracks =
+            audioFiles
+                .map(
+                  (f) =>
+                      Track(path: f, title: path.basenameWithoutExtension(f)),
+                )
+                .toList();
+
+        final defaultPlaylist = Playlist(
+          name: 'Main Playlist',
+          tracks: regularTracks,
+        );
+
+        if (regularTracks.isNotEmpty || cueFiles.isNotEmpty) {
+          final album = Album(
+            folderPath: dir.path,
+            name: dir.path.split('\\').last,
+            coverPath: coverFile.path,
+            playlists: [defaultPlaylist],
+            cueFiles: cueFiles,
+          );
+          _albums.add(album);
+          debugPrint(
+            'Found album: ${album.name} with ${cueFiles.length} CUE files',
+          );
+          return album;
+        }
       }
     }
-
     return parentAlbum;
   }
 

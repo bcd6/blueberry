@@ -226,23 +226,21 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             leading:
                                 _currentTrackIndex == index
                                     ? SizedBox(
-                                      width: 10, // Reduced size to match text
-                                      height: 10, // Reduced size to match text
+                                      width: 10,
+                                      height: 10,
                                       child: CircularProgressIndicator(
-                                        strokeWidth:
-                                            1.5, // Thinner stroke for better appearance
+                                        strokeWidth: 1.5,
                                         color: Colors.blue,
-                                        value:
-                                            _isPlaying
-                                                ? null
-                                                : 1, // null for spinning, 0 for stopped circle
+                                        value: _isPlaying ? null : 1,
                                       ),
                                     )
-                                    : Text(
-                                      '-',
-                                      style: const TextStyle(
+                                    : SizedBox(
+                                      width: 10,
+                                      height: 10,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.5,
                                         color: Colors.white54,
-                                        fontSize: 12,
+                                        value: 1,
                                       ),
                                     ),
                             title: Text(

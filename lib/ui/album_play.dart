@@ -19,11 +19,39 @@ class _AlbumPlayState extends State<AlbumPlay> {
   double _volume = 0.6;
   bool _isSpinning = false;
 
+  // Add new state variables
+  Duration _currentPosition = Duration.zero;
+  Duration _totalDuration = Duration.zero;
+  Map<String, Duration> _trackDurations = {};
+
   @override
   void initState() {
     super.initState();
     // Set initial volume
     _audioService.setVolume(_volume);
+    _loadTrackDurations();
+    // Add position and duration listeners
+    _audioService.positionStream.listen((position) {
+      if (_currentTrackIndex != null) {
+        setState(() => _currentPosition = position);
+      }
+    });
+    _audioService.durationStream.listen((duration) {
+      if (duration != null) {
+        setState(() => _totalDuration = duration);
+      }
+    });
+  }
+
+  Future<void> _loadTrackDurations() async {
+    for (final file in widget.album.files) {
+      final duration = await _audioService.getTrackDuration(file);
+      if (duration != null) {
+        setState(() {
+          _trackDurations[file] = duration;
+        });
+      }
+    }
   }
 
   // Add volume control method
@@ -65,6 +93,8 @@ class _AlbumPlayState extends State<AlbumPlay> {
       setState(() {
         _currentTrackIndex = index;
         _isPlaying = true;
+        _currentPosition = Duration.zero;
+        _totalDuration = _trackDurations[file] ?? Duration.zero;
       });
     }
   }
@@ -74,6 +104,14 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   Future<void> _openInExplorer(String path) async {
     await Process.run('explorer', [path]);
+  }
+
+  // Add helper method to format duration
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   @override
@@ -205,8 +243,21 @@ class _AlbumPlayState extends State<AlbumPlay> {
                               ),
                             ),
                             trailing: Text(
-                              '0:00',
-                              style: const TextStyle(color: Colors.white54),
+                              _currentTrackIndex == index
+                                  ? '${_formatDuration(_currentPosition)}/${_formatDuration(_trackDurations[widget.album.files[index]] ?? Duration.zero)}'
+                                  : _formatDuration(
+                                    _trackDurations[widget
+                                            .album
+                                            .files[index]] ??
+                                        Duration.zero,
+                                  ),
+                              style: TextStyle(
+                                color:
+                                    _currentTrackIndex == index
+                                        ? Colors.blue
+                                        : Colors.white54,
+                                fontSize: 12,
+                              ),
                             ),
                             onTap: () => _playTrack(index),
                           );

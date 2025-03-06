@@ -39,4 +39,21 @@ class AudioService {
     await _player.stop();
     await _player.dispose();
   }
+
+  // Add getters for streams
+  Stream<Duration> get positionStream => _player.onPositionChanged;
+  Stream<Duration?> get durationStream => _player.onDurationChanged;
+
+  Future<Duration?> getTrackDuration(String filePath) async {
+    try {
+      final player = AudioPlayer();
+      await player.setSource(DeviceFileSource(filePath));
+      final duration = await player.getDuration();
+      await player.dispose();
+      return duration;
+    } catch (e) {
+      debugPrint('Error getting duration for $filePath: $e');
+      return null;
+    }
+  }
 }

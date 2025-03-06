@@ -15,20 +15,58 @@ class _AlbumPlayState extends State<AlbumPlay> {
   final _audioService = AudioService();
   int? _currentTrackIndex;
   bool _isPlaying = false;
+  // Update initial volume
+  double _volume = 0.6;
+  bool _isSpinning = false;
 
   @override
-  void dispose() {
+  void initState() {
+    super.initState();
+    // Set initial volume
+    _audioService.setVolume(_volume);
+  }
+
+  // Add volume control method
+  void _onVolumeChanged(double value) {
+    setState(() {
+      _volume = value;
+    });
+    _audioService.setVolume(value);
+  }
+
+  @override
+  void dispose() async {
+    // Stop playback
+    if (_isPlaying) {
+      await _audioService.stop();
+    }
+    // Dispose audio service
     _audioService.dispose();
     super.dispose();
   }
 
-  void _playTrack(int index) {
-    final file = widget.album.files[index];
-    _audioService.playFile(file);
-    setState(() {
-      _currentTrackIndex = index;
-      _isPlaying = true;
-    });
+  void _playTrack(int index) async {
+    if (_currentTrackIndex == index && _isPlaying) {
+      // Pause current track
+      await _audioService.pause();
+      setState(() {
+        _isPlaying = false;
+      });
+    } else if (_currentTrackIndex == index && !_isPlaying) {
+      // Resume current track
+      await _audioService.resume();
+      setState(() {
+        _isPlaying = true;
+      });
+    } else {
+      // Play new track
+      final file = widget.album.files[index];
+      await _audioService.playFile(file);
+      setState(() {
+        _currentTrackIndex = index;
+        _isPlaying = true;
+      });
+    }
   }
 
   // Golden ratio constant
@@ -73,40 +111,35 @@ class _AlbumPlayState extends State<AlbumPlay> {
                     ),
                   ),
                   // Player controls
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.skip_previous,
-                          color: Colors.white,
-                          size: 32,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.volume_up,
+                          color: Colors.white54,
+                          size: 24,
                         ),
-                        onPressed: () {},
-                      ),
-                      const SizedBox(width: 16),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.play_circle_filled,
-                          color: Colors.white,
-                          size: 48,
+                        Expanded(
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              activeTrackColor: Colors.white,
+                              inactiveTrackColor: Colors.white24,
+                              thumbColor: Colors.white,
+                              trackHeight: 2.0,
+                            ),
+                            child: Slider(
+                              value: _volume,
+                              min: 0.0,
+                              max: 1.0,
+                              onChanged: _onVolumeChanged,
+                            ),
+                          ),
                         ),
-                        onPressed: () {},
-                      ),
-                      const SizedBox(width: 16),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.skip_next,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                        onPressed: () {},
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
                   const Spacer(), // Push the custom buttons to bottom
-                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -140,15 +173,27 @@ class _AlbumPlayState extends State<AlbumPlay> {
                           final fileName =
                               widget.album.files[index].split('\\').last;
                           return ListTile(
-                            leading: Text(
-                              '${index + 1}',
-                              style: TextStyle(
-                                color:
-                                    _currentTrackIndex == index
-                                        ? Colors.blue
-                                        : Colors.white54,
-                              ),
-                            ),
+                            leading:
+                                _currentTrackIndex == index
+                                    ? SizedBox(
+                                      width: 10, // Reduced size to match text
+                                      height: 10, // Reduced size to match text
+                                      child: CircularProgressIndicator(
+                                        strokeWidth:
+                                            1.5, // Thinner stroke for better appearance
+                                        color: Colors.blue,
+                                        value:
+                                            _isPlaying
+                                                ? null
+                                                : 0, // null for spinning, 0 for stopped circle
+                                      ),
+                                    )
+                                    : Text(
+                                      '${index + 1}',
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                      ),
+                                    ),
                             title: Text(
                               fileName,
                               style: TextStyle(
@@ -158,9 +203,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                         : Colors.white,
                               ),
                             ),
-                            trailing: const Text(
+                            trailing: Text(
                               '0:00',
-                              style: TextStyle(color: Colors.white54),
+                              style: const TextStyle(color: Colors.white54),
                             ),
                             onTap: () => _playTrack(index),
                           );

@@ -28,11 +28,15 @@ class AudioService {
 
   Future<void> pause() => _player.pause();
   Future<void> resume() => _player.resume();
-  Future<void> stop() => _player.stop();
+  Future<void> stop() async {
+    await _player.stop();
+  }
+
   Future<void> seek(Duration position) => _player.seek(position);
   Future<void> setVolume(double volume) => _player.setVolume(volume);
 
-  void dispose() {
-    _player.dispose();
+  void dispose() async {
+    await _player.stop();
+    await _player.dispose();
   }
 }

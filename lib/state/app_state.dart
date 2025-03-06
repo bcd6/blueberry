@@ -11,66 +11,106 @@ class AppState extends ChangeNotifier {
   List<Album> _albums = [];
   static const String configPath = 'D:\\~\\album';
   static const String configFileName = '~.json';
-
-  // Add file type constants
+  static const String coverFileName = 'cover.jpg';
   static const List<String> validFileTypes = ['flac', 'tak', 'cue'];
 
   Config? get config => _config;
   List<Album> get albums => _albums;
 
+  // Config management
+  String get _configFilePath => '$configPath\\$configFileName';
+
   Future<void> loadConfig() async {
     try {
-      final filePath = '$configPath\\$configFileName';
-      final file = File(filePath);
-      if (await file.exists()) {
-        final jsonString = await file.readAsString();
-        _config = Config.fromJson(json.decode(jsonString));
-      } else {
-        // Create default config if file doesn't exist
-        _config = Config(folders: []);
-      }
+      final file = File(_configFilePath);
+      _config =
+          await file.exists()
+              ? Config.fromJson(json.decode(await file.readAsString()))
+              : Config(folders: []);
+
       debugPrint('Config loaded: ${json.encode(_config?.toJson())}');
-      notifyListeners();
     } catch (e) {
       debugPrint('Error loading config: $e');
       _config = Config(folders: []);
     }
+    notifyListeners();
   }
 
+  // Album scanning
   Future<void> scanAlbums() async {
     _albums.clear();
-
     if (_config == null) {
       debugPrint('No config loaded, skipping album scan');
       return;
     }
 
-    // Start scanning from root folders
+    await _scanRootFolders();
+    debugPrint('Scan completed. Found ${_albums.length} albums');
+    notifyListeners();
+  }
+
+  Future<void> _scanRootFolders() async {
     for (final folder in _config!.folders) {
       try {
         final rootDirectory = Directory(folder.path);
-        if (!await rootDirectory.exists()) {
+        if (await rootDirectory.exists()) {
+          await _scanDirectory(rootDirectory);
+        } else {
           debugPrint('Skipping non-existent root directory: ${folder.path}');
-          continue;
         }
-        await scanDirectory(rootDirectory);
       } catch (e) {
         debugPrint('Error scanning root folder ${folder.path}: $e');
       }
     }
+  }
 
-    debugPrint('Scan completed. Found ${_albums.length} albums');
-    notifyListeners();
+  Future<void> _scanDirectory(Directory dir, {Album? parentAlbum}) async {
+    try {
+      final currentAlbum = await _processDirectory(dir, parentAlbum);
+      await _scanSubdirectories(dir, currentAlbum);
+    } catch (e) {
+      debugPrint('Error scanning directory ${dir.path}: $e');
+    }
+  }
+
+  Future<Album?> _processDirectory(Directory dir, Album? parentAlbum) async {
+    final coverFile = File('${dir.path}\\$coverFileName');
+
+    if (await _isValidAlbumDirectory(dir, coverFile)) {
+      final album = _createAlbum(dir, coverFile);
+      _albums.add(album);
+      debugPrint('Found album: ${album.name} at ${dir.path}');
+      return album;
+    }
+
+    return parentAlbum;
+  }
+
+  Future<void> _scanSubdirectories(Directory dir, Album? parentAlbum) async {
+    await for (final entity in dir.list()) {
+      if (entity is Directory) {
+        final subDir = entity as Directory;
+        if (!await _isEmptyDirectory(subDir)) {
+          await _scanDirectory(subDir, parentAlbum: parentAlbum);
+        }
+      }
+    }
+  }
+
+  // Utility methods
+  Future<bool> _isValidAlbumDirectory(Directory dir, File coverFile) async {
+    return await coverFile.exists() && await _hasValidFiles(dir);
+  }
+
+  Future<bool> _isEmptyDirectory(Directory dir) async {
+    return await dir.list().isEmpty;
   }
 
   Future<bool> _hasValidFiles(Directory dir) async {
     try {
       await for (final entity in dir.list()) {
-        if (entity is File) {
-          final extension = entity.path.toLowerCase();
-          if (validFileTypes.any((type) => extension.endsWith(type))) {
-            return true;
-          }
+        if (entity is File && _isValidFileType(entity.path)) {
+          return true;
         }
       }
     } catch (e) {
@@ -79,63 +119,20 @@ class AppState extends ChangeNotifier {
     return false;
   }
 
-  Future<void> scanDirectory(Directory dir, {Album? parentAlbum}) async {
-    try {
-      final coverFile = File('${dir.path}\\cover.jpg');
-      Album? currentAlbum = parentAlbum;
-
-      // First check if directory has valid files
-      final hasValidFiles = await _hasValidFiles(dir);
-
-      // Only process if directory has cover.jpg AND valid files
-      if (await coverFile.exists() && hasValidFiles) {
-        final albumName = dir.path.split('\\').last;
-        currentAlbum = Album(
-          path: dir.path,
-          name: albumName,
-          coverPath: coverFile.path,
-        );
-        _albums.add(currentAlbum);
-        debugPrint(
-          'Found album with valid files: ${currentAlbum.name} at ${dir.path}',
-        );
-      }
-
-      // Scan subdirectories
-      await for (final entity in dir.list()) {
-        if (entity is Directory) {
-          final subDir = entity;
-          final hasFiles = await subDir.list().isEmpty;
-
-          if (!hasFiles) {
-            if (currentAlbum != null) {
-              // Check for valid files in subdirectory before adding
-              final hasValidSubFiles = await _hasValidFiles(subDir);
-              if (hasValidSubFiles) {
-                final subAlbum = Album(
-                  path: subDir.path,
-                  name: currentAlbum.name,
-                  coverPath: currentAlbum.coverPath,
-                );
-                _albums.add(subAlbum);
-                debugPrint(
-                  'Added subfolder with valid files: ${subDir.path} using parent album: ${currentAlbum.name}',
-                );
-              }
-            }
-            // Recursively scan subdirectory
-            await scanDirectory(subDir, parentAlbum: currentAlbum);
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error scanning directory ${dir.path}: $e');
-    }
+  bool _isValidFileType(String path) {
+    final extension = path.toLowerCase();
+    return validFileTypes.any((type) => extension.endsWith(type));
   }
 
+  Album _createAlbum(Directory dir, File coverFile) {
+    final albumName = dir.path.split('\\').last;
+    return Album(path: dir.path, name: albumName, coverPath: coverFile.path);
+  }
+
+  // State management
   void shuffleAlbums() {
     _albums.shuffle();
-    debugPrint('Albums shuffled using built-in shuffle');
+    debugPrint('Albums shuffled');
     notifyListeners();
   }
 }

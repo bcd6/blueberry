@@ -101,7 +101,7 @@ class _AlbumListState extends State<AlbumList> {
           },
           child: GridView.extent(
             controller: scrollController,
-            //physics: const NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             maxCrossAxisExtent: 960,
             mainAxisSpacing: 0,
             crossAxisSpacing: 0,

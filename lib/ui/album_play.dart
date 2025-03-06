@@ -1,13 +1,38 @@
 import 'dart:io';
+import 'package:blueberry/service/audio_service.dart';
 import 'package:flutter/material.dart';
 import '../domain/album.dart';
 
-class AlbumPlay extends StatelessWidget {
+class AlbumPlay extends StatefulWidget {
   final Album album;
+  const AlbumPlay({super.key, required this.album});
+
+  @override
+  State<AlbumPlay> createState() => _AlbumPlayState();
+}
+
+class _AlbumPlayState extends State<AlbumPlay> {
+  final _audioService = AudioService();
+  int? _currentTrackIndex;
+  bool _isPlaying = false;
+
+  @override
+  void dispose() {
+    _audioService.dispose();
+    super.dispose();
+  }
+
+  void _playTrack(int index) {
+    final file = widget.album.files[index];
+    _audioService.playFile(file);
+    setState(() {
+      _currentTrackIndex = index;
+      _isPlaying = true;
+    });
+  }
+
   // Golden ratio constant
   static const double goldenRatio = 1.618;
-
-  const AlbumPlay({super.key, required this.album});
 
   Future<void> _openInExplorer(String path) async {
     await Process.run('explorer', [path]);
@@ -37,11 +62,11 @@ class AlbumPlay extends StatelessWidget {
                     height:
                         leftPanelWidth, // Make height equal to width for square container
                     child: GestureDetector(
-                      onTap: () => _openInExplorer(album.path),
+                      onTap: () => _openInExplorer(widget.album.path),
                       child: FittedBox(
                         fit: BoxFit.contain,
                         child: Image.file(
-                          File(album.coverPath),
+                          File(widget.album.coverPath),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -94,7 +119,7 @@ class AlbumPlay extends StatelessWidget {
                   children: [
                     const SizedBox(height: 32),
                     Text(
-                      album.name,
+                      widget.album.name,
                       style: Theme.of(
                         context,
                       ).textTheme.headlineLarge?.copyWith(
@@ -110,23 +135,34 @@ class AlbumPlay extends StatelessWidget {
                     ),
                     Expanded(
                       child: ListView.builder(
-                        itemCount: album.files.length,
+                        itemCount: widget.album.files.length,
                         itemBuilder: (context, index) {
-                          final fileName = album.files[index].split('\\').last;
+                          final fileName =
+                              widget.album.files[index].split('\\').last;
                           return ListTile(
                             leading: Text(
                               '${index + 1}',
-                              style: const TextStyle(color: Colors.white54),
+                              style: TextStyle(
+                                color:
+                                    _currentTrackIndex == index
+                                        ? Colors.blue
+                                        : Colors.white54,
+                              ),
                             ),
                             title: Text(
                               fileName,
-                              style: const TextStyle(color: Colors.white),
+                              style: TextStyle(
+                                color:
+                                    _currentTrackIndex == index
+                                        ? Colors.blue
+                                        : Colors.white,
+                              ),
                             ),
                             trailing: const Text(
                               '0:00',
                               style: TextStyle(color: Colors.white54),
                             ),
-                            onTap: () {},
+                            onTap: () => _playTrack(index),
                           );
                         },
                       ),

@@ -39,6 +39,7 @@ dependencies:
   window_size: ^0.1.0
   json_annotation: ^4.9.0
   provider: ^6.1.1
+  audioplayers: ^5.2.1
 
 dev_dependencies:
   flutter_test:

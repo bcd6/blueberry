@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:metadata_god/metadata_god.dart';
 import 'package:path/path.dart' as path;
 
 class CueTrack {
@@ -47,16 +48,13 @@ class CueParser {
       debugPrint('\n=== Starting CUE parsing: ${path.basename(cuePath)} ===');
       final file = File(cuePath);
       final lines = await file.readAsLines(encoding: utf8);
-
       final parseState = _CueParseState();
 
       for (final line in lines) {
         _parseLine(line.trim(), parseState);
       }
-
       _addTrackIfValid(parseState);
-      _calculateTrackDurations(parseState.tracks);
-
+      await _calculateTrackDurations(cuePath, parseState);
       debugPrint('\n=== CUE parsing completed ===\n');
       return parseState.audioFile != null
           ? CueSheet(
@@ -182,8 +180,25 @@ class CueParser {
     }
   }
 
-  static void _calculateTrackDurations(List<CueTrack> tracks) {
+  static Future<void> _calculateTrackDurations(
+    String cuePath,
+    _CueParseState state,
+  ) async {
+    final tracks = state.tracks;
     if (tracks.isEmpty) return;
+
+    // Get audio file path from CUE directory
+    Duration audioFileDuration = Duration.zero;
+    try {
+      final cueDir = path.dirname(cuePath);
+      final audioFilePath = path.join(cueDir, state.audioFile ?? '');
+      final audioFileMetadata = await MetadataGod.readMetadata(
+        file: audioFilePath,
+      );
+      audioFileDuration = audioFileMetadata.duration ?? Duration.zero;
+    } catch (e) {
+      debugPrint('Error getting audio metadata: $e');
+    }
 
     tracks.sort((a, b) => a.index.compareTo(b.index));
 
@@ -204,11 +219,13 @@ class CueParser {
     // Handle last track duration
     if (tracks.length > 1) {
       final lastIndex = tracks.length - 1;
-      final previousDuration = tracks[lastIndex - 1].duration ?? Duration.zero;
       tracks[lastIndex] = CueTrack(
         title: tracks[lastIndex].title,
         start: tracks[lastIndex].start,
-        duration: previousDuration,
+        duration:
+            audioFileDuration != Duration.zero
+                ? audioFileDuration - tracks[lastIndex].start
+                : audioFileDuration,
         performer: tracks[lastIndex].performer,
         index: tracks[lastIndex].index,
         isrc: tracks[lastIndex].isrc,

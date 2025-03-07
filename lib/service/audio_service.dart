@@ -1,13 +1,12 @@
-import 'package:blueberry/domain/LoopType.dart';
+import 'package:blueberry/domain/loop_mode.dart';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
 import 'dart:async';
 
 class AudioService {
   final Player _player = Player();
-  final _loopModeController = StreamController<LoopType>.broadcast();
-
-  LoopType _loopMode = LoopType.playlist;
+  final _loopModeController = StreamController<LoopMode>.broadcast();
+  LoopMode _loopMode = LoopMode.playlist;
   Function(bool wasLooped)? onTrackComplete;
 
   AudioService() {
@@ -24,7 +23,7 @@ class AudioService {
     });
 
     _player.stream.completed.listen((_) async {
-      if (_loopMode == LoopType.track) {
+      if (_loopMode == LoopMode.track) {
         // Replay the current track
         await _player.seek(Duration.zero);
         await _player.play();
@@ -61,22 +60,22 @@ class AudioService {
   Future<void> seek(Duration position) => _player.seek(position);
   Future<void> setVolume(double volume) => _player.setVolume(volume * 100);
 
-  Future<void> toggleLoopType() async {
-    final modes = [LoopType.track, LoopType.playlist];
+  Future<void> toggleLoopMode() async {
+    final modes = [LoopMode.track, LoopMode.playlist];
     final currentIndex = modes.indexOf(_loopMode);
     _loopMode = modes[(currentIndex + 1) % modes.length];
     _loopModeController.add(_loopMode);
     debugPrint('Loop mode set to: $_loopMode');
   }
 
-  LoopType get loopMode => _loopMode;
-  bool get isLoopingTrack => _loopMode == LoopType.track;
-  bool get isLoopingPlaylist => _loopMode == LoopType.playlist;
+  LoopMode get loopMode => _loopMode;
+  bool get isLoopingTrack => _loopMode == LoopMode.track;
+  bool get isLoopingPlaylist => _loopMode == LoopMode.playlist;
 
   Stream<bool> get playerStateStream => _player.stream.playing;
   Stream<Duration> get positionStream => _player.stream.position;
   Stream<Duration> get durationStream => _player.stream.duration;
-  Stream<LoopType> get loopModeStream => _loopModeController.stream;
+  Stream<LoopMode> get loopModeStream => _loopModeController.stream;
 
   Future<void> dispose() async {
     await _player.dispose();

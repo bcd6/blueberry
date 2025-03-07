@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:blueberry/domain/LoopType.dart';
+import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/service/audio_service.dart';
 import 'package:flutter/material.dart';
@@ -164,13 +164,13 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   Widget _buildLoopButton() {
     final (icon, tooltip) = switch (_audioService.loopMode) {
-      LoopType.track => (Icons.repeat_one, 'Loop Track'),
-      LoopType.playlist => (Icons.repeat, 'Loop Playlist'),
+      LoopMode.track => (Icons.repeat_one, 'Loop Track'),
+      LoopMode.playlist => (Icons.repeat, 'Loop Playlist'),
     };
 
     return IconButton(
       icon: Icon(icon, color: Colors.white),
-      onPressed: _audioService.toggleLoopType,
+      onPressed: _audioService.toggleLoopMode,
       tooltip: tooltip,
     );
   }

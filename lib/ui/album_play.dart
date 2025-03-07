@@ -48,7 +48,13 @@ class _AlbumPlayState extends State<AlbumPlay> {
   void _setupSubscriptions() {
     _positionSubscription = _audioService.positionStream.listen((position) {
       if (_currentTrackIndex != null && mounted) {
-        setState(() => _currentPosition = position);
+        final currentTrack =
+            _playlists[_currentPlaylistIndex!].tracks[_currentTrackIndex!];
+        // Adjust position relative to track start
+        final adjustedPosition = position - currentTrack.startOffset;
+        if (adjustedPosition > Duration.zero) {
+          setState(() => _currentPosition = adjustedPosition);
+        }
       }
     });
 
@@ -109,14 +115,13 @@ class _AlbumPlayState extends State<AlbumPlay> {
           setState(() => _isPlaying = true);
         }
       } else {
-        debugPrint('Switching to new track...');
-
-        debugPrint('Stopping current playback');
         await _audioService.stop();
-
+        debugPrint('Stopping current playback');
+        debugPrint('Switching to new track...');
         debugPrint('Starting new track: ${track.title}');
         debugPrint('File path: ${track.path}');
         debugPrint('Start offset: ${track.startOffset}');
+        debugPrint('Current position: ${_currentPosition.inSeconds}');
 
         await _audioService.playFile(track.path, startFrom: track.startOffset);
         setState(() {

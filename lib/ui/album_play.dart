@@ -170,7 +170,10 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
     return IconButton(
       icon: Icon(icon, color: Colors.white),
-      onPressed: _audioService.toggleLoopMode,
+      onPressed: () async {
+        await _audioService.toggleLoopMode();
+        setState(() {}); // Trigger rebuild to update icon
+      },
       tooltip: tooltip,
     );
   }

@@ -56,10 +56,8 @@ class AudioService {
   Future<void> pause() => _player.pause();
   Future<void> resume() => _player.play();
   Future<void> stop() => _player.stop();
-
   Future<void> seek(Duration position) => _player.seek(position);
   Future<void> setVolume(double volume) => _player.setVolume(volume * 100);
-
   Future<void> toggleLoopMode() async {
     final modes = [LoopMode.track, LoopMode.playlist];
     final currentIndex = modes.indexOf(_loopMode);
@@ -71,7 +69,6 @@ class AudioService {
   LoopMode get loopMode => _loopMode;
   bool get isLoopingTrack => _loopMode == LoopMode.track;
   bool get isLoopingPlaylist => _loopMode == LoopMode.playlist;
-
   Stream<bool> get playerStateStream => _player.stream.playing;
   Stream<Duration> get positionStream => _player.stream.position;
   Stream<Duration> get durationStream => _player.stream.duration;

@@ -158,7 +158,7 @@ class AppState extends ChangeNotifier {
   Future<List<String>> _getValidFiles(Directory dir) async {
     List<String> files = [];
     try {
-      await for (final entity in dir.list()) {
+      await for (final entity in dir.list(recursive: true)) {
         if (entity is File && _isValidFileType(entity.path)) {
           files.add(entity.path);
         }

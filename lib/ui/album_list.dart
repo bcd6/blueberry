@@ -45,7 +45,8 @@ class _AlbumListState extends State<AlbumList> {
 
   void _onScroll() {
     final position = scrollController.position;
-
+    debugPrint('Scrolling: ${position.pixels}');
+    debugPrint('MaxScrollExtent: ${position.maxScrollExtent}');
     if (position.pixels >= position.maxScrollExtent * 0.8) {
       final appState = context.read<AppState>();
       final currentLength = displayedIndices.length;

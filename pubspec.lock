@@ -45,58 +45,58 @@ packages:
     dependency: "direct main"
     description:
       name: audioplayers
-      sha256: c05c6147124cd63e725e861335a8b4d57300b80e6e92cea7c145c739223bbaef
+      sha256: "76a65e82c29df1be72bf1b1dbe9600c181dda10b5e00ef2a5b7fb91c37a773e2"
       url: "https://pub.dev"
     source: hosted
-    version: "5.2.1"
+    version: "6.3.0"
   audioplayers_android:
     dependency: transitive
     description:
       name: audioplayers_android
-      sha256: b00e1a0e11365d88576320ec2d8c192bc21f1afb6c0e5995d1c57ae63156acb5
+      sha256: "5e8444166ad34820c214f822b6327b434347ede76458e24a08db5492ad97fc76"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.3"
+    version: "5.1.0"
   audioplayers_darwin:
     dependency: transitive
     description:
       name: audioplayers_darwin
-      sha256: "3034e99a6df8d101da0f5082dcca0a2a99db62ab1d4ddb3277bed3f6f81afe08"
+      sha256: "064bc321f7460c46945d3363a99f9e33bd8d64eb494db412a2e616fdb3d746a1"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.2"
+    version: "6.1.1"
   audioplayers_linux:
     dependency: transitive
     description:
       name: audioplayers_linux
-      sha256: "60787e73fefc4d2e0b9c02c69885402177e818e4e27ef087074cf27c02246c9e"
+      sha256: "7f9b41c8b60b320041248617fca8f6f93da53899bd100c6d16fb225b5a91c138"
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.0"
+    version: "4.1.1"
   audioplayers_platform_interface:
     dependency: transitive
     description:
       name: audioplayers_platform_interface
-      sha256: "365c547f1bb9e77d94dd1687903a668d8f7ac3409e48e6e6a3668a1ac2982adb"
+      sha256: c0683ae22a53c4680862fc55c672d4b6046e9f7c156075c9eb6b182644bf200c
       url: "https://pub.dev"
     source: hosted
-    version: "6.1.0"
+    version: "7.0.1"
   audioplayers_web:
     dependency: transitive
     description:
       name: audioplayers_web
-      sha256: "22cd0173e54d92bd9b2c80b1204eb1eb159ece87475ab58c9788a70ec43c2a62"
+      sha256: "1a02a0d9aa84c0786cd7977edb224f0c9dc49181259a45ff6b0fa41b3d3c0c4c"
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.0"
+    version: "5.0.2"
   audioplayers_windows:
     dependency: transitive
     description:
       name: audioplayers_windows
-      sha256: "9536812c9103563644ada2ef45ae523806b0745f7a78e89d1b5fb1951de90e1a"
+      sha256: "733bf3cb6169f17ef4c79cc645be73e6b21753bb2c8822e48191d34afbd48b47"
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.0"
+    version: "4.1.1"
   boolean_selector:
     dependency: transitive
     description:

@@ -124,13 +124,15 @@ class AppState extends ChangeNotifier {
             cueFiles: cueFiles,
           );
           _albums.add(album);
-          debugPrint('''
-Found album: ${album.name}
-  CUE files: ${cueFiles.length}
-  Regular tracks: ${regularTracks.length}
-  CUE matched files: ${cueMatchFiles.length}''');
+          // debugPrint('''
+          //   Found album: ${album.name}
+          //   CUE files: ${cueFiles.length}
+          //   Regular tracks: ${regularTracks.length}
+          //   CUE matched files: ${cueMatchFiles.length}''');
           return album;
         }
+      } else {
+        debugPrint('Empty directory: ${dir.path}');
       }
     }
     return parentAlbum;

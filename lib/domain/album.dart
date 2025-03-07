@@ -41,6 +41,7 @@ class Album {
                       duration: t.duration,
                       startOffset: t.start,
                       metadata: t.metadata,
+                      isCueTrack: true,
                     ),
                   )
                   .toList();

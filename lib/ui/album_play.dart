@@ -42,18 +42,33 @@ class _AlbumPlayState extends State<AlbumPlay> {
   void _initializeAudio() {
     _audioService.setVolume(_volume);
     _setupSubscriptions();
-    _audioService.onTrackComplete = _onTrackComplete;
   }
 
   void _setupSubscriptions() {
-    _positionSubscription = _audioService.positionStream.listen((position) {
+    _positionSubscription = _audioService.positionStream.listen((
+      position,
+    ) async {
       if (_currentTrackIndex != null && mounted) {
         final currentTrack =
             _playlists[_currentPlaylistIndex!].tracks[_currentTrackIndex!];
+
         // Adjust position relative to track start
         final adjustedPosition = position - currentTrack.startOffset;
         if (adjustedPosition > Duration.zero) {
           setState(() => _currentPosition = adjustedPosition);
+        }
+
+        if (currentTrack.duration != Duration.zero &&
+            currentTrack.duration!.inMilliseconds - position.inMilliseconds <
+                200) {
+          debugPrint('Track completed');
+          if (_audioService.isLoopingTrack) {
+            await _audioService.seek(currentTrack.startOffset);
+            await _audioService.play();
+          }
+          if (!_audioService.isLoopingTrack && mounted) {
+            _handleTrackComplete();
+          }
         }
       }
     });
@@ -63,12 +78,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
         setState(() => _totalDuration = duration);
       }
     });
-  }
-
-  void _onTrackComplete(bool wasLooped) {
-    if (!wasLooped && mounted) {
-      _handleTrackComplete();
-    }
   }
 
   Future<void> _loadPlaylists() async {
@@ -111,7 +120,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
           setState(() => _isPlaying = false);
         } else {
           debugPrint('Resuming current track');
-          await _audioService.resume();
+          await _audioService.play();
           setState(() => _isPlaying = true);
         }
       } else {

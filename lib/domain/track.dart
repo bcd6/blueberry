@@ -6,6 +6,7 @@ class Track {
   final Duration? duration;
   final Duration startOffset;
   final Map<String, String> metadata;
+  final bool isCueTrack;
 
   Track({
     required this.path,
@@ -15,6 +16,7 @@ class Track {
     this.duration,
     this.startOffset = Duration.zero,
     this.metadata = const {},
+    this.isCueTrack = false,
   });
 
   String get fileName => path.split('\\').last;

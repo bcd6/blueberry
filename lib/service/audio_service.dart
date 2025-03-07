@@ -7,7 +7,6 @@ class AudioService {
   final Player _player = Player();
   final _loopModeController = StreamController<LoopMode>.broadcast();
   LoopMode _loopMode = LoopMode.playlist;
-  Function(bool wasLooped)? onTrackComplete;
 
   AudioService() {
     _initPlayer();
@@ -20,18 +19,6 @@ class AudioService {
 
     _player.stream.position.listen((position) {
       // debugPrint('Position: $position');
-    });
-
-    _player.stream.completed.listen((_) async {
-      if (_loopMode == LoopMode.track) {
-        // Replay the current track
-        await _player.seek(Duration.zero);
-        await _player.play();
-        onTrackComplete?.call(true);
-      } else {
-        // Let the UI handle playlist progression
-        onTrackComplete?.call(false);
-      }
     });
   }
 
@@ -54,7 +41,7 @@ class AudioService {
   }
 
   Future<void> pause() => _player.pause();
-  Future<void> resume() => _player.play();
+  Future<void> play() => _player.play();
   Future<void> stop() => _player.stop();
   Future<void> seek(Duration position) => _player.seek(position);
   Future<void> setVolume(double volume) => _player.setVolume(volume * 100);

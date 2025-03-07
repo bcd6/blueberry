@@ -184,6 +184,7 @@ Found album: ${album.name}
         path: filePath,
         title: title,
         performer: metadata.artist ?? '',
+        duration: metadata.duration,
       );
     } catch (e) {
       debugPrint('Error reading metadata from $filePath: $e');

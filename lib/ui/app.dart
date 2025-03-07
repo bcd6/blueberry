@@ -12,7 +12,7 @@ class App extends StatelessWidget {
     final appState = context.read<AppState>();
     await appState.loadConfig();
     await appState.scanAlbums();
-    appState.shuffleAlbums();
+    // appState.shuffleAlbums();
   }
 
   @override

@@ -3,10 +3,12 @@ import 'package:blueberry/ui/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:metadata_god/metadata_god.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  MetadataGod.initialize();
   // debugPaintSizeEnabled = true;
 
   runApp(

@@ -6,6 +6,7 @@ import 'dart:convert';
 import '../domain/config.dart';
 import '../domain/album.dart';
 import '../domain/track.dart';
+import 'package:metadata_god/metadata_god.dart';
 
 class AppState extends ChangeNotifier {
   Config? _config;
@@ -102,14 +103,10 @@ class AppState extends ChangeNotifier {
               !f.toLowerCase().endsWith('.cue') && !cueMatchFiles.contains(f),
         );
 
-        // Create regular tracks playlist
-        final regularTracks =
-            audioFiles
-                .map(
-                  (f) =>
-                      Track(path: f, title: path.basenameWithoutExtension(f)),
-                )
-                .toList();
+        // Create regular tracks playlist with metadata
+        final regularTracks = await Future.wait(
+          audioFiles.map((f) => _createTrackFromFile(f)),
+        );
 
         // Only create playlist if there are regular tracks
         final playlists = <Playlist>[];
@@ -173,6 +170,28 @@ Found album: ${album.name}
   bool _isValidFileType(String path) {
     final extension = path.toLowerCase();
     return validFileTypes.any((type) => extension.endsWith(type));
+  }
+
+  Future<Track> _createTrackFromFile(String filePath) async {
+    try {
+      final metadata = await MetadataGod.readMetadata(file: filePath);
+      final title =
+          metadata.title?.isNotEmpty == true
+              ? metadata.title!
+              : path.basenameWithoutExtension(filePath);
+
+      return Track(
+        path: filePath,
+        title: title,
+        performer: metadata.artist ?? '',
+      );
+    } catch (e) {
+      debugPrint('Error reading metadata from $filePath: $e');
+      return Track(
+        path: filePath,
+        title: path.basenameWithoutExtension(filePath),
+      );
+    }
   }
 
   // State management

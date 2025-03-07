@@ -29,6 +29,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   bool _loading = true;
   double _volume = _defaultVolume;
   Duration _currentPosition = Duration.zero;
+  // ignore: unused_field
   Duration _totalDuration = Duration.zero;
 
   @override
@@ -165,7 +166,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
     final (icon, tooltip) = switch (_audioService.loopMode) {
       LoopMode.track => (Icons.repeat_one, 'Loop Track'),
       LoopMode.playlist => (Icons.repeat, 'Loop Playlist'),
-      _ => (Icons.repeat_outlined, 'No Loop'),
     };
 
     return IconButton(

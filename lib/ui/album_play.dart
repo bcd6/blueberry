@@ -53,7 +53,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
     });
 
     _durationSubscription = _audioService.durationStream.listen((duration) {
-      if (duration != null && mounted) {
+      if (mounted) {
         setState(() => _totalDuration = duration);
       }
     });
@@ -170,7 +170,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
     return IconButton(
       icon: Icon(icon, color: Colors.white),
-      onPressed: _audioService.toggleLoopMode,
+      onPressed: _audioService.toggleLoopType,
       tooltip: tooltip,
     );
   }

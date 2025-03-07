@@ -3,11 +3,12 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  just_audio_windows
+  media_kit_libs_windows_audio
   window_size
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  media_kit_native_event_loop
   metadata_god
 )
 

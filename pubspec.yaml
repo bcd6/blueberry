@@ -2,7 +2,7 @@ name: blueberry
 description: "A record viewer."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -39,8 +39,8 @@ dependencies:
   window_size: ^0.1.0
   json_annotation: ^4.9.0
   provider: ^6.1.1
-  just_audio: ^0.9.36
-  just_audio_windows: ^0.2.0
+  media_kit: ^1.1.11 # Primary package.
+  media_kit_libs_audio: ^1.0.5 # Native audio dependencies.
   path: ^1.8.0
   metadata_god: ^0.5.2+1
 
@@ -61,7 +61,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

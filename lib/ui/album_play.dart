@@ -87,22 +87,51 @@ class _AlbumPlayState extends State<AlbumPlay> {
         _currentPlaylistIndex == playlistIndex &&
         _currentTrackIndex == trackIndex;
 
-    if (isSameTrack && _isPlaying) {
-      await _audioService.pause();
-      setState(() => _isPlaying = false);
-    } else if (isSameTrack && !_isPlaying) {
-      await _audioService.resume();
-      setState(() => _isPlaying = true);
-    } else {
-      await _audioService.playFile(track.path, startFrom: track.startOffset);
-      setState(() {
-        _currentPlaylistIndex = playlistIndex;
-        _currentTrackIndex = trackIndex;
-        _isPlaying = true;
-        _currentPosition = Duration.zero;
-        _totalDuration = track.duration ?? Duration.zero;
-      });
+    debugPrint('\n=== Play Track Request ===');
+    debugPrint('Playlist: $playlistIndex, Track: $trackIndex');
+    debugPrint(
+      'Current playlist: $_currentPlaylistIndex, Current track: $_currentTrackIndex',
+    );
+    debugPrint('Is same track: $isSameTrack');
+    debugPrint('Is currently playing: $_isPlaying');
+
+    try {
+      if (isSameTrack) {
+        debugPrint('Handling same track toggle...');
+        if (_isPlaying) {
+          debugPrint('Pausing current track');
+          await _audioService.pause();
+          setState(() => _isPlaying = false);
+        } else {
+          debugPrint('Resuming current track');
+          await _audioService.resume();
+          setState(() => _isPlaying = true);
+        }
+      } else {
+        debugPrint('Switching to new track...');
+
+        debugPrint('Stopping current playback');
+        await _audioService.stop();
+
+        debugPrint('Starting new track: ${track.title}');
+        debugPrint('File path: ${track.path}');
+        debugPrint('Start offset: ${track.startOffset}');
+
+        await _audioService.playFile(track.path, startFrom: track.startOffset);
+        setState(() {
+          _currentPlaylistIndex = playlistIndex;
+          _currentTrackIndex = trackIndex;
+          _isPlaying = true;
+          _currentPosition = Duration.zero;
+          _totalDuration = track.duration ?? Duration.zero;
+        });
+        debugPrint('New track started successfully');
+      }
+    } catch (e) {
+      debugPrint('Error playing track: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
     }
+    debugPrint('=== Play Track Request Complete ===\n');
   }
 
   void _handleTrackComplete() {

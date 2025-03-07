@@ -47,15 +47,44 @@ class CueParser {
     try {
       debugPrint('\n=== Starting CUE parsing: ${path.basename(cuePath)} ===');
       final file = File(cuePath);
-      final lines = await file.readAsLines(encoding: utf8);
+
+      // Define encodings to try in order
+      final encodings = [utf8, ascii, latin1, SystemEncoding()];
+
+      List<String> lines = [];
+      Exception? lastError;
+
+      // Try each encoding until successful
+      for (final encoding in encodings) {
+        try {
+          debugPrint('Trying encoding: ${encoding.name}');
+          lines = await file.readAsLines(encoding: encoding);
+          debugPrint('Successfully read with ${encoding.name}');
+          lastError = null;
+          break;
+        } catch (e) {
+          lastError = Exception('Failed with ${encoding.name}: $e');
+          continue;
+        }
+      }
+
+      // If all encodings failed
+      if (lines.isEmpty) {
+        throw lastError ?? Exception('Failed to read file with all encodings');
+      }
+
+      // Continue with parsing
       final parseState = _CueParseState();
 
       for (final line in lines) {
         _parseLine(line.trim(), parseState);
       }
+
       _addTrackIfValid(parseState);
       await _calculateTrackDurations(cuePath, parseState);
+
       debugPrint('\n=== CUE parsing completed ===\n');
+
       return parseState.audioFile != null
           ? CueSheet(
             audioFile: parseState.audioFile!,

@@ -191,6 +191,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   Future<void> _openInExplorer(String path) async {
+    debugPrint('Opening in explorer: $path');
     await Process.run('explorer', [path]);
   }
 
@@ -297,7 +298,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                               //   style: Theme.of(context).textTheme.titleLarge
                               //       ?.copyWith(color: Colors.white54),
                               // ),
-                              //const SizedBox(height: 8),
+                              // const SizedBox(height: 8),
                               ...playlist.tracks.asMap().entries.map((entry) {
                                 final trackIndex = entry.key;
                                 final track = entry.value;
@@ -307,7 +308,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
                                 return ListTile(
                                   leading:
-                                      _currentTrackIndex == trackIndex
+                                      isCurrentTrack
                                           ? SizedBox(
                                             width: 10,
                                             height: 10,

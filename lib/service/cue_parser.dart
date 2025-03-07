@@ -219,18 +219,28 @@ class CueParser {
   }
 
   static Duration? _parseTime(String timeStr) {
+    debugPrint('Parsing time: $timeStr');
     final parts = timeStr.split(':');
     if (parts.length == 3) {
       try {
         final minutes = int.parse(parts[0]);
         final seconds = int.parse(parts[1]);
         final frames = int.parse(parts[2]);
-        return Duration(
-          minutes: minutes,
-          seconds: seconds,
-          milliseconds: (frames * 1000 ~/ 75),
+
+        // Calculate total seconds
+        final totalSeconds = minutes * 60 + seconds;
+        // Convert frames to milliseconds (75 frames per second in CUE standard)
+        final milliseconds = (frames * 1000 / 75).round();
+
+        final duration = Duration(
+          seconds: totalSeconds,
+          milliseconds: milliseconds,
         );
+
+        debugPrint('Converted $timeStr to ${_formatDuration(duration)}');
+        return duration;
       } catch (e) {
+        debugPrint('Error parsing time: $e');
         return null;
       }
     }
@@ -238,8 +248,9 @@ class CueParser {
   }
 
   static String _formatDuration(Duration d) {
-    return '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}'
-        '.${(d.inMilliseconds % 1000 ~/ 10).toString().padLeft(2, '0')}';
+    return '${(d.inMinutes).toString().padLeft(2, '0')}:'
+        '${(d.inSeconds % 60).toString().padLeft(2, '0')}.'
+        '${((d.inMilliseconds % 1000) / 10).round().toString().padLeft(2, '0')}';
   }
 }
 

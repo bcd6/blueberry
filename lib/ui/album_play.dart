@@ -269,23 +269,33 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                     _currentTrackIndex == trackIndex;
 
                                 return ListTile(
-                                  leading: SizedBox(
-                                    width: 10,
-                                    height: 10,
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1.5,
-                                        color:
-                                            isCurrentTrack
-                                                ? Colors.blue
-                                                : Colors.white54,
-                                        value:
-                                            (isCurrentTrack && _isPlaying)
-                                                ? null
-                                                : 1,
-                                      ),
-                                    ),
-                                  ),
+                                  leading:
+                                      _currentTrackIndex == trackIndex
+                                          ? SizedBox(
+                                            width: 10,
+                                            height: 10,
+                                            child: Center(
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 1.5,
+                                                color:
+                                                    isCurrentTrack
+                                                        ? Colors.blue
+                                                        : Colors.white54,
+                                                value:
+                                                    (isCurrentTrack &&
+                                                            _isPlaying)
+                                                        ? null
+                                                        : 1,
+                                              ),
+                                            ),
+                                          )
+                                          : Text(
+                                            (trackIndex + 1).toString(),
+                                            style: const TextStyle(
+                                              color: Colors.white54,
+                                              fontSize: 12,
+                                            ),
+                                          ),
                                   title: Text(
                                     track.title,
                                     style: TextStyle(

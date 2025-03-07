@@ -51,12 +51,12 @@ class _AlbumListState extends State<AlbumList> {
       final appState = context.read<AppState>();
       final currentLength = displayedIndices.length;
       final totalAlbums = appState.albums.length;
-
-      debugPrint('Loading more: $currentLength/$totalAlbums albums');
+      debugPrint('CurrentLength: $currentLength');
 
       if (currentLength < totalAlbums) {
         setState(() {
           displayedIndices.add(currentLength);
+          displayedIndices.add(currentLength + 1);
         });
       }
     }

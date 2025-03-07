@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/service/audio_service.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +52,13 @@ class _AlbumPlayState extends State<AlbumPlay> {
       }
     });
     _loadPlaylists();
+
+    // Handle track completion
+    _audioService.onTrackComplete = (wasLooped) {
+      if (!wasLooped && mounted) {
+        _handleTrackComplete();
+      }
+    };
   }
 
   Future<void> _loadPlaylists() async {
@@ -121,6 +129,54 @@ class _AlbumPlayState extends State<AlbumPlay> {
         _totalDuration = track.duration ?? Duration.zero;
       });
     }
+  }
+
+  void _handleTrackComplete() {
+    if (_currentPlaylistIndex == null || _currentTrackIndex == null) return;
+
+    final playlist = _playlists[_currentPlaylistIndex!];
+    final nextTrackIndex = _currentTrackIndex! + 1;
+
+    if (nextTrackIndex < playlist.tracks.length) {
+      // Play next track in playlist
+      _playTrack(_currentPlaylistIndex!, nextTrackIndex);
+    } else if (_audioService.isLoopingPlaylist) {
+      // Start playlist over
+      _playTrack(_currentPlaylistIndex!, 0);
+    }
+  }
+
+  Widget _buildLoopButton() {
+    IconData icon;
+    String tooltip;
+
+    switch (_audioService.loopMode) {
+      case LoopMode.track:
+        icon = Icons.repeat_one;
+        tooltip = 'Loop Track';
+        break;
+      case LoopMode.playlist:
+        icon = Icons.repeat;
+        tooltip = 'Loop Playlist';
+        break;
+    }
+
+    return IconButton(
+      icon: Icon(icon, color: Colors.white),
+      onPressed: _audioService.toggleLoopMode,
+      tooltip: tooltip,
+    );
+  }
+
+  // Add the loop button to your control bar
+  Widget _buildControlBar() {
+    return Row(
+      children: [
+        // ...existing volume slider...
+        const SizedBox(width: 16),
+        _buildLoopButton(),
+      ],
+    );
   }
 
   // Golden ratio constant
@@ -201,6 +257,8 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             ),
                           ),
                         ),
+                        const SizedBox(width: 16),
+                        _buildLoopButton(),
                       ],
                     ),
                   ),

@@ -1,9 +1,15 @@
+import 'package:blueberry/domain/loop_mode.dart';
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:async';
 
 class AudioService {
   final AudioPlayer _player = AudioPlayer();
   final Map<String, Duration> _durationCache = {};
+  final _loopModeController = StreamController<LoopMode>.broadcast();
+
+  LoopMode _loopMode = LoopMode.playlist;
+  Function(bool wasLooped)? onTrackComplete;
 
   AudioService() {
     _initPlayer();
@@ -18,8 +24,18 @@ class AudioService {
       debugPrint('Position: $position');
     });
 
-    // Set playback mode to prevent automatic advancement
-    _player.setReleaseMode(ReleaseMode.stop);
+    // Handle track completion
+    _player.onPlayerComplete.listen((_) async {
+      if (_loopMode == LoopMode.track) {
+        // Replay the current track
+        await _player.seek(Duration.zero);
+        await _player.resume();
+        onTrackComplete?.call(true);
+      } else {
+        // Let the UI handle playlist progression
+        onTrackComplete?.call(false);
+      }
+    });
   }
 
   Future<void> playFile(
@@ -63,19 +79,24 @@ class AudioService {
     return position >= startOffset && position <= (startOffset + duration);
   }
 
-  // Add method to handle track completion
-  void onTrackComplete(Function callback) {
-    _player.onPlayerComplete.listen((_) => callback());
+  Future<void> toggleLoopMode() async {
+    final modes = [LoopMode.track, LoopMode.playlist];
+    final currentIndex = modes.indexOf(_loopMode);
+    _loopMode = modes[(currentIndex + 1) % modes.length];
+    _loopModeController.add(_loopMode); // Notify listeners
+    debugPrint('Loop mode set to: $_loopMode');
   }
 
-  void dispose() async {
-    await _player.stop();
-    await _player.dispose();
-  }
+  // Add getters
+  LoopMode get loopMode => _loopMode;
+  bool get isLoopingTrack => _loopMode == LoopMode.track;
+  bool get isLoopingPlaylist => _loopMode == LoopMode.playlist;
 
   // Add getters for streams
+  Stream<PlayerState> get playerStateStream => _player.onPlayerStateChanged;
   Stream<Duration> get positionStream => _player.onPositionChanged;
   Stream<Duration?> get durationStream => _player.onDurationChanged;
+  Stream<LoopMode> get loopModeStream => _loopModeController.stream;
 
   Future<Duration?> getTrackDuration(String filePath) async {
     try {
@@ -97,5 +118,11 @@ class AudioService {
       debugPrint('Error getting duration for $filePath: $e');
       return null;
     }
+  }
+
+  Future<void> dispose() async {
+    await _player.stop();
+    await _player.dispose();
+    await _loopModeController.close();
   }
 }

@@ -15,59 +15,59 @@ class AlbumPlay extends StatefulWidget {
 }
 
 class _AlbumPlayState extends State<AlbumPlay> {
+  static const double _goldenRatio = 1.618;
+  static const double _defaultVolume = 0.6;
+
   final _audioService = AudioService();
-  int? _currentTrackIndex;
-  bool _isPlaying = false;
-  // Update initial volume
-  double _volume = 0.6;
-
-  // Add new state variables
-  Duration _currentPosition = Duration.zero;
-  Duration _totalDuration = Duration.zero;
-
-  // Add StreamSubscription variables
+  late final List<Playlist> _playlists;
   late final StreamSubscription _positionSubscription;
   late final StreamSubscription _durationSubscription;
 
-  // Add playlist tracking
+  int? _currentTrackIndex;
   int? _currentPlaylistIndex;
-
-  late final List<Playlist> _playlists;
+  bool _isPlaying = false;
   bool _loading = true;
+  double _volume = _defaultVolume;
+  Duration _currentPosition = Duration.zero;
+  Duration _totalDuration = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    // Set initial volume
+    _initializeAudio();
+    _loadPlaylists();
+  }
+
+  void _initializeAudio() {
     _audioService.setVolume(_volume);
-    // Store stream subscriptions
+    _setupSubscriptions();
+    _audioService.onTrackComplete = _onTrackComplete;
+  }
+
+  void _setupSubscriptions() {
     _positionSubscription = _audioService.positionStream.listen((position) {
       if (_currentTrackIndex != null && mounted) {
         setState(() => _currentPosition = position);
       }
     });
+
     _durationSubscription = _audioService.durationStream.listen((duration) {
       if (duration != null && mounted) {
         setState(() => _totalDuration = duration);
       }
     });
-    _loadPlaylists();
+  }
 
-    // Handle track completion
-    _audioService.onTrackComplete = (wasLooped) {
-      if (!wasLooped && mounted) {
-        _handleTrackComplete();
-      }
-    };
+  void _onTrackComplete(bool wasLooped) {
+    if (!wasLooped && mounted) {
+      _handleTrackComplete();
+    }
   }
 
   Future<void> _loadPlaylists() async {
     setState(() => _loading = true);
-
-    // Start with regular playlists
     _playlists = List.from(widget.album.playlists);
 
-    // Load CUE playlists
     if (widget.album.cueFiles.isNotEmpty) {
       final cuePlaylists = await widget.album.loadCuePlaylists();
       _playlists.addAll(cuePlaylists);
@@ -76,50 +76,24 @@ class _AlbumPlayState extends State<AlbumPlay> {
     setState(() => _loading = false);
   }
 
-  // Add volume control method
   void _onVolumeChanged(double value) {
-    setState(() {
-      _volume = value;
-    });
+    setState(() => _volume = value);
     _audioService.setVolume(value);
   }
 
-  @override
-  void dispose() async {
-    // Cancel stream subscriptions
-    await _positionSubscription.cancel();
-    await _durationSubscription.cancel();
-
-    // Stop playback
-    if (_isPlaying) {
-      await _audioService.stop();
-    }
-    // Dispose audio service
-    _audioService.dispose();
-    super.dispose();
-  }
-
-  void _playTrack(int playlistIndex, int trackIndex) async {
+  Future<void> _playTrack(int playlistIndex, int trackIndex) async {
     final track = _playlists[playlistIndex].tracks[trackIndex];
+    final isSameTrack =
+        _currentPlaylistIndex == playlistIndex &&
+        _currentTrackIndex == trackIndex;
 
-    if (_currentPlaylistIndex == playlistIndex &&
-        _currentTrackIndex == trackIndex &&
-        _isPlaying) {
-      // Pause current track
+    if (isSameTrack && _isPlaying) {
       await _audioService.pause();
-      setState(() {
-        _isPlaying = false;
-      });
-    } else if (_currentPlaylistIndex == playlistIndex &&
-        _currentTrackIndex == trackIndex &&
-        !_isPlaying) {
-      // Resume current track
+      setState(() => _isPlaying = false);
+    } else if (isSameTrack && !_isPlaying) {
       await _audioService.resume();
-      setState(() {
-        _isPlaying = true;
-      });
+      setState(() => _isPlaying = true);
     } else {
-      // Play new track
       await _audioService.playFile(track.path, startFrom: track.startOffset);
       setState(() {
         _currentPlaylistIndex = playlistIndex;
@@ -138,45 +112,32 @@ class _AlbumPlayState extends State<AlbumPlay> {
     final nextTrackIndex = _currentTrackIndex! + 1;
 
     if (nextTrackIndex < playlist.tracks.length) {
-      // Play next track in playlist
       _playTrack(_currentPlaylistIndex!, nextTrackIndex);
     } else if (_audioService.isLoopingPlaylist) {
-      // Start playlist over
       _playTrack(_currentPlaylistIndex!, 0);
     }
   }
 
   String _getAlbumTitle() {
     try {
-      var first = _playlists[0].tracks[0].album;
-      if (first != null && first.isNotEmpty) {
-        return first;
-      }
+      final firstTrackAlbum = _playlists[0].tracks[0].album;
+      if (firstTrackAlbum?.isNotEmpty == true) return firstTrackAlbum!;
 
-      var cueFirst = _playlists[0].name;
-      if (cueFirst != null && cueFirst.isNotEmpty) {
-        return cueFirst;
-      }
+      final playlistName = _playlists[0].name;
+      if (playlistName.isNotEmpty) return playlistName;
+
       return widget.album.name;
-    } catch (e) {
+    } catch (_) {
       return widget.album.name;
     }
   }
 
   Widget _buildLoopButton() {
-    IconData icon;
-    String tooltip;
-
-    switch (_audioService.loopMode) {
-      case LoopMode.track:
-        icon = Icons.repeat_one;
-        tooltip = 'Loop Track';
-        break;
-      case LoopMode.playlist:
-        icon = Icons.repeat;
-        tooltip = 'Loop Playlist';
-        break;
-    }
+    final (icon, tooltip) = switch (_audioService.loopMode) {
+      LoopMode.track => (Icons.repeat_one, 'Loop Track'),
+      LoopMode.playlist => (Icons.repeat, 'Loop Playlist'),
+      _ => (Icons.repeat_outlined, 'No Loop'),
+    };
 
     return IconButton(
       icon: Icon(icon, color: Colors.white),
@@ -185,19 +146,15 @@ class _AlbumPlayState extends State<AlbumPlay> {
     );
   }
 
-  // Golden ratio constant
-  static const double goldenRatio = 1.618;
-
-  Future<void> _openInExplorer(String path) async {
-    await Process.run('explorer', [path]);
-  }
-
-  // Add helper method to format duration
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$minutes:$seconds';
+  }
+
+  Future<void> _openInExplorer(String path) async {
+    await Process.run('explorer', [path]);
   }
 
   @override
@@ -207,7 +164,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
     }
     // Calculate left panel width based on screen width
     final screenWidth = MediaQuery.of(context).size.width;
-    final leftPanelWidth = screenWidth / (1 + goldenRatio);
+    final leftPanelWidth = screenWidth / (1 + _goldenRatio);
 
     return GestureDetector(
       onSecondaryTap: () => Navigator.pop(context),
@@ -371,5 +328,14 @@ class _AlbumPlayState extends State<AlbumPlay> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _positionSubscription.cancel();
+    _durationSubscription.cancel();
+    if (_isPlaying) _audioService.stop();
+    _audioService.dispose();
+    super.dispose();
   }
 }

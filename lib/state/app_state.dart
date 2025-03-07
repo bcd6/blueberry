@@ -183,6 +183,7 @@ Found album: ${album.name}
       return Track(
         path: filePath,
         title: title,
+        album: metadata.album,
         performer: metadata.artist ?? '',
         duration: metadata.duration,
       );

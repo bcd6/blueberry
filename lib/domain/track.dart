@@ -1,6 +1,7 @@
 class Track {
   final String path;
   final String title;
+  final String? album;
   final String performer;
   final Duration? duration;
   final Duration startOffset;
@@ -9,6 +10,7 @@ class Track {
   Track({
     required this.path,
     required this.title,
+    this.album = '',
     this.performer = '',
     this.duration,
     this.startOffset = Duration.zero,

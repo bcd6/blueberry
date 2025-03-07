@@ -146,6 +146,23 @@ class _AlbumPlayState extends State<AlbumPlay> {
     }
   }
 
+  String _getAlbumTitle() {
+    try {
+      var first = _playlists[0].tracks[0].album;
+      if (first != null && first.isNotEmpty) {
+        return first;
+      }
+
+      var cueFirst = _playlists[0].name;
+      if (cueFirst != null && cueFirst.isNotEmpty) {
+        return cueFirst;
+      }
+      return widget.album.name;
+    } catch (e) {
+      return widget.album.name;
+    }
+  }
+
   Widget _buildLoopButton() {
     IconData icon;
     String tooltip;
@@ -165,17 +182,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
       icon: Icon(icon, color: Colors.white),
       onPressed: _audioService.toggleLoopMode,
       tooltip: tooltip,
-    );
-  }
-
-  // Add the loop button to your control bar
-  Widget _buildControlBar() {
-    return Row(
-      children: [
-        // ...existing volume slider...
-        const SizedBox(width: 16),
-        _buildLoopButton(),
-      ],
     );
   }
 
@@ -275,7 +281,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                   children: [
                     const SizedBox(height: 32),
                     Text(
-                      widget.album.name,
+                      _getAlbumTitle(),
                       style: Theme.of(
                         context,
                       ).textTheme.headlineLarge?.copyWith(
@@ -283,6 +289,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 24),
                     Expanded(
                       child: ListView.builder(
                         itemCount: _playlists.length,
@@ -291,13 +298,12 @@ class _AlbumPlayState extends State<AlbumPlay> {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const SizedBox(height: 24),
-                              Text(
-                                playlist.name,
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(color: Colors.white54),
-                              ),
-                              const SizedBox(height: 8),
+                              // Text(
+                              //   playlist.name,
+                              //   style: Theme.of(context).textTheme.titleLarge
+                              //       ?.copyWith(color: Colors.white54),
+                              // ),
+                              //const SizedBox(height: 8),
                               ...playlist.tracks.asMap().entries.map((entry) {
                                 final trackIndex = entry.key;
                                 final track = entry.value;
@@ -350,12 +356,13 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                       () =>
                                           _playTrack(playlistIndex, trackIndex),
                                 );
-                              }).toList(),
+                              }),
                             ],
                           );
                         },
                       ),
                     ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),

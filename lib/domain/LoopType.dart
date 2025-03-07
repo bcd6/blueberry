@@ -1,0 +1,1 @@
+enum LoopType { track, playlist }

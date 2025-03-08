@@ -244,7 +244,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: Colors.blue));
     }
     // Calculate left panel width based on screen width
     final screenWidth = MediaQuery.of(context).size.width;

@@ -172,7 +172,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   List<Widget> _getAlbumTitleUI() {
     if (_playlists.length > 1) {
       return [
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         Text(
           _getAlbumTitle(),
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -183,7 +183,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
       ];
     }
     return [
-      const SizedBox(height: 24),
+      const SizedBox(height: 32),
       Text(
         _getAlbumTitle(),
         style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -268,7 +268,8 @@ class _AlbumPlayState extends State<AlbumPlay> {
                     child: GestureDetector(
                       onTap: () => _openInExplorer(widget.album.folderPath),
                       child: FittedBox(
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
                         child: Image.file(
                           File(widget.album.coverPath),
                           fit: BoxFit.cover,

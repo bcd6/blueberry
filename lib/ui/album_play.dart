@@ -169,7 +169,35 @@ class _AlbumPlayState extends State<AlbumPlay> {
     }
   }
 
+  List<Widget> _getAlbumTitleUI() {
+    if (_playlists.length > 1) {
+      return [
+        const SizedBox(height: 24),
+        Text(
+          _getAlbumTitle(),
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ];
+    }
+    return [
+      const SizedBox(height: 24),
+      Text(
+        _getAlbumTitle(),
+        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: 24),
+    ];
+  }
+
   String _getAlbumTitle() {
+    if (_playlists.length > 1) return widget.album.name;
+
     try {
       final firstTrackAlbum = _playlists[0].tracks[0].album;
       if (firstTrackAlbum?.isNotEmpty == true) return firstTrackAlbum!;
@@ -290,17 +318,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 32),
-                    Text(
-                      _getAlbumTitle(),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.headlineLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    ..._getAlbumTitleUI(),
                     Expanded(
                       child: ListView.builder(
                         itemCount: _playlists.length,
@@ -309,12 +327,20 @@ class _AlbumPlayState extends State<AlbumPlay> {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Text(
-                              //   playlist.name,
-                              //   style: Theme.of(context).textTheme.titleLarge
-                              //       ?.copyWith(color: Colors.white54),
-                              // ),
-                              // const SizedBox(height: 8),
+                              _playlists.length > 1
+                                  ? Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 24,
+                                    ),
+                                    child: Text(
+                                      playlist.name,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(color: Colors.white54),
+                                    ),
+                                  )
+                                  : const SizedBox.shrink(),
                               ...playlist.tracks.asMap().entries.map((entry) {
                                 final trackIndex = entry.key;
                                 final track = entry.value;

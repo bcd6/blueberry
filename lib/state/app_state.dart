@@ -14,7 +14,22 @@ class AppState extends ChangeNotifier {
   static const String configPath = 'D:\\~\\album';
   static const String configFileName = '~.json';
   static const String coverFileName = 'cover.jpg';
-  static const List<String> validFileTypes = ['flac', 'ape', 'tak', 'cue'];
+  static const List<String> validFileTypes = [
+    'flac',
+    'ape',
+    'mp3',
+    'm4a',
+    'aac',
+    'ogg',
+    'tak',
+    'cue',
+    'wav',
+    'aiff',
+    'alac',
+    'wma',
+    'opus',
+    'dsd',
+  ];
 
   Config? get config => _config;
   List<Album> get albums => _albums;

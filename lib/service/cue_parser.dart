@@ -49,7 +49,7 @@ class CueParser {
       final file = File(cuePath);
 
       // Define encodings to try in order
-      final encodings = [utf8, ascii, latin1, SystemEncoding()];
+      final encodings = [utf8, ascii];
 
       List<String> lines = [];
       Exception? lastError;

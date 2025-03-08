@@ -270,7 +270,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                     child: GestureDetector(
                       onTap: () => _openInExplorer(widget.album.folderPath),
                       child: FittedBox(
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                         alignment: Alignment.topCenter,
                         child: Image.file(
                           File(widget.album.coverPath),

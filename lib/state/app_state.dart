@@ -13,7 +13,7 @@ class AppState extends ChangeNotifier {
   final List<Album> _albums = [];
   static const String configPath = 'D:\\~\\album';
   static const String configFileName = '~.json';
-  static const String coverFileName = 'cover.jpg';
+  static const String coverFileName = 'folder.jpg';
   static const List<String> validFileTypes = [
     'flac',
     'ape',

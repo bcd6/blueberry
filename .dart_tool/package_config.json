@@ -8,12 +8,6 @@
       "languageVersion": "3.3"
     },
     {
-      "name": "amlv",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/amlv-1.0.2",
-      "packageUri": "lib/",
-      "languageVersion": "3.1"
-    },
-    {
       "name": "analyzer",
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-7.3.0",
       "packageUri": "lib/",
@@ -36,48 +30,6 @@
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/async-2.12.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
-    },
-    {
-      "name": "audioplayers",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers-5.2.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
-      "name": "audioplayers_android",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers_android-4.0.3",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
-      "name": "audioplayers_darwin",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers_darwin-5.0.2",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
-      "name": "audioplayers_linux",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers_linux-3.1.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
-      "name": "audioplayers_platform_interface",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers_platform_interface-6.1.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
-      "name": "audioplayers_web",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers_web-4.1.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
-    },
-    {
-      "name": "audioplayers_windows",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/audioplayers_windows-3.1.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
     },
     {
       "name": "boolean_selector",
@@ -182,12 +134,6 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "csslib",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/csslib-0.17.3",
-      "packageUri": "lib/",
-      "languageVersion": "2.19"
-    },
-    {
       "name": "cupertino_icons",
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/cupertino_icons-1.0.8",
       "packageUri": "lib/",
@@ -250,12 +196,6 @@
     {
       "name": "flutter_test",
       "rootUri": "file:///C:/Users/youqing/fvm/versions/3.29.0/packages/flutter_test",
-      "packageUri": "lib/",
-      "languageVersion": "3.7"
-    },
-    {
-      "name": "flutter_web_plugins",
-      "rootUri": "file:///C:/Users/youqing/fvm/versions/3.29.0/packages/flutter_web_plugins",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -614,12 +554,6 @@
       "languageVersion": "3.1"
     },
     {
-      "name": "srt_parser_2",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/srt_parser_2-2.0.2",
-      "packageUri": "lib/",
-      "languageVersion": "2.19"
-    },
-    {
       "name": "stack_trace",
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/stack_trace-1.12.1",
       "packageUri": "lib/",
@@ -758,7 +692,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-03-08T07:14:30.955284Z",
+  "generated": "2025-03-08T07:58:23.796778Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///C:/Users/youqing/fvm/versions/3.29.0",

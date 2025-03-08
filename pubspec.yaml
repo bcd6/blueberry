@@ -43,7 +43,9 @@ dependencies:
   media_kit_libs_audio: ^1.0.5 # Native audio dependencies.
   path: ^1.8.0
   metadata_god: ^0.5.2+1
-  amlv: ^1.0.2
+  lyrics_parser: ^1.0.0-nullsafety.0
+  simple_animations: ^5.1.0
+  scroll_to_index: ^3.0.1
 
 dev_dependencies:
   flutter_test:

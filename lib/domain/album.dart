@@ -1,5 +1,5 @@
 import 'package:blueberry/domain/track.dart';
-import 'package:blueberry/service/cue_parser.dart';
+import 'package:blueberry/feature/cue/cue_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 

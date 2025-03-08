@@ -191,7 +191,8 @@ class CueParser {
     if (state.isInTrack && state.currentStart != null) {
       state.tracks.add(
         CueTrack(
-          title: state.currentTitle,
+          title:
+              state.currentTitle.isNotEmpty ? state.currentTitle : 'No Title',
           start: state.currentStart!,
           performer:
               state.currentPerformer.isEmpty
@@ -206,6 +207,8 @@ class CueParser {
           metadata: Map.from(state.currentMetadata),
         ),
       );
+    } else {
+      debugPrint('Skipping invalid track');
     }
   }
 

@@ -229,7 +229,7 @@ class CueParser {
       );
       audioFileDuration = audioFileMetadata.duration ?? Duration.zero;
     } catch (e) {
-      debugPrint('Error getting audio metadata: $e');
+      // debugPrint('Error getting audio metadata: $e');
       final durationSeconds = await _getAudioDuration(audioFilePath);
       audioFileDuration = Duration(seconds: durationSeconds?.toInt() ?? 0);
     }

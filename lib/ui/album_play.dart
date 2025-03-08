@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/service/audio_service.dart';
+import 'package:blueberry/state/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:blueberry/ui/lyric_display.dart';
 import '../domain/album.dart';
@@ -46,7 +47,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
     _playlists = List.from(widget.album.playlists);
 
     if (widget.album.cueFiles.isNotEmpty) {
-      final cuePlaylists = await widget.album.loadCuePlaylists();
+      final cuePlaylists = await AppState.loadCuePlaylists(
+        widget.album.cueFiles,
+      );
       _playlists.addAll(cuePlaylists);
     }
 

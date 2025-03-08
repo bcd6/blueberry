@@ -58,9 +58,16 @@ class _AlbumPlayState extends State<AlbumPlay> {
           setState(() => _currentPosition = adjustedPosition);
         }
 
-        if (currentTrack.duration != Duration.zero &&
-            currentTrack.duration!.inMilliseconds - position.inMilliseconds <
+        if (currentTrack.duration! > Duration.zero &&
+            currentTrack.duration!.inMilliseconds -
+                    adjustedPosition.inMilliseconds <
                 200) {
+          debugPrint(
+            'Track completed currentTrack.duration: ${currentTrack.duration!.inMilliseconds}',
+          );
+          debugPrint(
+            'Track completed adjustedPosition: ${adjustedPosition.inMilliseconds}',
+          );
           debugPrint('Track completed');
           if (_audioService.isLoopingTrack) {
             await _audioService.seek(currentTrack.startOffset);

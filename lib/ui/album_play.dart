@@ -21,7 +21,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   final _audioService = AudioService();
   late final List<Playlist> _playlists;
-  late final StreamSubscription _currentPositionSubscription;
+  StreamSubscription? _currentPositionSubscription;
 
   int? _currentTrackIndex;
   int? _currentPlaylistIndex;
@@ -93,6 +93,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
         debugPrint('Start offset: ${track.startOffset}');
         debugPrint('Current position: ${_currentPosition.inSeconds}');
 
+        await _currentPositionSubscription?.cancel();
         _currentPositionSubscription = _audioService
             .currentTrackDurationStream(
               _audioService.positionStream,
@@ -224,6 +225,16 @@ class _AlbumPlayState extends State<AlbumPlay> {
     await Process.run('explorer', [path]);
   }
 
+  void _onPositionChanged(double value) async {
+    if (_currentTrackIndex != null && _currentPlaylistIndex != null) {
+      final track =
+          _playlists[_currentPlaylistIndex!].tracks[_currentTrackIndex!];
+      final newPosition = Duration(milliseconds: value.toInt());
+      await _audioService.seek(track.startOffset + newPosition);
+      setState(() => _currentPosition = newPosition);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -267,12 +278,14 @@ class _AlbumPlayState extends State<AlbumPlay> {
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Row(
                       children: [
+                        // Volume control
                         const Icon(
                           Icons.volume_up,
                           color: Colors.white54,
                           size: 24,
                         ),
-                        Expanded(
+                        SizedBox(
+                          width: leftPanelWidth * 0.2, // 20% of panel width
                           child: SliderTheme(
                             data: SliderTheme.of(context).copyWith(
                               activeTrackColor: Colors.white,
@@ -288,6 +301,59 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             ),
                           ),
                         ),
+
+                        // Position control
+                        ...[
+                          const SizedBox(width: 16),
+                          Text(
+                            _formatDuration(_currentPosition),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Expanded(
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: Colors.blue,
+                                inactiveTrackColor: Colors.white24,
+                                thumbColor: Colors.blue,
+                                trackHeight: 2.0,
+                              ),
+                              child: Slider(
+                                value:
+                                    _currentPosition.inMilliseconds.toDouble(),
+                                min: 0,
+                                max:
+                                    _currentPlaylistIndex != null &&
+                                            _currentTrackIndex != null
+                                        ? _playlists[_currentPlaylistIndex!]
+                                                .tracks[_currentTrackIndex!]
+                                                .duration
+                                                ?.inMilliseconds
+                                                .toDouble() ??
+                                            0
+                                        : 0,
+                                onChanged: _onPositionChanged,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            _formatDuration(
+                              _currentPlaylistIndex != null &&
+                                      _currentTrackIndex != null
+                                  ? _playlists[_currentPlaylistIndex!]
+                                          .tracks[_currentTrackIndex!]
+                                          .duration ??
+                                      Duration.zero
+                                  : Duration.zero,
+                            ),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                         const SizedBox(width: 16),
                         _buildLoopButton(),
                       ],
@@ -408,7 +474,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   @override
   void dispose() {
-    _currentPositionSubscription.cancel();
+    _currentPositionSubscription?.cancel();
     if (_isPlaying) _audioService.stop();
     _audioService.dispose();
     super.dispose();

@@ -205,7 +205,7 @@ class AppState extends ChangeNotifier {
         duration: metadata.duration,
       );
     } catch (e) {
-      debugPrint('Error reading metadata from $filePath: $e');
+      // debugPrint('Error reading metadata from $filePath: $e');
       return Track(
         path: filePath,
         title: path.basenameWithoutExtension(filePath),

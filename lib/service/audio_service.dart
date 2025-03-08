@@ -61,6 +61,15 @@ class AudioService {
   Stream<Duration> get durationStream => _player.stream.duration;
   Stream<LoopMode> get loopModeStream => _loopModeController.stream;
 
+  Stream<Duration> currentTrackDurationStream(
+    Stream<Duration> inputStream,
+    Duration startOffset,
+  ) {
+    return inputStream.map((position) {
+      return position - startOffset;
+    });
+  }
+
   Future<void> dispose() async {
     await _player.dispose();
     await _loopModeController.close();

@@ -21,8 +21,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   final _audioService = AudioService();
   late final List<Playlist> _playlists;
-  late final StreamSubscription _positionSubscription;
-  late final StreamSubscription _durationSubscription;
+  late final StreamSubscription _currentPositionSubscription;
 
   int? _currentTrackIndex;
   int? _currentPlaylistIndex;
@@ -30,8 +29,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
   bool _loading = true;
   double _volume = _defaultVolume;
   Duration _currentPosition = Duration.zero;
-  // ignore: unused_field
-  Duration _totalDuration = Duration.zero;
 
   @override
   void initState() {
@@ -42,50 +39,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   void _initializeAudio() {
     _audioService.setVolume(_volume);
-    _setupSubscriptions();
-  }
-
-  void _setupSubscriptions() {
-    _positionSubscription = _audioService.positionStream.listen((
-      position,
-    ) async {
-      if (_currentTrackIndex != null && mounted) {
-        final currentTrack =
-            _playlists[_currentPlaylistIndex!].tracks[_currentTrackIndex!];
-
-        // Adjust position relative to track start
-        final adjustedPosition = position - currentTrack.startOffset;
-        if (adjustedPosition > Duration.zero) {
-          setState(() => _currentPosition = adjustedPosition);
-        }
-
-        if (currentTrack.duration! > Duration.zero &&
-            currentTrack.duration!.inMilliseconds -
-                    adjustedPosition.inMilliseconds <
-                200) {
-          debugPrint(
-            'Track completed currentTrack.duration: ${currentTrack.duration!.inMilliseconds}',
-          );
-          debugPrint(
-            'Track completed adjustedPosition: ${adjustedPosition.inMilliseconds}',
-          );
-          debugPrint('Track completed');
-          if (_audioService.isLoopingTrack) {
-            await _audioService.seek(currentTrack.startOffset);
-            await _audioService.play();
-          }
-          if (!_audioService.isLoopingTrack && mounted) {
-            _handleTrackComplete();
-          }
-        }
-      }
-    });
-
-    _durationSubscription = _audioService.durationStream.listen((duration) {
-      if (mounted) {
-        setState(() => _totalDuration = duration);
-      }
-    });
   }
 
   Future<void> _loadPlaylists() async {
@@ -140,13 +93,44 @@ class _AlbumPlayState extends State<AlbumPlay> {
         debugPrint('Start offset: ${track.startOffset}');
         debugPrint('Current position: ${_currentPosition.inSeconds}');
 
+        _currentPositionSubscription = _audioService
+            .currentTrackDurationStream(
+              _audioService.positionStream,
+              track.startOffset,
+            )
+            .listen((position) async {
+              // Handle _currentPosition
+              if (position > Duration.zero) {
+                setState(() => _currentPosition = position);
+              }
+
+              // Handle track completion
+              if (track.duration! > Duration.zero &&
+                  track.duration!.inMilliseconds - position.inMilliseconds <
+                      200) {
+                debugPrint(
+                  'Track completed currentTrack.duration: ${track.duration!.inMilliseconds}',
+                );
+                debugPrint(
+                  'Track completed adjustedPosition: ${position.inMilliseconds}',
+                );
+                debugPrint('Track completed');
+                if (_audioService.isLoopingTrack) {
+                  await _audioService.seek(track.startOffset);
+                  await _audioService.play();
+                }
+                if (!_audioService.isLoopingTrack && mounted) {
+                  _handleTrackComplete();
+                }
+              }
+            });
+
         await _audioService.playFile(track.path, startFrom: track.startOffset);
         setState(() {
           _currentPlaylistIndex = playlistIndex;
           _currentTrackIndex = trackIndex;
           _isPlaying = true;
           _currentPosition = Duration.zero;
-          _totalDuration = track.duration ?? Duration.zero;
         });
         debugPrint('New track started successfully');
       }
@@ -424,8 +408,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   @override
   void dispose() {
-    _positionSubscription.cancel();
-    _durationSubscription.cancel();
+    _currentPositionSubscription.cancel();
     if (_isPlaying) _audioService.stop();
     _audioService.dispose();
     super.dispose();

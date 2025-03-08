@@ -5,13 +5,15 @@ class Album {
   final String name;
   final String coverPath;
   final List<Playlist> playlists;
-  final List<String> cueFiles; // Store CUE file paths instead of parsed data
+  final List<String> regularFiles;
+  final List<String> cueFiles;
 
   Album({
     required this.folderPath,
     required this.name,
     required this.coverPath,
-    required this.playlists,
+    this.playlists = const [],
+    this.regularFiles = const [],
     this.cueFiles = const [],
   });
 }

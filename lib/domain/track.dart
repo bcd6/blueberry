@@ -2,7 +2,7 @@ class Track {
   final String path;
   final String title;
   final String? album;
-  final String performer;
+  final String? performer;
   final Duration? duration;
   final Duration startOffset;
   final Map<String, String> metadata;

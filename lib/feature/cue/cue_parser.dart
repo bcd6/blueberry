@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:blueberry/state/app_state.dart';
 import 'package:flutter/foundation.dart';
-import 'package:metadata_god/metadata_god.dart';
 import 'package:path/path.dart' as path;
 
 class CueTrack {
@@ -220,19 +220,9 @@ class CueParser {
     if (tracks.isEmpty) return;
 
     // Get audio file path from CUE directory
-    Duration audioFileDuration = Duration.zero;
     final cueDir = path.dirname(cuePath);
     final audioFilePath = path.join(cueDir, state.audioFile ?? '');
-    try {
-      final audioFileMetadata = await MetadataGod.readMetadata(
-        file: audioFilePath,
-      );
-      audioFileDuration = audioFileMetadata.duration ?? Duration.zero;
-    } catch (e) {
-      // debugPrint('Error getting audio metadata: $e');
-      final durationSeconds = await _getAudioDuration(audioFilePath);
-      audioFileDuration = Duration(seconds: durationSeconds?.toInt() ?? 0);
-    }
+    final audioFileDuration = await AppState.getAudioDuration(audioFilePath);
 
     tracks.sort((a, b) => a.index.compareTo(b.index));
 
@@ -302,26 +292,6 @@ class CueParser {
     return '${(d.inMinutes).toString().padLeft(2, '0')}:'
         '${(d.inSeconds % 60).toString().padLeft(2, '0')}.'
         '${((d.inMilliseconds % 1000) / 10).round().toString().padLeft(2, '0')}';
-  }
-
-  static Future<double?> _getAudioDuration(String filePath) async {
-    try {
-      ProcessResult result = await Process.run('ffprobe', [
-        '-i',
-        filePath,
-        '-show_entries',
-        'format=duration',
-        '-v',
-        'quiet',
-        '-of',
-        'csv=p=0',
-      ]);
-
-      return double.tryParse(result.stdout.trim());
-    } catch (e) {
-      debugPrint('Error getting duration: $e');
-      return null;
-    }
   }
 }
 

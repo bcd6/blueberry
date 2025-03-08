@@ -67,6 +67,18 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  static Future<Playlist?> loadRegularPlaylist(
+    List<String> regularFiles,
+  ) async {
+    // Create regular tracks playlist with metadata
+    final regularTracks = await Future.wait(
+      regularFiles.map((f) => _createTrackFromFile(f)),
+    );
+    return regularTracks.isNotEmpty
+        ? Playlist(name: '', tracks: regularTracks)
+        : null;
+  }
+
   static Future<List<Playlist>> loadCuePlaylists(List<String> cueFiles) async {
     final List<Playlist> cuePlaylists = [];
 
@@ -166,24 +178,13 @@ class AppState extends ChangeNotifier {
               !f.toLowerCase().endsWith('.cue') && !cueMatchFiles.contains(f),
         );
 
-        // Create regular tracks playlist with metadata
-        final regularTracks = await Future.wait(
-          audioFiles.map((f) => _createTrackFromFile(f)),
-        );
-
-        // Only create playlist if there are regular tracks
-        final playlists = <Playlist>[];
-        if (regularTracks.isNotEmpty) {
-          playlists.add(Playlist(name: '', tracks: regularTracks));
-        }
-
         // Create album if there are any tracks or CUE files
-        if (regularTracks.isNotEmpty || cueFiles.isNotEmpty) {
+        if (audioFiles.isNotEmpty || cueFiles.isNotEmpty) {
           final album = Album(
             folderPath: dir.path,
             name: dir.path.split('\\').last,
             coverPath: coverFile.path,
-            playlists: playlists,
+            regularFiles: audioFiles.toList(),
             cueFiles: cueFiles,
           );
           _albums.add(album);
@@ -237,27 +238,50 @@ class AppState extends ChangeNotifier {
     return validFileTypes.any((type) => extension.endsWith(type));
   }
 
-  Future<Track> _createTrackFromFile(String filePath) async {
+  static Future<Track> _createTrackFromFile(String filePath) async {
+    String title = path.basenameWithoutExtension(filePath);
+    String? album;
+    String? performer;
     try {
       final metadata = await MetadataGod.readMetadata(file: filePath);
-      final title =
-          metadata.title?.isNotEmpty == true
-              ? metadata.title!
-              : path.basenameWithoutExtension(filePath);
+      title = metadata.title?.isNotEmpty == true ? metadata.title! : title;
+      album = metadata.album;
+      performer = metadata.artist ?? '';
+    } catch (e) {
+      debugPrint('Error reading metadata from $filePath: $e');
+    }
 
-      return Track(
-        path: filePath,
-        title: title,
-        album: metadata.album,
-        performer: metadata.artist ?? '',
-        duration: metadata.duration,
+    final duration = await getAudioDuration(filePath);
+
+    return Track(
+      path: filePath,
+      title: title,
+      album: album,
+      performer: performer,
+      duration: duration,
+    );
+  }
+
+  static Future<Duration> getAudioDuration(String filePath) async {
+    try {
+      ProcessResult result = await Process.run('ffprobe', [
+        '-i',
+        filePath,
+        '-show_entries',
+        'format=duration',
+        '-v',
+        'quiet',
+        '-of',
+        'csv=p=0',
+      ]);
+      // debugPrint('Duration result: ${result.stdout}');
+
+      return Duration(
+        seconds: double.tryParse(result.stdout.trim())?.toInt() ?? 0,
       );
     } catch (e) {
-      // debugPrint('Error reading metadata from $filePath: $e');
-      return Track(
-        path: filePath,
-        title: path.basenameWithoutExtension(filePath),
-      );
+      debugPrint('Error getting duration: $e');
+      return Duration.zero;
     }
   }
 

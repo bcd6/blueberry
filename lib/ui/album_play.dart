@@ -4,6 +4,7 @@ import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:blueberry/ui/lyric_display.dart';
 import '../domain/album.dart';
 
 class AlbumPlay extends StatefulWidget {
@@ -308,7 +309,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                       ],
                     ),
                   ),
-                  const Spacer(), // Push the custom buttons to bottom
+                  const LyricDisplay(),
                 ],
               ),
             ),

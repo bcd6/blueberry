@@ -126,7 +126,7 @@ class AppState extends ChangeNotifier {
         // Only create playlist if there are regular tracks
         final playlists = <Playlist>[];
         if (regularTracks.isNotEmpty) {
-          playlists.add(Playlist(name: 'Files', tracks: regularTracks));
+          playlists.add(Playlist(name: '', tracks: regularTracks));
         }
 
         // Create album if there are any tracks or CUE files

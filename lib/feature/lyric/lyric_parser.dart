@@ -30,10 +30,10 @@ class LyricParser {
           final timestamp = _parseTimestamp(match);
           final text = match.group(7)?.trim() ?? '';
 
-          if (text.isNotEmpty || parts.isEmpty) {
-            parts.add(LyricPart(text, timestamp));
-            debugPrint('Part: "$text" @ ${_formatDuration(timestamp)}');
-          }
+          parts.add(LyricPart(text.isEmpty ? '♪' : text, timestamp));
+          debugPrint(
+            'Part: "${text.isEmpty ? '♪' : text}" @ ${_formatDuration(timestamp)}',
+          );
         }
 
         if (parts.isNotEmpty) {
@@ -65,7 +65,7 @@ class LyricParser {
     // Add empty line at start if needed
     if (allLines.isEmpty || allLines[0].startTime > Duration.zero) {
       debugPrint('Adding empty line at start');
-      allLines.insert(0, LyricLine([LyricPart('', Duration.zero)]));
+      allLines.insert(0, LyricLine([LyricPart('♪', Duration.zero)]));
     }
 
     return allLines;

@@ -8,136 +8,135 @@ import 'package:flutter/foundation.dart';
 // 3. line with chacater in betwen [00:00.00]藤[00:00.91]宫[00:01.83]ゆ[00:02.75]き [00:03.66]- [00:04.58]Words [00:05.50]Are[00:06.41]
 // 4. line with chacater in betwen, and bracket [03:57.44] <03:57.44> 信じた <03:58.23>   <03:59.37> (光と影の中)
 class LyricParser {
-  static final _characterTimeTagRegex = RegExp(
-    r'(.*?)\[(\d{2}):(\d{2})\.(\d{2})\]',
-  );
-  static final _lineTimeTagRegex = RegExp(
-    r'^\[(\d{2}):(\d{2})\.(\d{2,3})\](.+)$',
-  );
-  static final _bracketTimeTagRegex = RegExp(
-    r'<(\d{2}):(\d{2})\.(\d{2})>\s*([^<]*)',
+  // Regex patterns for different formats
+  static final _squareBracketRegex = RegExp(r'\[(\d{2}):(\d{2})\.(\d{2,3})\]');
+  static final _angleBracketRegex = RegExp(r'<(\d{2}):(\d{2})\.(\d{2,3})>');
+  static final _characterTimeRegex = RegExp(
+    r'([^\[\]<>]*?)(?:\[(\d{2}):(\d{2})\.(\d{2,3})\]|<(\d{2}):(\d{2})\.(\d{2,3})>)',
   );
 
   static List<LyricLine> parse(String content) {
     debugPrint('\n=== Parsing Lyrics ===');
-    final lines = content.split('\n').where((line) => line.trim().isNotEmpty);
-    final result =
-        lines.map(_parseLine).where((line) => line.parts.isNotEmpty).toList();
+    final allLines = <LyricLine>[];
 
-    // Sort lines by start time
-    result.sort((a, b) => a.startTime.compareTo(b.startTime));
+    for (final line in content.split('\n')) {
+      final trimmedLine = line.trim();
+      if (trimmedLine.isEmpty) continue;
+
+      // Check if it's a character-timed line
+      if (_isCharacterTimedLine(trimmedLine)) {
+        final parts = _parseCharacterTimedLine(trimmedLine);
+        if (parts.isNotEmpty) {
+          allLines.add(LyricLine(parts));
+          continue;
+        }
+      }
+
+      // Try parsing as multi-timestamp line
+      final timestamps = _squareBracketRegex.allMatches(trimmedLine);
+      if (timestamps.length > 1) {
+        final text = trimmedLine.replaceAll(_squareBracketRegex, '').trim();
+        for (final match in timestamps) {
+          final timestamp = _parseTimestamp(
+            match.group(1)!,
+            match.group(2)!,
+            match.group(3)!,
+          );
+          allLines.add(LyricLine([LyricPart(text, timestamp)]));
+        }
+        continue;
+      }
+
+      // Try single timestamp line
+      final firstTimestamp = _squareBracketRegex.firstMatch(trimmedLine);
+      if (firstTimestamp != null) {
+        final text = trimmedLine.replaceAll(_squareBracketRegex, '').trim();
+        final timestamp = _parseTimestamp(
+          firstTimestamp.group(1)!,
+          firstTimestamp.group(2)!,
+          firstTimestamp.group(3)!,
+        );
+        allLines.add(LyricLine([LyricPart(text, timestamp)]));
+        continue;
+      }
+
+      // Treat as plain text if no timestamps found
+      allLines.add(LyricLine([LyricPart(trimmedLine, Duration.zero)]));
+    }
+
+    // Sort all lines by timestamp
+    allLines.sort((a, b) => a.startTime.compareTo(b.startTime));
 
     // Add empty line at start if needed
-    if (result.isNotEmpty || result[0].fullText.isEmpty) {
-      result[0] = LyricLine([LyricPart('~', Duration.zero)]);
-    }
-    if (result.isEmpty || result[0].startTime > Duration.zero) {
-      debugPrint('Adding empty line at start');
-      result.insert(0, LyricLine([LyricPart('~', Duration.zero)]));
+    if (allLines.isEmpty || allLines[0].startTime > Duration.zero) {
+      allLines.insert(0, LyricLine([LyricPart('', Duration.zero)]));
     }
 
-    debugPrint('Parsed ${result.length} lines');
-    return result;
+    return allLines;
   }
 
-  static LyricLine _parseLine(String line) {
-    debugPrint('\nParsing line: "$line"');
+  static bool _isCharacterTimedLine(String line) {
+    final parts = line.split(RegExp(r'(?:\[|\<)'));
+    if (parts.length <= 1) return false;
 
-    // Try bracket format first (newer format)
-    if (line.contains('<')) {
-      return _parseBracketLine(line);
-    }
+    // Check if most parts have timestamps
+    final withTimestamp =
+        parts
+            .where(
+              (p) =>
+                  p.contains(RegExp(r'\d{2}:\d{2}\.\d{2,3}\]')) ||
+                  p.contains(RegExp(r'\d{2}:\d{2}\.\d{2,3}\>')),
+            )
+            .length;
+    return withTimestamp > parts.length / 2;
+  }
 
-    // Try full line parsing
-    final lineMatch = _lineTimeTagRegex.firstMatch(line);
-    if (lineMatch != null) {
-      final minutes = int.parse(lineMatch.group(1)!);
-      final seconds = int.parse(lineMatch.group(2)!);
-      final millisStr = lineMatch.group(3)!;
-      final text = lineMatch.group(4)!.trim();
-
-      // Handle both 2 and 3 decimal places
-      final millis =
-          millisStr.length == 2
-              ? int.parse(millisStr) * 10
-              : int.parse(millisStr);
-
-      final timestamp = Duration(
-        minutes: minutes,
-        seconds: seconds,
-        milliseconds: millis,
-      );
-
-      debugPrint('Line: "$text" @ ${_formatDuration(timestamp)}');
-      return LyricLine([LyricPart(text, timestamp)]);
-    }
-
-    // Character-by-character parsing
+  static List<LyricPart> _parseCharacterTimedLine(String line) {
     final parts = <LyricPart>[];
-    var remainingLine = line;
-    var match = _characterTimeTagRegex.firstMatch(remainingLine);
+    var match = _characterTimeRegex.firstMatch(line);
+    var position = 0;
 
     while (match != null) {
-      final char = match.group(1)!;
-      final minutes = int.parse(match.group(2)!);
-      final seconds = int.parse(match.group(3)!);
-      final centiseconds = int.parse(match.group(4)!);
-
-      final timestamp = Duration(
-        minutes: minutes,
-        seconds: seconds,
-        milliseconds: centiseconds * 10,
+      final text = match.group(1)?.trim() ?? '';
+      final timestamp = _parseTimestamp(
+        match.group(2) ?? match.group(5)!,
+        match.group(3) ?? match.group(6)!,
+        match.group(4) ?? match.group(7)!,
       );
-
-      if (char.isNotEmpty) {
-        parts.add(LyricPart(char, timestamp));
-        debugPrint('Char: "$char" @ ${_formatDuration(timestamp)}');
-      }
-
-      // Update remaining line
-      remainingLine = remainingLine.substring(match.end);
-      match = _characterTimeTagRegex.firstMatch(remainingLine);
-    }
-
-    // Add any remaining text
-    if (remainingLine.isNotEmpty && parts.isNotEmpty) {
-      parts.add(LyricPart(remainingLine.trim(), parts.last.timestamp));
-      debugPrint(
-        'Remaining: "${remainingLine.trim()}" @ ${_formatDuration(parts.last.timestamp)}',
-      );
-    }
-
-    return LyricLine(parts);
-  }
-
-  static LyricLine _parseBracketLine(String line) {
-    final parts = <LyricPart>[];
-    final matches = _bracketTimeTagRegex.allMatches(line);
-
-    for (final match in matches) {
-      final minutes = int.parse(match.group(1)!);
-      final seconds = int.parse(match.group(2)!);
-      final centiseconds = int.parse(match.group(3)!);
-      final text = match.group(4)!;
 
       if (text.isNotEmpty) {
-        final timestamp = Duration(
-          minutes: minutes,
-          seconds: seconds,
-          milliseconds: centiseconds * 10,
-        );
-
-        parts.add(LyricPart(text.trim(), timestamp));
-        debugPrint(
-          'Bracket part: "${text.trim()}" @ ${_formatDuration(timestamp)}',
-        );
+        parts.add(LyricPart(text, timestamp));
       }
+
+      position = match.end;
+      line = line.substring(position);
+      match = _characterTimeRegex.firstMatch(line);
     }
 
-    // Sort parts by timestamp
-    parts.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    // Add remaining text if any
+    final remaining = line.trim();
+    if (remaining.isNotEmpty && parts.isNotEmpty) {
+      parts.add(LyricPart(remaining, parts.last.timestamp));
+    }
 
-    return LyricLine(parts);
+    return parts;
+  }
+
+  static Duration _parseTimestamp(
+    String minutes,
+    String seconds,
+    String millisStr,
+  ) {
+    final millis =
+        millisStr.length == 2
+            ? int.parse(millisStr) * 10
+            : int.parse(millisStr);
+
+    return Duration(
+      minutes: int.parse(minutes),
+      seconds: int.parse(seconds),
+      milliseconds: millis,
+    );
   }
 
   static String _formatDuration(Duration d) {

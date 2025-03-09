@@ -35,6 +35,9 @@ class LyricLoader {
         return remoteLyric;
       }
 
+      // Create empty LRC file if search failed
+      debugPrint('Creating empty LRC file as placeholder');
+      await _createEmptyLrcFile(trackPath, trackTitle, album, performer);
       return null;
     } catch (e) {
       debugPrint('Error in lyric loader: $e');
@@ -116,7 +119,7 @@ class LyricLoader {
             debugPrint('Successfully fetched lyrics');
             return json['lyrics'] as String;
           } else {
-            debugPrint('Python script error: ${json['error']}');
+            debugPrint('Python script error: ${json.toString()}');
           }
         } catch (e) {
           debugPrint('Error parsing Python output: $e');
@@ -176,6 +179,34 @@ class LyricLoader {
       debugPrint('Lyrics saved successfully');
     } catch (e) {
       debugPrint('Error saving lyrics: $e');
+    }
+  }
+
+  static Future<void> _createEmptyLrcFile(
+    String trackPath,
+    String title,
+    String? album,
+    String? performer,
+  ) async {
+    try {
+      final directory = path.dirname(trackPath);
+      final lyricPath = path.join(directory, '$title.lrc');
+
+      final content = '''[ti:$title]
+[ar:${performer ?? 'Unknown'}]
+[al:${album ?? 'Unknown'}]
+[by:Blueberry]
+[re:LyricLoader]
+[ve:1.0]
+
+''';
+
+      debugPrint('Creating empty LRC at: $lyricPath');
+      final file = File(lyricPath);
+      await file.writeAsString(content, encoding: utf8);
+      debugPrint('Empty LRC file created successfully');
+    } catch (e) {
+      debugPrint('Error creating empty LRC file: $e');
     }
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:blueberry/domain/track.dart';
 import 'package:blueberry/feature/lyric/helper.dart';
 import 'package:blueberry/feature/lyric/models/lyric.dart';
@@ -69,15 +71,16 @@ class LyricViewer extends StatefulWidget {
   });
 
   @override
-  State<LyricViewer> createState() => LyricViewerState();
+  State<LyricViewer> createState() => _LyricViewerState();
 }
 
-class LyricViewerState extends State<LyricViewer> {
+class _LyricViewerState extends State<LyricViewer> {
   int _currentLyricLine = 0;
   bool isPlaying = false;
   int timeProgress = 0;
   int audioDuration = 0;
   Lyric? _lyric;
+  StreamSubscription? _currentPositionSubscription;
 
   final AutoScrollController _controller = AutoScrollController();
   final LrcLyricParser _lrcLyricParser = LrcLyricParser();
@@ -103,61 +106,47 @@ class LyricViewerState extends State<LyricViewer> {
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   void initState() {
     super.initState();
     _loadLyricFile();
-
-    widget.currentPositionStream.listen((duration) {
-      audioDuration = duration.inSeconds;
-    });
-    widget.currentPositionStream.listen((time) {
-      setState(() {
-        timeProgress = time.inSeconds;
-      });
-      if (isPlaying) {
-        int i = _lyric!.lines.indexWhere((li) => li.time > time);
-        if (i > 0) {
-          i--;
-        }
-        if (i != _currentLyricLine && i < _lyric!.lines.length) {
-          _jumpToLine(i, "listener", play: false, d: time);
-        }
-      }
-    });
-
-    super.initState();
+    _setupDurationStream();
   }
 
-  void reloadLyrics() {
-    _loadLyricFile();
-    _currentLyricLine = 0;
+  @override
+  void didUpdateWidget(covariant LyricViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.track != oldWidget.track) {
+      _loadLyricFile();
+      _setupDurationStream();
+    }
+  }
+
+  @override
+  void dispose() {
+    _currentPositionSubscription?.cancel();
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLyricFile() async {
     setState(() => _lyric = null); // Clear current lyrics
 
     try {
-      final trackPath = widget.track.path;
-      final directory = path.dirname(trackPath);
-      final filename = path.basenameWithoutExtension(trackPath);
+      final directory = path.dirname(widget.track.path);
+      final filename = path.basenameWithoutExtension(widget.track.title);
 
-      debugPrint('Looking for lyrics: $filename');
+      debugPrint('Looking for lyrics directory: $directory');
+      debugPrint('Looking for lyrics filename: $filename');
 
       // Try common lyric file extensions
-      for (final ext in ['.lrc', '.txt']) {
+      for (final ext in ['.lcr']) {
         final lyricPath = path.join(directory, '$filename$ext');
         final lyricFile = File(lyricPath);
-
         if (await lyricFile.exists()) {
           debugPrint('Found lyric file: $lyricPath');
           final result = await _lrcLyricParser.parse(lyricFile);
-          setState(() async {
+          debugPrint('Parsed lyric file: $result');
+          setState(() {
             _lyric = result;
           });
           return;
@@ -170,12 +159,33 @@ class LyricViewerState extends State<LyricViewer> {
     }
   }
 
+  Future<void> _setupDurationStream() async {
+    await _currentPositionSubscription?.cancel();
+    _currentPositionSubscription = widget.currentPositionStream.listen((
+      duration,
+    ) {
+      audioDuration = duration.inSeconds;
+      setState(() {
+        timeProgress = duration.inSeconds;
+      });
+      if (isPlaying) {
+        int i = _lyric!.lines.indexWhere((li) => li.time > duration);
+        if (i > 0) {
+          i--;
+        }
+        if (i != _currentLyricLine && i < _lyric!.lines.length) {
+          _jumpToLine(i, "listener", play: false, d: duration);
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_lyric == null) {
-      return const Center(
+      return Center(
         child: Text(
-          'No lyrics available',
+          widget.track.title,
           style: TextStyle(color: Colors.white54),
         ),
       );

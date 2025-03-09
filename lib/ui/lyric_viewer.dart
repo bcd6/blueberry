@@ -156,7 +156,7 @@ class _LyricViewerState extends State<LyricViewer> {
         line.fullText,
         style: TextStyle(
           color: Colors.white.withValues(alpha: 0.5),
-          fontSize: 16,
+          fontSize: 18,
         ),
       );
     }
@@ -172,7 +172,7 @@ class _LyricViewerState extends State<LyricViewer> {
                     isActive
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.5),
-                fontSize: 18,
+                fontSize: 24,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               ),
             );

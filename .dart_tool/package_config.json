@@ -302,8 +302,8 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "lyrics_parser",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/lyrics_parser-1.0.0-nullsafety.0",
+      "name": "lrc",
+      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/lrc-1.0.2",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -500,12 +500,6 @@
       "languageVersion": "2.16"
     },
     {
-      "name": "scroll_to_index",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/scroll_to_index-3.0.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
-    },
-    {
       "name": "shelf",
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/shelf-1.4.2",
       "packageUri": "lib/",
@@ -522,12 +516,6 @@
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/shelf_web_socket-1.0.4",
       "packageUri": "lib/",
       "languageVersion": "2.17"
-    },
-    {
-      "name": "simple_animations",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/simple_animations-5.1.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
     },
     {
       "name": "sky_engine",
@@ -692,7 +680,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-03-08T07:58:23.796778Z",
+  "generated": "2025-03-09T06:55:15.420331Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///C:/Users/youqing/fvm/versions/3.29.0",

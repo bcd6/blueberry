@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/domain/track.dart';
-import 'package:blueberry/feature/lyric/ui/lyric_viewer.dart';
+import 'package:blueberry/ui/lyric_viewer.dart';
 import 'package:blueberry/service/audio_service.dart';
 import 'package:blueberry/state/app_state.dart';
 import 'package:flutter/material.dart';

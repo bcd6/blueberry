@@ -34,6 +34,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
   double _volume = _defaultVolume;
   Duration _currentPosition = Duration.zero;
 
+  // Add this field to manage lyric key
+  final _lyricKey = GlobalKey<LyricViewerState>();
+
   @override
   void initState() {
     super.initState();
@@ -144,6 +147,10 @@ class _AlbumPlayState extends State<AlbumPlay> {
           _isPlaying = true;
           _currentPosition = Duration.zero;
         });
+
+        // Force lyric viewer to reload
+        _lyricKey.currentState?.reloadLyrics();
+
         debugPrint('New track started successfully');
       }
     } catch (e) {
@@ -170,6 +177,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
     if (_currentTrack == null) return const SizedBox.shrink();
 
     return LyricViewer(
+      key: _lyricKey,
       track: _currentTrack!,
       currentPositionStream: _currentPositionStream!,
     );

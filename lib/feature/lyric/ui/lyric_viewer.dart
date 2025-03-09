@@ -7,7 +7,6 @@ import 'package:blueberry/feature/lyric/ui/widgets/fluid_background.dart';
 import 'package:blueberry/feature/lyric/ui/widgets/lines_builder.dart';
 import 'package:blueberry/feature/lyric/ui/widgets/title.dart';
 import 'package:flutter/material.dart';
-import 'package:lyrics_parser/lyrics_parser.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;
@@ -70,10 +69,10 @@ class LyricViewer extends StatefulWidget {
   });
 
   @override
-  State<LyricViewer> createState() => _LyricViewerState();
+  State<LyricViewer> createState() => LyricViewerState();
 }
 
-class _LyricViewerState extends State<LyricViewer> {
+class LyricViewerState extends State<LyricViewer> {
   int _currentLyricLine = 0;
   bool isPlaying = false;
   int timeProgress = 0;
@@ -82,10 +81,6 @@ class _LyricViewerState extends State<LyricViewer> {
 
   final AutoScrollController _controller = AutoScrollController();
   final LrcLyricParser _lrcLyricParser = LrcLyricParser();
-
-  _playAudio() {
-    _currentLyricLine = 0;
-  }
 
   _jumpToLine(int index, String caller, {bool play = true, Duration? d}) {
     List<LyricLine> lines = _lyric!.lines;
@@ -117,8 +112,6 @@ class _LyricViewerState extends State<LyricViewer> {
   void initState() {
     super.initState();
     _loadLyricFile();
-    cleanSwipeInterface();
-    _playAudio();
 
     widget.currentPositionStream.listen((duration) {
       audioDuration = duration.inSeconds;
@@ -141,11 +134,20 @@ class _LyricViewerState extends State<LyricViewer> {
     super.initState();
   }
 
+  void reloadLyrics() {
+    _loadLyricFile();
+    _currentLyricLine = 0;
+  }
+
   Future<void> _loadLyricFile() async {
+    setState(() => _lyric = null); // Clear current lyrics
+
     try {
       final trackPath = widget.track.path;
       final directory = path.dirname(trackPath);
       final filename = path.basenameWithoutExtension(trackPath);
+
+      debugPrint('Looking for lyrics: $filename');
 
       // Try common lyric file extensions
       for (final ext in ['.lrc', '.txt']) {

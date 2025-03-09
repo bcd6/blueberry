@@ -1,19 +1,6 @@
-import 'dart:io';
-
 import 'package:blueberry/feature/lyric/models/lyric_line.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
-
-/// Removes the swipe part of the screen on android devices
-Future cleanSwipeInterface() async {
-  if (Platform.isAndroid) {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent),
-    );
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  }
-}
 
 /// Converts [seconds] to human readable time in mm:ss
 String getTimeString(int seconds) {

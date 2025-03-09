@@ -154,26 +154,37 @@ class _LyricViewerState extends State<LyricViewer> {
     if (!isCurrent) {
       return Text(
         line.fullText,
-        style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.5),
-          fontSize: 18,
-        ),
+        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18),
       );
     }
 
     return Wrap(
+      spacing: 4, // Base spacing between characters
       children:
           line.parts.map((part) {
             final isActive = line.parts.indexOf(part) <= _currentPartIndex;
+            final nextPart =
+                line.parts.length > line.parts.indexOf(part) + 1
+                    ? line.parts[line.parts.indexOf(part) + 1]
+                    : null;
+
+            // Calculate time gap between this part and next part
+            final timeGap =
+                nextPart != null
+                    ? nextPart.timestamp.inMilliseconds -
+                        part.timestamp.inMilliseconds
+                    : 0;
+
+            // Add extra spacing based on time gap
+            final extraSpacing = timeGap > 500 ? ' ' : '';
+
             return Text(
-              part.text,
+              part.text + extraSpacing,
               style: TextStyle(
-                color:
-                    isActive
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.5),
+                color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
                 fontSize: 24,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                letterSpacing: 1.0, // Base letter spacing
               ),
             );
           }).toList(),

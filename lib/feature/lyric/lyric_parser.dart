@@ -12,6 +12,7 @@ class LyricParser {
   static final _timeTagRegex = RegExp(
     r'(?:\[(\d{2}):(\d{2})\.(\d{2,3})\]|\<(\d{2}):(\d{2})\.(\d{2,3})\>)\s*([^\[<]*)',
   );
+  static const emptyPartText = '♪';
 
   static List<LyricLine> parse(String content) {
     debugPrint('\n=== Parsing Lyrics ===');
@@ -30,10 +31,27 @@ class LyricParser {
           final timestamp = _parseTimestamp(match);
           final text = match.group(7)?.trim() ?? '';
 
-          parts.add(LyricPart(text.isEmpty ? '♪' : text, timestamp));
+          parts.add(LyricPart(text.isEmpty ? emptyPartText : text, timestamp));
           debugPrint(
-            'Part: "${text.isEmpty ? '♪' : text}" @ ${_formatDuration(timestamp)}',
+            'Part: "${text.isEmpty ? emptyPartText : text}" @ ${_formatDuration(timestamp)}',
           );
+        }
+
+        // if part.text is empty, replace it by the next not empty part.text
+        for (var i = 0; i < parts.length; i++) {
+          if (parts[i].text == emptyPartText) {
+            for (var j = i + 1; j < parts.length; j++) {
+              if (parts[j].text != emptyPartText) {
+                parts[i] = LyricPart(parts[j].text, parts[i].timestamp);
+                break;
+              }
+            }
+          }
+        }
+
+        // if part.text is empty, and it is the last part, and not the only part, remove it
+        if (parts.last.text == emptyPartText && parts.length > 1) {
+          parts.removeLast();
         }
 
         if (parts.isNotEmpty) {
@@ -65,7 +83,7 @@ class LyricParser {
     // Add empty line at start if needed
     if (allLines.isEmpty || allLines[0].startTime > Duration.zero) {
       debugPrint('Adding empty line at start');
-      allLines.insert(0, LyricLine([LyricPart('♪', Duration.zero)]));
+      allLines.insert(0, LyricLine([LyricPart(emptyPartText, Duration.zero)]));
     }
 
     return allLines;

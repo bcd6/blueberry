@@ -5,7 +5,7 @@ from syncedlyrics import search
 def fetch_lyrics(title, artist=None):
     try:
         query = f"{title} {artist}" if artist else title
-        lyrics = search(query)
+        lyrics = search(query, synced_only=True, enhanced=True)
         if lyrics:
             print(json.dumps({
                 "success": True,

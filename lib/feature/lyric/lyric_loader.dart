@@ -10,6 +10,7 @@ class LyricLoader {
     String trackPath,
     String trackTitle,
     String? album,
+    String? performer,
   ) async {
     try {
       debugPrint('\n=== Looking for Lyrics ===');
@@ -23,7 +24,11 @@ class LyricLoader {
       }
 
       // If local file not found, try remote API
-      final remoteLyric = await _searchRemoteLyric(trackTitle, album);
+      final remoteLyric = await _searchRemoteLyric(
+        trackTitle,
+        album,
+        performer,
+      );
       if (remoteLyric != null) {
         // Save remote lyric to local file
         await _saveLyricToLocal(trackPath, trackTitle, remoteLyric);
@@ -77,11 +82,16 @@ class LyricLoader {
     return null;
   }
 
-  static Future<String?> _searchRemoteLyric(String title, String? album) async {
+  static Future<String?> _searchRemoteLyric(
+    String title,
+    String? album,
+    String? performer,
+  ) async {
     try {
       debugPrint('\n=== Searching Lyrics using Python ===');
       debugPrint('Title: $title');
       debugPrint('Album: $album');
+      debugPrint('Performer: $performer');
 
       final scriptPath = path.join(Directory.current.path, _pythonScript);
 
@@ -95,7 +105,7 @@ class LyricLoader {
       final result = await Process.run('python', [
         scriptPath,
         title,
-        if (album != null) album,
+        if (performer != null) performer,
       ]);
 
       if (result.exitCode == 0) {

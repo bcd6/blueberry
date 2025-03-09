@@ -100,11 +100,12 @@ class _LyricViewerState extends State<LyricViewer> {
 
     await _currentPositionSubscription?.cancel();
 
-    if (_lyrics == null) {
-      return;
-    }
     _currentPositionSubscription = widget.currentPositionStream.listen(
       (position) {
+        if (_lyrics == null) {
+          // debugPrint('Position update ignored - no lyrics loaded');
+          return;
+        }
         _updateCurrentPosition(position);
       },
       onError: (error) {
@@ -134,7 +135,7 @@ class _LyricViewerState extends State<LyricViewer> {
         for (var j = line.parts.length - 1; j >= 0; j--) {
           if (line.parts[j].timestamp.inMilliseconds <= ms) {
             if (_currentIndex != i || _currentPartIndex != j) {
-              debugPrint('Updating to line $i, part $j: ${line.parts[j].text}');
+              // debugPrint('Updating to line $i, part $j: ${line.parts[j].text}');
               setState(() {
                 _currentIndex = i;
                 _currentPartIndex = j;
@@ -176,12 +177,7 @@ class _LyricViewerState extends State<LyricViewer> {
   @override
   Widget build(BuildContext context) {
     if (_lyrics == null || _lyrics!.isEmpty) {
-      return Center(
-        child: Text(
-          widget.track.title,
-          style: const TextStyle(color: Colors.white54),
-        ),
-      );
+      return Container();
     }
 
     final displayLines = <Widget>[];
@@ -200,23 +196,17 @@ class _LyricViewerState extends State<LyricViewer> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.track.title,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
           ...displayLines.map(
-            (widget) => Padding(
+            (widget) => Container(
+              width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 8),
+              alignment: Alignment.centerLeft,
               child: widget,
             ),
           ),

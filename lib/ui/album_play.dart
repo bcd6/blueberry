@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
+import 'package:blueberry/domain/track.dart';
+import 'package:blueberry/feature/lyric/ui/lyric_viewer.dart';
 import 'package:blueberry/service/audio_service.dart';
 import 'package:blueberry/state/app_state.dart';
 import 'package:flutter/material.dart';
-import 'package:blueberry/ui/lyric_display.dart';
 import '../domain/album.dart';
 
 class AlbumPlay extends StatefulWidget {
@@ -22,10 +23,12 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   final _audioService = AudioService();
   late final List<Playlist> _playlists;
+  Stream<Duration>? _currentPositionStream;
   StreamSubscription? _currentPositionSubscription;
 
   int? _currentTrackIndex;
   int? _currentPlaylistIndex;
+  Track? _currentTrack;
   bool _isPlaying = false;
   bool _loading = true;
   double _volume = _defaultVolume;
@@ -99,43 +102,45 @@ class _AlbumPlayState extends State<AlbumPlay> {
         debugPrint('Start offset: ${track.startOffset}');
         debugPrint('Current position: ${_currentPosition.inSeconds}');
 
-        await _currentPositionSubscription?.cancel();
-        _currentPositionSubscription = _audioService
-            .currentTrackDurationStream(
-              _audioService.positionStream,
-              track.startOffset,
-            )
-            .listen((position) async {
-              // Handle _currentPosition
-              if (position > Duration.zero) {
-                setState(() => _currentPosition = position);
-              }
+        _currentPositionStream = _audioService.currentTrackDurationStream(
+          _audioService.positionStream,
+          track.startOffset,
+        );
 
-              // Handle track completion
-              if (track.duration! > Duration.zero &&
-                  track.duration!.inMilliseconds - position.inMilliseconds <
-                      200) {
-                debugPrint(
-                  'Track completed currentTrack.duration: ${track.duration!.inMilliseconds}',
-                );
-                debugPrint(
-                  'Track completed adjustedPosition: ${position.inMilliseconds}',
-                );
-                debugPrint('Track completed');
-                if (_audioService.isLoopingTrack) {
-                  await _audioService.seek(track.startOffset);
-                  await _audioService.play();
-                }
-                if (!_audioService.isLoopingTrack && mounted) {
-                  _handleTrackComplete();
-                }
-              }
-            });
+        await _currentPositionSubscription?.cancel();
+        _currentPositionSubscription = _currentPositionStream?.listen((
+          position,
+        ) async {
+          // Handle _currentPosition
+          if (position > Duration.zero) {
+            setState(() => _currentPosition = position);
+          }
+
+          // Handle track completion
+          if (track.duration! > Duration.zero &&
+              track.duration!.inMilliseconds - position.inMilliseconds < 200) {
+            debugPrint(
+              'Track completed currentTrack.duration: ${track.duration!.inMilliseconds}',
+            );
+            debugPrint(
+              'Track completed adjustedPosition: ${position.inMilliseconds}',
+            );
+            debugPrint('Track completed');
+            if (_audioService.isLoopingTrack) {
+              await _audioService.seek(track.startOffset);
+              await _audioService.play();
+            }
+            if (!_audioService.isLoopingTrack && mounted) {
+              _handleTrackComplete();
+            }
+          }
+        });
 
         await _audioService.playFile(track.path, startFrom: track.startOffset);
         setState(() {
           _currentPlaylistIndex = playlistIndex;
           _currentTrackIndex = trackIndex;
+          _currentTrack = track;
           _isPlaying = true;
           _currentPosition = Duration.zero;
         });
@@ -159,6 +164,15 @@ class _AlbumPlayState extends State<AlbumPlay> {
     } else if (_audioService.isLoopingPlaylist) {
       _playTrack(_currentPlaylistIndex!, 0);
     }
+  }
+
+  Widget _getLyricUI() {
+    if (_currentTrack == null) return const SizedBox.shrink();
+
+    return LyricViewer(
+      track: _currentTrack!,
+      currentPositionStream: _currentPositionStream!,
+    );
   }
 
   List<Widget> _getAlbumTitleUI() {
@@ -365,7 +379,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                       ],
                     ),
                   ),
-                  const LyricDisplay(),
+                  _getLyricUI(),
                 ],
               ),
             ),

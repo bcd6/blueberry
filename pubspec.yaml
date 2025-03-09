@@ -43,7 +43,6 @@ dependencies:
   media_kit_libs_audio: ^1.0.5 # Native audio dependencies.
   path: ^1.8.0
   metadata_god: ^0.5.2+1
-  lrc: ^1.0.2
 
 dev_dependencies:
   flutter_test:

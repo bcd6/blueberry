@@ -1,37 +1,38 @@
+import 'dart:convert';
 import 'dart:io';
-
-import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
-import 'package:lrc/lrc.dart';
+import 'package:flutter/foundation.dart';
 
 class LyricLoader {
-  static Future<Lrc> loadLyricByAudioFile(
-    String audioFilePath,
-    String audioTitle,
-  ) async {
+  static Future<String?> loadLyricContent(String trackPath) async {
     try {
-      final directory = path.dirname(audioFilePath);
-      final filename = path.basenameWithoutExtension(audioTitle);
+      final directory = path.dirname(trackPath);
+      final filename = path.basenameWithoutExtension(trackPath);
 
-      debugPrint('Looking for lyrics directory: $directory');
-      debugPrint('Looking for lyrics filename: $filename');
-
-      // Try common lyric file extensions
-      for (final ext in ['.lrc']) {
+      // Try different lyric file extensions
+      for (final ext in ['.lrc', '.txt']) {
         final lyricPath = path.join(directory, '$filename$ext');
         final lyricFile = File(lyricPath);
+
         if (await lyricFile.exists()) {
           debugPrint('Found lyric file: $lyricPath');
-          final content = await lyricFile.readAsString();
-          final result = Lrc.parse(content);
-          debugPrint('Parsed lyric file: $result');
-          return result;
+          // Try different encodings
+          for (final encoding in [utf8, latin1, systemEncoding]) {
+            try {
+              return await lyricFile.readAsString(encoding: encoding);
+            } catch (e) {
+              debugPrint('Failed to read with ${encoding.name}: $e');
+              continue;
+            }
+          }
         }
       }
-      debugPrint('No lyric file found for: $audioFilePath');
+
+      debugPrint('No lyric file found for: $filename');
+      return null;
     } catch (e) {
       debugPrint('Error loading lyric file: $e');
+      return null;
     }
-    return Lrc.parse('');
   }
 }

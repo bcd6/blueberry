@@ -302,12 +302,6 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "lrc",
-      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/lrc-1.0.2",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
-    },
-    {
       "name": "matcher",
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/matcher-0.12.17",
       "packageUri": "lib/",
@@ -680,7 +674,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-03-09T06:55:15.420331Z",
+  "generated": "2025-03-09T08:28:15.549211Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///C:/Users/youqing/fvm/versions/3.29.0",

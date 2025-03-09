@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:blueberry/domain/track.dart';
 import 'package:blueberry/feature/lyric/lyric_loader.dart';
+import 'package:blueberry/feature/lyric/lyric_parser.dart';
+import 'package:blueberry/feature/lyric/model/lyric_part.dart';
 import 'package:flutter/material.dart';
-import 'package:lrc/lrc.dart';
 
 class LyricViewer extends StatefulWidget {
   final Track track;
@@ -20,7 +21,9 @@ class LyricViewer extends StatefulWidget {
 
 class _LyricViewerState extends State<LyricViewer> {
   StreamSubscription? _currentPositionSubscription;
-  Lrc? _lyric;
+  List<LyricLine>? _lyrics;
+  int _currentIndex = 0;
+  int _currentPartIndex = 0;
 
   @override
   void initState() {
@@ -45,25 +48,80 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   Future<void> _loadLyricFile() async {
-    final lyric = await LyricLoader.loadLyricByAudioFile(
-      widget.track.path,
-      widget.track.title,
-    );
-    setState(() {
-      _lyric = lyric;
-    });
+    final content = await LyricLoader.loadLyricContent(widget.track.path);
+    if (content != null) {
+      setState(() {
+        _lyrics = LyricParser.parse(content);
+        _currentIndex = 0;
+        _currentPartIndex = 0;
+      });
+    }
   }
 
   Future<void> _setupDurationStream() async {
     await _currentPositionSubscription?.cancel();
-    _currentPositionSubscription = widget.currentPositionStream.listen(
-      (duration) {},
+    _currentPositionSubscription = widget.currentPositionStream.listen((
+      position,
+    ) {
+      if (_lyrics == null) return;
+      _updateCurrentPosition(position);
+    });
+  }
+
+  void _updateCurrentPosition(Duration position) {
+    if (_lyrics == null) return;
+
+    final ms = position.inMilliseconds;
+    var foundLine = false;
+
+    for (var i = _lyrics!.length - 1; i >= 0; i--) {
+      final line = _lyrics![i];
+      if (line.startTime.inMilliseconds <= ms) {
+        // Find current part within line
+        for (var j = line.parts.length - 1; j >= 0; j--) {
+          if (line.parts[j].timestamp.inMilliseconds <= ms) {
+            if (_currentIndex != i || _currentPartIndex != j) {
+              setState(() {
+                _currentIndex = i;
+                _currentPartIndex = j;
+              });
+            }
+            foundLine = true;
+            break;
+          }
+        }
+        if (foundLine) break;
+      }
+    }
+  }
+
+  Widget _buildLyricLine(LyricLine line, bool isCurrent) {
+    if (!isCurrent) {
+      return Text(
+        line.fullText,
+        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
+      );
+    }
+
+    return Row(
+      children:
+          line.parts.map((part) {
+            final isActive = line.parts.indexOf(part) <= _currentPartIndex;
+            return Text(
+              part.text,
+              style: TextStyle(
+                color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
+                fontSize: 18,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              ),
+            );
+          }).toList(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_lyric == null) {
+    if (_lyrics == null || _lyrics!.isEmpty) {
       return Center(
         child: Text(
           widget.track.title,
@@ -72,6 +130,44 @@ class _LyricViewerState extends State<LyricViewer> {
       );
     }
 
-    return Text(widget.track.title);
+    final displayLines = <Widget>[];
+
+    // Previous line
+    if (_currentIndex > 0) {
+      displayLines.add(_buildLyricLine(_lyrics![_currentIndex - 1], false));
+    }
+
+    // Current line
+    displayLines.add(_buildLyricLine(_lyrics![_currentIndex], true));
+
+    // Next line
+    if (_currentIndex < _lyrics!.length - 1) {
+      displayLines.add(_buildLyricLine(_lyrics![_currentIndex + 1], false));
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.track.title,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...displayLines.map(
+            (widget) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: widget,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

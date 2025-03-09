@@ -1,6 +1,11 @@
 import 'package:blueberry/feature/lyric/model/lyric_part.dart';
 import 'package:flutter/foundation.dart';
 
+// parse line
+// 1. match the first n parts of the \[(\d{2}):(\d{2})\.(\d{2,3})\], if n > 1 then it's mutliple timestamp line,
+// each match is a Line starttime, flatten it to multiple lines with same line parts
+// 2. then match the line parts string, it could be like 藤[00:00.91]宫[00:01.83]ゆ[00:02.75]き [00:03.66]- [00:04.58]Words [00:05.50]Are[00:06.41] or <03:57.44> 信じた <03:58.23>   <03:59.37> (光と影の中)
+
 // should support
 // 1. line with timestamp [00:04.00]原曲：東方星蓮船「法界の火」
 // 1. line with timestamp, 3 digits [00:36.889]我每天晚上在这里哪里也不想去

@@ -48,14 +48,33 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   Future<void> _loadLyricFile() async {
-    final content = await LyricLoader.loadLyricContent(widget.track.path);
+    debugPrint('\n=== Loading Lyrics ===');
+    debugPrint('Track: ${widget.track.title}');
+    debugPrint('Path: ${widget.track.path}');
+
+    final content = await LyricLoader.loadLyricContent(
+      widget.track.path,
+      widget.track.title,
+    );
     if (content != null) {
+      debugPrint('Lyric content loaded: ${content.length} characters');
+      final lyrics = LyricParser.parse(content);
+      debugPrint('Parsed ${lyrics.length} lyric lines');
+
+      if (lyrics.isNotEmpty) {
+        debugPrint('First line: ${lyrics[0].fullText}');
+        debugPrint('First timestamp: ${lyrics[0].startTime}');
+      }
+
       setState(() {
-        _lyrics = LyricParser.parse(content);
+        _lyrics = lyrics;
         _currentIndex = 0;
         _currentPartIndex = 0;
       });
+    } else {
+      debugPrint('No lyrics found');
     }
+    debugPrint('=== Lyrics Loading Complete ===\n');
   }
 
   Future<void> _setupDurationStream() async {
@@ -69,10 +88,15 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   void _updateCurrentPosition(Duration position) {
-    if (_lyrics == null) return;
+    if (_lyrics == null) {
+      debugPrint('No lyrics available for position update');
+      return;
+    }
 
     final ms = position.inMilliseconds;
     var foundLine = false;
+
+    debugPrint('Updating position: ${position.inSeconds}s');
 
     for (var i = _lyrics!.length - 1; i >= 0; i--) {
       final line = _lyrics![i];
@@ -81,6 +105,7 @@ class _LyricViewerState extends State<LyricViewer> {
         for (var j = line.parts.length - 1; j >= 0; j--) {
           if (line.parts[j].timestamp.inMilliseconds <= ms) {
             if (_currentIndex != i || _currentPartIndex != j) {
+              debugPrint('Updating to line $i, part $j: ${line.parts[j].text}');
               setState(() {
                 _currentIndex = i;
                 _currentPartIndex = j;
@@ -103,7 +128,7 @@ class _LyricViewerState extends State<LyricViewer> {
       );
     }
 
-    return Row(
+    return Wrap(
       children:
           line.parts.map((part) {
             final isActive = line.parts.indexOf(part) <= _currentPartIndex;

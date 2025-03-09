@@ -242,16 +242,18 @@ class AppState extends ChangeNotifier {
     String title = path.basenameWithoutExtension(filePath);
     String? album;
     String? performer;
+    Duration? duration;
     try {
       final metadata = await MetadataGod.readMetadata(file: filePath);
       title = metadata.title?.isNotEmpty == true ? metadata.title! : title;
       album = metadata.album;
       performer = metadata.artist ?? '';
+      duration = metadata.duration;
     } catch (e) {
       debugPrint('Error reading metadata from $filePath: $e');
     }
 
-    final duration = await getAudioDuration(filePath);
+    duration ??= await getAudioDuration(filePath);
 
     return Track(
       path: filePath,

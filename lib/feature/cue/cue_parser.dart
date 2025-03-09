@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:blueberry/state/app_state.dart';
 import 'package:flutter/foundation.dart';
+import 'package:metadata_god/metadata_god.dart';
 import 'package:path/path.dart' as path;
 
 class CueTrack {
@@ -222,7 +223,6 @@ class CueParser {
     // Get audio file path from CUE directory
     final cueDir = path.dirname(cuePath);
     final audioFilePath = path.join(cueDir, state.audioFile ?? '');
-    final audioFileDuration = await AppState.getAudioDuration(audioFilePath);
 
     tracks.sort((a, b) => a.index.compareTo(b.index));
 
@@ -241,6 +241,15 @@ class CueParser {
     }
 
     // Handle last track duration
+    Duration? audioFileDuration;
+    try {
+      final metadata = await MetadataGod.readMetadata(file: audioFilePath);
+      audioFileDuration = metadata.duration;
+    } catch (e) {
+      debugPrint('Error reading metadata from $audioFilePath: $e');
+    }
+
+    audioFileDuration ??= await AppState.getAudioDuration(audioFilePath);
     if (tracks.length > 1) {
       final lastIndex = tracks.length - 1;
       tracks[lastIndex] = CueTrack(

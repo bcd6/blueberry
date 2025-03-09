@@ -96,6 +96,7 @@ class AppState extends ChangeNotifier {
                     (t) => Track(
                       path: audioPath,
                       title: t.title,
+                      album: cueSheet.title,
                       performer: t.performer,
                       duration: t.duration,
                       startOffset: t.start,

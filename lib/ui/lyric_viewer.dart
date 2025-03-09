@@ -73,6 +73,7 @@ class _LyricViewerState extends State<LyricViewer> {
     final content = await LyricLoader.loadLyricContent(
       widget.track.path,
       widget.track.title,
+      widget.track.album,
     );
     if (content != null) {
       debugPrint('Lyric content loaded: ${content.length} characters');

@@ -8,11 +8,9 @@ import 'package:flutter/foundation.dart';
 // 3. line with chacater in betwen [00:00.00]藤[00:00.91]宫[00:01.83]ゆ[00:02.75]き [00:03.66]- [00:04.58]Words [00:05.50]Are[00:06.41]
 // 4. line with chacater in betwen, and bracket [03:57.44] <03:57.44> 信じた <03:58.23>   <03:59.37> (光と影の中)
 class LyricParser {
-  // Regex patterns for different formats
-  static final _squareBracketRegex = RegExp(r'\[(\d{2}):(\d{2})\.(\d{2,3})\]');
-  static final _angleBracketRegex = RegExp(r'<(\d{2}):(\d{2})\.(\d{2,3})>');
-  static final _characterTimeRegex = RegExp(
-    r'([^\[\]<>]*?)(?:\[(\d{2}):(\d{2})\.(\d{2,3})\]|<(\d{2}):(\d{2})\.(\d{2,3})>)',
+  // Unified timestamp regex for mixed brackets
+  static final _timeTagRegex = RegExp(
+    r'(?:\[(\d{2}):(\d{2})\.(\d{2,3})\]|\<(\d{2}):(\d{2})\.(\d{2,3})\>)\s*([^\[<]*)',
   );
 
   static List<LyricLine> parse(String content) {
@@ -23,45 +21,42 @@ class LyricParser {
       final trimmedLine = line.trim();
       if (trimmedLine.isEmpty) continue;
 
-      // Check if it's a character-timed line
-      if (_isCharacterTimedLine(trimmedLine)) {
-        final parts = _parseCharacterTimedLine(trimmedLine);
+      // Parse all timestamps and text parts
+      final matches = _timeTagRegex.allMatches(trimmedLine);
+      if (matches.isNotEmpty) {
+        final parts = <LyricPart>[];
+
+        for (final match in matches) {
+          final timestamp = _parseTimestamp(match);
+          final text = match.group(7)?.trim() ?? '';
+
+          if (text.isNotEmpty || parts.isEmpty) {
+            parts.add(LyricPart(text, timestamp));
+            debugPrint('Part: "$text" @ ${_formatDuration(timestamp)}');
+          }
+        }
+
         if (parts.isNotEmpty) {
-          allLines.add(LyricLine(parts));
+          // For lines with same text at different timestamps, create multiple lines
+          if (parts.length > 1 && parts.every((p) => p.text == parts[0].text)) {
+            for (final part in parts) {
+              allLines.add(LyricLine([part]));
+              debugPrint(
+                'Multi-time line: "${part.text}" @ ${_formatDuration(part.timestamp)}',
+              );
+            }
+          } else {
+            // For character-timed lines, keep as one line
+            allLines.add(LyricLine(parts));
+            debugPrint('Character-timed line with ${parts.length} parts');
+          }
           continue;
         }
       }
 
-      // Try parsing as multi-timestamp line
-      final timestamps = _squareBracketRegex.allMatches(trimmedLine);
-      if (timestamps.length > 1) {
-        final text = trimmedLine.replaceAll(_squareBracketRegex, '').trim();
-        for (final match in timestamps) {
-          final timestamp = _parseTimestamp(
-            match.group(1)!,
-            match.group(2)!,
-            match.group(3)!,
-          );
-          allLines.add(LyricLine([LyricPart(text, timestamp)]));
-        }
-        continue;
-      }
-
-      // Try single timestamp line
-      final firstTimestamp = _squareBracketRegex.firstMatch(trimmedLine);
-      if (firstTimestamp != null) {
-        final text = trimmedLine.replaceAll(_squareBracketRegex, '').trim();
-        final timestamp = _parseTimestamp(
-          firstTimestamp.group(1)!,
-          firstTimestamp.group(2)!,
-          firstTimestamp.group(3)!,
-        );
-        allLines.add(LyricLine([LyricPart(text, timestamp)]));
-        continue;
-      }
-
       // Treat as plain text if no timestamps found
       allLines.add(LyricLine([LyricPart(trimmedLine, Duration.zero)]));
+      debugPrint('Plain text line: "$trimmedLine"');
     }
 
     // Sort all lines by timestamp
@@ -69,74 +64,24 @@ class LyricParser {
 
     // Add empty line at start if needed
     if (allLines.isEmpty || allLines[0].startTime > Duration.zero) {
+      debugPrint('Adding empty line at start');
       allLines.insert(0, LyricLine([LyricPart('', Duration.zero)]));
     }
 
     return allLines;
   }
 
-  static bool _isCharacterTimedLine(String line) {
-    final parts = line.split(RegExp(r'(?:\[|\<)'));
-    if (parts.length <= 1) return false;
+  static Duration _parseTimestamp(RegExpMatch match) {
+    final minutes = int.parse(match.group(1) ?? match.group(4)!);
+    final seconds = int.parse(match.group(2) ?? match.group(5)!);
+    final millisStr = match.group(3) ?? match.group(6)!;
 
-    // Check if most parts have timestamps
-    final withTimestamp =
-        parts
-            .where(
-              (p) =>
-                  p.contains(RegExp(r'\d{2}:\d{2}\.\d{2,3}\]')) ||
-                  p.contains(RegExp(r'\d{2}:\d{2}\.\d{2,3}\>')),
-            )
-            .length;
-    return withTimestamp > parts.length / 2;
-  }
-
-  static List<LyricPart> _parseCharacterTimedLine(String line) {
-    final parts = <LyricPart>[];
-    var match = _characterTimeRegex.firstMatch(line);
-    var position = 0;
-
-    while (match != null) {
-      final text = match.group(1)?.trim() ?? '';
-      final timestamp = _parseTimestamp(
-        match.group(2) ?? match.group(5)!,
-        match.group(3) ?? match.group(6)!,
-        match.group(4) ?? match.group(7)!,
-      );
-
-      if (text.isNotEmpty) {
-        parts.add(LyricPart(text, timestamp));
-      }
-
-      position = match.end;
-      line = line.substring(position);
-      match = _characterTimeRegex.firstMatch(line);
-    }
-
-    // Add remaining text if any
-    final remaining = line.trim();
-    if (remaining.isNotEmpty && parts.isNotEmpty) {
-      parts.add(LyricPart(remaining, parts.last.timestamp));
-    }
-
-    return parts;
-  }
-
-  static Duration _parseTimestamp(
-    String minutes,
-    String seconds,
-    String millisStr,
-  ) {
     final millis =
         millisStr.length == 2
             ? int.parse(millisStr) * 10
             : int.parse(millisStr);
 
-    return Duration(
-      minutes: int.parse(minutes),
-      seconds: int.parse(seconds),
-      milliseconds: millis,
-    );
+    return Duration(minutes: minutes, seconds: seconds, milliseconds: millis);
   }
 
   static String _formatDuration(Duration d) {

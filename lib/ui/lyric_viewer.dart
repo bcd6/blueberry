@@ -3,8 +3,6 @@ import 'package:blueberry/domain/track.dart';
 import 'package:blueberry/feature/lyric/lyric_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:lrc/lrc.dart';
-import 'dart:io';
-import 'package:path/path.dart' as path;
 
 class LyricViewer extends StatefulWidget {
   final Track track;
@@ -74,9 +72,6 @@ class _LyricViewerState extends State<LyricViewer> {
       );
     }
 
-    return Container(
-      constraints: const BoxConstraints.expand(),
-      child: Text(widget.track.title),
-    );
+    return Text(widget.track.title);
   }
 }

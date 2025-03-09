@@ -13,9 +13,6 @@ class Lyric {
   /// Duration of the media
   final Duration? duration;
 
-  /// Audio source of the media
-  final Object? audio;
-
   /// Lines of the lyric
   final List<LyricLine> lines;
 
@@ -24,7 +21,6 @@ class Lyric {
     required this.artist,
     required this.album,
     required this.duration,
-    required this.audio,
     required this.lines,
   });
 }

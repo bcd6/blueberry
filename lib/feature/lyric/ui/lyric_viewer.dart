@@ -2,11 +2,15 @@ import 'package:blueberry/domain/track.dart';
 import 'package:blueberry/feature/lyric/helper.dart';
 import 'package:blueberry/feature/lyric/models/lyric.dart';
 import 'package:blueberry/feature/lyric/models/lyric_line.dart';
+import 'package:blueberry/feature/lyric/parser/lrc_lyric_parser.dart';
 import 'package:blueberry/feature/lyric/ui/widgets/fluid_background.dart';
 import 'package:blueberry/feature/lyric/ui/widgets/lines_builder.dart';
 import 'package:blueberry/feature/lyric/ui/widgets/title.dart';
 import 'package:flutter/material.dart';
+import 'package:lyrics_parser/lyrics_parser.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
+import 'dart:io';
+import 'package:path/path.dart' as path;
 
 /// A widget that renders the AMLV based on the [Lyric] instance.
 class LyricViewer extends StatefulWidget {
@@ -72,18 +76,19 @@ class LyricViewer extends StatefulWidget {
 class _LyricViewerState extends State<LyricViewer> {
   int _currentLyricLine = 0;
   bool isPlaying = false;
-  bool get _audio => widget.lyric.audio != null;
   int timeProgress = 0;
   int audioDuration = 0;
+  Lyric? _lyric;
 
   final AutoScrollController _controller = AutoScrollController();
+  final LrcLyricParser _lrcLyricParser = LrcLyricParser();
 
   _playAudio() {
     _currentLyricLine = 0;
   }
 
   _jumpToLine(int index, String caller, {bool play = true, Duration? d}) {
-    List<LyricLine> lines = widget.lyric.lines;
+    List<LyricLine> lines = _lyric!.lines;
     if (index > lines.length - 1) {
       return;
     }
@@ -102,20 +107,16 @@ class _LyricViewerState extends State<LyricViewer> {
     });
   }
 
-  _disposer() {
-    _controller.dispose();
-  }
-
   @override
   void dispose() {
-    if (_audio) {
-      _disposer();
-    }
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
+    super.initState();
+    _loadLyricFile();
     cleanSwipeInterface();
     _playAudio();
 
@@ -127,11 +128,11 @@ class _LyricViewerState extends State<LyricViewer> {
         timeProgress = time.inSeconds;
       });
       if (isPlaying) {
-        int i = widget.lyric.lines.indexWhere((li) => li.time > time);
+        int i = _lyric!.lines.indexWhere((li) => li.time > time);
         if (i > 0) {
           i--;
         }
-        if (i != _currentLyricLine && i < widget.lyric.lines.length) {
+        if (i != _currentLyricLine && i < _lyric!.lines.length) {
           _jumpToLine(i, "listener", play: false, d: time);
         }
       }
@@ -140,8 +141,44 @@ class _LyricViewerState extends State<LyricViewer> {
     super.initState();
   }
 
+  Future<void> _loadLyricFile() async {
+    try {
+      final trackPath = widget.track.path;
+      final directory = path.dirname(trackPath);
+      final filename = path.basenameWithoutExtension(trackPath);
+
+      // Try common lyric file extensions
+      for (final ext in ['.lrc', '.txt']) {
+        final lyricPath = path.join(directory, '$filename$ext');
+        final lyricFile = File(lyricPath);
+
+        if (await lyricFile.exists()) {
+          debugPrint('Found lyric file: $lyricPath');
+          final result = await _lrcLyricParser.parse(lyricFile);
+          setState(() async {
+            _lyric = result;
+          });
+          return;
+        }
+      }
+
+      debugPrint('No lyric file found for: ${widget.track.title}');
+    } catch (e) {
+      debugPrint('Error loading lyric file: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_lyric == null) {
+      return const Center(
+        child: Text(
+          'No lyrics available',
+          style: TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+
     return Scaffold(
       body: FluidBackground(
         color1: widget.gradientColor1,
@@ -153,7 +190,7 @@ class _LyricViewerState extends State<LyricViewer> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 LyricViewerTitle(
-                  lyric: widget.lyric,
+                  lyric: _lyric!,
                   titleColor: widget.activeColor,
                   subtitleColor: widget.inactiveColor,
                 ),
@@ -161,7 +198,7 @@ class _LyricViewerState extends State<LyricViewer> {
                 LyricLinesBuilder(
                   controller: _controller,
                   currentLyricLine: _currentLyricLine,
-                  lines: widget.lyric.lines,
+                  lines: _lyric!.lines,
                   onLineChanged: (int i, String caller) {
                     return _jumpToLine(i, caller);
                   },

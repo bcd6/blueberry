@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
 
 class LyricLoader {
-  static const _baseUrl = 'https://www.lyrics.com';
+  static const _pythonScript = 'assets/scripts/fetch_lyrics.py';
 
   static Future<String?> loadLyricContent(
     String trackPath,
@@ -80,53 +79,46 @@ class LyricLoader {
 
   static Future<String?> _searchRemoteLyric(String title, String? album) async {
     try {
-      debugPrint('\n=== Searching Lyrics.com ===');
+      debugPrint('\n=== Searching Lyrics using Python ===');
       debugPrint('Title: $title');
       debugPrint('Album: $album');
 
-      // Search for song
-      final searchQuery = Uri.encodeComponent('$title ${album ?? ''}');
-      final searchUrl = '$_baseUrl/search/lyrics?q=$searchQuery';
+      final scriptPath = path.join(Directory.current.path, _pythonScript);
 
-      final response = await http.get(
-        Uri.parse(searchUrl),
-        headers: {'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html'},
-      );
+      debugPrint('Script path: $scriptPath');
 
-      if (response.statusCode == 200) {
-        // Find first lyric link in search results
-        final linkMatch = RegExp(
-          r'<a href="(/lyric/\d+/[^"]+)"[^>]*class="[^"]*title[^"]*"',
-        ).firstMatch(response.body);
-
-        if (linkMatch != null) {
-          final lyricPath = linkMatch.group(1)!;
-          debugPrint('Found lyric page: $lyricPath');
-
-          // Get lyrics page
-          final lyricsResponse = await http.get(
-            Uri.parse('$_baseUrl$lyricPath'),
-            headers: {'User-Agent': 'Mozilla/5.0'},
-          );
-
-          if (lyricsResponse.statusCode == 200) {
-            final lyrics = _extractLyricsFromHtml(lyricsResponse.body);
-            if (lyrics != null) {
-              debugPrint('Successfully extracted lyrics');
-              return lyrics;
-            }
-          } else {
-            debugPrint('Failed to get lyrics: ${lyricsResponse.statusCode}');
-          }
-        }
-      } else {
-        debugPrint('Failed to search: ${response.statusCode}');
+      if (!File(scriptPath).existsSync()) {
+        debugPrint('Error: Python script not found at $scriptPath');
+        return null;
       }
 
-      debugPrint('No lyrics found on Lyrics.com');
+      final result = await Process.run('python', [
+        scriptPath,
+        title,
+        if (album != null) album,
+      ]);
+
+      if (result.exitCode == 0) {
+        try {
+          final json = jsonDecode(result.stdout as String);
+
+          if (json['success'] == true) {
+            debugPrint('Successfully fetched lyrics');
+            return json['lyrics'] as String;
+          } else {
+            debugPrint('Python script error: ${json['error']}');
+          }
+        } catch (e) {
+          debugPrint('Error parsing Python output: $e');
+          debugPrint('Output: ${result.stdout}');
+        }
+      } else {
+        debugPrint('Python script failed: ${result.stderr}');
+      }
+
       return null;
     } catch (e, stack) {
-      debugPrint('Error searching lyrics: $e');
+      debugPrint('Error running Python script: $e');
       debugPrint('Stack trace: $stack');
       return null;
     }

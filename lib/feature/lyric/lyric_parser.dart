@@ -2,12 +2,14 @@ import 'package:blueberry/feature/lyric/model/lyric_part.dart';
 import 'package:flutter/foundation.dart';
 
 class LyricParser {
-  // Update the character timing regex pattern
   static final _characterTimeTagRegex = RegExp(
     r'(.*?)\[(\d{2}):(\d{2})\.(\d{2})\]',
   );
   static final _lineTimeTagRegex = RegExp(
     r'^\[(\d{2}):(\d{2})\.(\d{2})\](.+)$',
+  );
+  static final _bracketTimeTagRegex = RegExp(
+    r'<(\d{2}):(\d{2})\.(\d{2})>\s*([^<]*)',
   );
 
   static List<LyricLine> parse(String content) {
@@ -23,7 +25,12 @@ class LyricParser {
   static LyricLine _parseLine(String line) {
     debugPrint('\nParsing line: "$line"');
 
-    // Try full line parsing first
+    // Try bracket format first (newer format)
+    if (line.contains('<')) {
+      return _parseBracketLine(line);
+    }
+
+    // Try full line parsing
     final lineMatch = _lineTimeTagRegex.firstMatch(line);
     if (lineMatch != null) {
       final minutes = int.parse(lineMatch.group(1)!);
@@ -75,6 +82,36 @@ class LyricParser {
         'Remaining: "${remainingLine.trim()}" @ ${_formatDuration(parts.last.timestamp)}',
       );
     }
+
+    return LyricLine(parts);
+  }
+
+  static LyricLine _parseBracketLine(String line) {
+    final parts = <LyricPart>[];
+    final matches = _bracketTimeTagRegex.allMatches(line);
+
+    for (final match in matches) {
+      final minutes = int.parse(match.group(1)!);
+      final seconds = int.parse(match.group(2)!);
+      final centiseconds = int.parse(match.group(3)!);
+      final text = match.group(4)!;
+
+      if (text.isNotEmpty) {
+        final timestamp = Duration(
+          minutes: minutes,
+          seconds: seconds,
+          milliseconds: centiseconds * 10,
+        );
+
+        parts.add(LyricPart(text.trim(), timestamp));
+        debugPrint(
+          'Bracket part: "${text.trim()}" @ ${_formatDuration(timestamp)}',
+        );
+      }
+    }
+
+    // Sort parts by timestamp
+    parts.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
     return LyricLine(parts);
   }

@@ -153,18 +153,13 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   Widget _buildLyricLine(LyricLine line, bool isCurrent) {
-    if (!isCurrent) {
-      return Text(
-        line.fullText,
-        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
-      );
-    }
-
+    // Apply spacing rules to all lines
     return Wrap(
       spacing: 4, // Base spacing between characters
       children:
           line.parts.map((part) {
-            final isActive = line.parts.indexOf(part) <= _currentPartIndex;
+            final isActive =
+                isCurrent && line.parts.indexOf(part) <= _currentPartIndex;
             final nextPart =
                 line.parts.length > line.parts.indexOf(part) + 1
                     ? line.parts[line.parts.indexOf(part) + 1]
@@ -184,7 +179,7 @@ class _LyricViewerState extends State<LyricViewer> {
               part.text + extraSpacing,
               style: TextStyle(
                 color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
-                fontSize: 20,
+                fontSize: isCurrent ? 20 : 16,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                 letterSpacing: 1.0, // Base letter spacing
               ),

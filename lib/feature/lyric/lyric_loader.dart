@@ -192,7 +192,8 @@ class LyricLoader {
       final directory = path.dirname(trackPath);
       final lyricPath = path.join(directory, '$title.lrc');
 
-      final content = '''[ti:$title]
+      final content = '''[empty]
+[ti:$title]
 [ar:${performer ?? 'Unknown'}]
 [al:${album ?? 'Unknown'}]
 [by:Blueberry]

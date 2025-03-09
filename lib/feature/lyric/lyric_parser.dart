@@ -6,7 +6,7 @@ class LyricParser {
     r'(.*?)\[(\d{2}):(\d{2})\.(\d{2})\]',
   );
   static final _lineTimeTagRegex = RegExp(
-    r'^\[(\d{2}):(\d{2})\.(\d{2})\](.+)$',
+    r'^\[(\d{2}):(\d{2})\.(\d{2,3})\](.+)$',
   );
   static final _bracketTimeTagRegex = RegExp(
     r'<(\d{2}):(\d{2})\.(\d{2})>\s*([^<]*)',
@@ -35,13 +35,19 @@ class LyricParser {
     if (lineMatch != null) {
       final minutes = int.parse(lineMatch.group(1)!);
       final seconds = int.parse(lineMatch.group(2)!);
-      final centiseconds = int.parse(lineMatch.group(3)!);
+      final millisStr = lineMatch.group(3)!;
       final text = lineMatch.group(4)!.trim();
+
+      // Handle both 2 and 3 decimal places
+      final millis =
+          millisStr.length == 2
+              ? int.parse(millisStr) * 10
+              : int.parse(millisStr);
 
       final timestamp = Duration(
         minutes: minutes,
         seconds: seconds,
-        milliseconds: centiseconds * 10,
+        milliseconds: millis,
       );
 
       debugPrint('Line: "$text" @ ${_formatDuration(timestamp)}');

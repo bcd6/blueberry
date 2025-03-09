@@ -18,6 +18,15 @@ class LyricParser {
     final result =
         lines.map(_parseLine).where((line) => line.parts.isNotEmpty).toList();
 
+    // Sort lines by start time
+    result.sort((a, b) => a.startTime.compareTo(b.startTime));
+
+    // Add empty line at start if needed
+    if (result.isEmpty || result[0].startTime > Duration.zero) {
+      debugPrint('Adding empty line at start');
+      result.insert(0, LyricLine([LyricPart('~', Duration.zero)]));
+    }
+
     debugPrint('Parsed ${result.length} lines');
     return result;
   }

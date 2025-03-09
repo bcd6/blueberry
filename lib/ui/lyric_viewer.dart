@@ -36,8 +36,26 @@ class _LyricViewerState extends State<LyricViewer> {
   void didUpdateWidget(covariant LyricViewer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.track != oldWidget.track) {
+      debugPrint('\n=== Track Changed ===');
+      debugPrint('Old track: ${oldWidget.track.title}');
+      debugPrint('New track: ${widget.track.title}');
+
+      // Reset state
+      setState(() {
+        _lyrics = null;
+        _currentIndex = 0;
+        _currentPartIndex = 0;
+      });
+
+      // Cancel existing subscription
+      _currentPositionSubscription?.cancel();
+      _currentPositionSubscription = null;
+
+      // Load new lyrics and setup stream
       _loadLyricFile();
       _setupDurationStream();
+
+      debugPrint('=== Track Change Complete ===\n');
     }
   }
 
@@ -78,13 +96,24 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   Future<void> _setupDurationStream() async {
+    debugPrint('\n=== Setting up position stream ===');
+
     await _currentPositionSubscription?.cancel();
-    _currentPositionSubscription = widget.currentPositionStream.listen((
-      position,
-    ) {
-      if (_lyrics == null) return;
-      _updateCurrentPosition(position);
-    });
+
+    if (_lyrics == null) {
+      return;
+    }
+    _currentPositionSubscription = widget.currentPositionStream.listen(
+      (position) {
+        _updateCurrentPosition(position);
+      },
+      onError: (error) {
+        debugPrint('Position stream error: $error');
+      },
+      cancelOnError: false,
+    );
+
+    debugPrint('=== Position stream setup complete ===\n');
   }
 
   void _updateCurrentPosition(Duration position) {
@@ -96,7 +125,7 @@ class _LyricViewerState extends State<LyricViewer> {
     final ms = position.inMilliseconds;
     var foundLine = false;
 
-    debugPrint('Updating position: ${position.inSeconds}s');
+    // debugPrint('Updating position: ${position.inSeconds}s');
 
     for (var i = _lyrics!.length - 1; i >= 0; i--) {
       final line = _lyrics![i];

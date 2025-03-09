@@ -37,15 +37,11 @@ class LyricParser {
           );
         }
 
-        // if part.text is empty, replace it by the next not empty part.text
-        for (var i = 0; i < parts.length; i++) {
-          if (parts[i].text == emptyPartText) {
-            for (var j = i + 1; j < parts.length; j++) {
-              if (parts[j].text != emptyPartText) {
-                parts[i] = LyricPart(parts[j].text, parts[i].timestamp);
-                break;
-              }
-            }
+        // if part.text is empty, and part.timestamp != next part.timestamp, replace it by the next not empty part.text
+        for (var i = 0; i < parts.length - 1; i++) {
+          if (parts[i].text == emptyPartText &&
+              parts[i].timestamp != parts[i + 1].timestamp) {
+            parts[i] = parts[i + 1];
           }
         }
 
@@ -57,7 +53,16 @@ class LyricParser {
         if (parts.isNotEmpty) {
           // For lines with same text at different timestamps, create multiple lines
           if (parts.length > 1 && parts.every((p) => p.text == parts[0].text)) {
+            Duration? ts;
             for (final part in parts) {
+              if (ts == null) {
+                ts = part.timestamp;
+              } else if (ts == part.timestamp) {
+                continue;
+              } else {
+                ts = part.timestamp;
+              }
+
               allLines.add(LyricLine([part]));
               debugPrint(
                 'Multi-time line: "${part.text}" @ ${_formatDuration(part.timestamp)}',

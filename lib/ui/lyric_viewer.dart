@@ -154,7 +154,10 @@ class _LyricViewerState extends State<LyricViewer> {
     if (!isCurrent) {
       return Text(
         line.fullText,
-        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.5),
+          fontSize: 16,
+        ),
       );
     }
 
@@ -165,7 +168,10 @@ class _LyricViewerState extends State<LyricViewer> {
             return Text(
               part.text,
               style: TextStyle(
-                color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
+                color:
+                    isActive
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                 fontSize: 18,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               ),

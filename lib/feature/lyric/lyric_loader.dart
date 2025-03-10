@@ -137,31 +137,6 @@ class LyricLoader {
     }
   }
 
-  static String? _extractLyricsFromHtml(String html) {
-    try {
-      // Extract lyrics from pre tag with id="lyric-body-text"
-      final lyricsMatch = RegExp(
-        r'<pre[^>]*id="lyric-body-text"[^>]*>(.*?)</pre>',
-        dotAll: true,
-      ).firstMatch(html);
-
-      if (lyricsMatch != null) {
-        return lyricsMatch
-            .group(1)
-            ?.replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
-            .replaceAll('&nbsp;', ' ') // Fix spaces
-            .replaceAll('&#x27;', "'") // Fix apostrophes
-            .replaceAll('&quot;', '"') // Fix quotes
-            .replaceAll('&amp;', '&') // Fix ampersands
-            .trim();
-      }
-      return null;
-    } catch (e) {
-      debugPrint('Error extracting lyrics: $e');
-      return null;
-    }
-  }
-
   static Future<void> _saveLyricToLocal(
     String trackPath,
     String title,

@@ -158,7 +158,6 @@ class _LyricViewerState extends State<LyricViewer> {
       children:
           line.parts.map((part) {
             final partIndex = line.parts.indexOf(part);
-            final isActive = isCurrent && partIndex <= _currentPartIndex;
 
             // Get next part from same line
             final nextPart =

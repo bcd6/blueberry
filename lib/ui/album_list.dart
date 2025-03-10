@@ -26,6 +26,12 @@ class _AlbumListState extends State<AlbumList> {
     _initializeData();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheImages();
+  }
+
   Future<void> _initializeData() async {
     final appState = context.read<AppState>();
     final albumCount = appState.albums.length;
@@ -37,6 +43,53 @@ class _AlbumListState extends State<AlbumList> {
     });
   }
 
+  Future<void> _precacheImages() async {
+    final appState = context.read<AppState>();
+    for (final index in displayedIndices) {
+      if (index < appState.albums.length) {
+        final album = appState.albums[index];
+        await precacheImage(
+          FileImage(File(album.coverPath)),
+          context,
+          size: const Size(480, 480),
+        ).onError((error, stackTrace) {
+          debugPrint('Failed to precache image: $error');
+          return;
+        });
+      }
+    }
+  }
+
+  Future<void> _precacheNextBatch(List<int> newIndices) async {
+    final appState = context.read<AppState>();
+    for (final index in newIndices) {
+      if (index < appState.albums.length) {
+        final album = appState.albums[index];
+        await precacheImage(
+          FileImage(File(album.coverPath)),
+          context,
+          size: const Size(480, 480),
+        );
+      }
+    }
+  }
+
+  Widget _buildAlbumCover(String coverPath) {
+    return Image.file(
+      File(coverPath),
+      fit: BoxFit.cover,
+      cacheWidth: 480,
+      cacheHeight: 480,
+      filterQuality: FilterQuality.medium,
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('Error loading image: $error');
+        return const Center(
+          child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     scrollController.dispose();
@@ -45,8 +98,8 @@ class _AlbumListState extends State<AlbumList> {
 
   void _onScroll() {
     final position = scrollController.position;
-    debugPrint('Scrolling: ${position.pixels}');
-    debugPrint('MaxScrollExtent: ${position.maxScrollExtent}');
+    // debugPrint('Scrolling: ${position.pixels}');
+    // debugPrint('MaxScrollExtent: ${position.maxScrollExtent}');
     if (position.pixels >= position.maxScrollExtent * 0.8) {
       final appState = context.read<AppState>();
       final currentLength = displayedIndices.length;
@@ -54,10 +107,12 @@ class _AlbumListState extends State<AlbumList> {
       debugPrint('CurrentLength: $currentLength');
 
       if (currentLength < totalAlbums) {
+        final newIndices = [currentLength, currentLength + 1];
         setState(() {
-          displayedIndices.add(currentLength);
-          displayedIndices.add(currentLength + 1);
+          displayedIndices.addAll(newIndices);
         });
+        // Precache next batch of images
+        _precacheNextBatch(newIndices);
       }
     }
   }
@@ -110,10 +165,7 @@ class _AlbumListState extends State<AlbumList> {
                   return Container(
                     padding: const EdgeInsets.all(36),
                     child: GestureDetector(
-                      child: Image.file(
-                        File(album.coverPath),
-                        fit: BoxFit.cover,
-                      ),
+                      child: _buildAlbumCover(album.coverPath),
                       onTap: () {
                         Navigator.push(
                           context,

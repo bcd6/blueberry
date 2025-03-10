@@ -67,7 +67,7 @@ class LyricLoader {
 
     // Try different filenames and extensions
     for (final name in [sanitizedTitle, sanitizedFilename]) {
-      for (final ext in ['.lrc', '.txt']) {
+      for (final ext in ['.lrc']) {
         final lyricPath = path.join(directory, '$name$ext');
         final lyricFile = File(lyricPath);
 

@@ -15,14 +15,14 @@ import 'package:flutter/foundation.dart';
 class LyricParser {
   // Two regex patterns for different character timing formats
   static final _textFirstRegex = RegExp(
-    r'([^\[\]<>]+?)(?:\[(\d{2}):(\d{2})\.(\d{2,3})\])',
+    r'([^\[\]<>]+?)(?:\[(\d{2}):(\d{1,2})\.(\d{2,3})\])',
   );
   static final _timestampFirstRegex = RegExp(
-    r'(?:\[(\d{2}):(\d{2})\.(\d{2,3})\]|\<(\d{2}):(\d{2})\.(\d{2,3})\>)\s*([^\[\]<>]*)',
+    r'(?:\[(\d{2}):(\d{1,2})\.(\d{2,3})\]|\<(\d{2}):(\d{1,2})\.(\d{2,3})\>)\s*([^\[\]<>]*)',
   );
-  static final _timestampRegex = RegExp(r'\[(\d{2}):(\d{2})\.(\d{2,3})\]');
+  static final _timestampRegex = RegExp(r'\[(\d{2}):(\d{1,2})\.(\d{2,3})\]');
   static final _multiTimestampLineRegex = RegExp(
-    r'^(\[(\d{2}):(\d{2})\.(\d{2,3})\])+(.*)$',
+    r'^(\[(\d{2}):(\d{1,2})\.(\d{2,3})\])+(.*)$',
   );
 
   static const emptyPartText = '♪';
@@ -66,11 +66,14 @@ class LyricParser {
           }
           continue;
         }
+      } else {
+        debugPrint('Single-time line: "$trimmedLine"');
       }
 
       // Step 2: Parse character-by-character with timestamps
       final parts = <LyricPart>[];
       var remainingLine = trimmedLine;
+      debugPrint('Step 2 line: "$trimmedLine"');
 
       // Detect format based on first character
       final isTimestampFirst =

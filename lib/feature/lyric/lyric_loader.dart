@@ -192,15 +192,7 @@ class LyricLoader {
       final directory = path.dirname(trackPath);
       final lyricPath = path.join(directory, '$title.lrc');
 
-      final content = '''[empty]
-[ti:$title]
-[ar:${performer ?? 'Unknown'}]
-[al:${album ?? 'Unknown'}]
-[by:Blueberry]
-[re:LyricLoader]
-[ve:1.0]
-
-''';
+      final content = '''[00:00.00]''';
 
       debugPrint('Creating empty LRC at: $lyricPath');
       final file = File(lyricPath);

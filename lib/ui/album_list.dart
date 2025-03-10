@@ -75,18 +75,21 @@ class _AlbumListState extends State<AlbumList> {
   }
 
   Widget _buildAlbumCover(String coverPath) {
-    return Image.file(
-      File(coverPath),
-      fit: BoxFit.cover,
-      cacheWidth: 480,
-      cacheHeight: 480,
-      filterQuality: FilterQuality.medium,
-      errorBuilder: (context, error, stackTrace) {
-        debugPrint('Error loading image: $error');
-        return const Center(
-          child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
-        );
-      },
+    return FittedBox(
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      child: Image.file(
+        File(coverPath),
+        fit: BoxFit.cover,
+        cacheHeight: 480,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint('Error loading image: $error');
+          return const Center(
+            child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+          );
+        },
+      ),
     );
   }
 

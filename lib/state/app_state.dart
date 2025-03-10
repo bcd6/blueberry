@@ -67,16 +67,36 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  static Future<Playlist?> loadRegularPlaylist(
+  static Future<List<Playlist>> loadRegularPlaylist(
     List<String> regularFiles,
   ) async {
-    // Create regular tracks playlist with metadata
-    final regularTracks = await Future.wait(
-      regularFiles.map((f) => _createTrackFromFile(f)),
-    );
-    return regularTracks.isNotEmpty
-        ? Playlist(name: '', tracks: regularTracks)
-        : null;
+    // Group files by parent folder
+    final Map<String, List<String>> filesByFolder = {};
+
+    for (final file in regularFiles) {
+      final parentFolder = path.dirname(file);
+      final folderName = path.basename(parentFolder);
+      filesByFolder.putIfAbsent(folderName, () => []).add(file);
+    }
+
+    // Create playlists for each folder
+    final List<Playlist> playlists = [];
+
+    for (final entry in filesByFolder.entries) {
+      final folderName = entry.key;
+      final folderFiles = entry.value;
+
+      // Create tracks for this folder's files
+      final tracks = await Future.wait(
+        folderFiles.map((f) => _createTrackFromFile(f)),
+      );
+
+      if (tracks.isNotEmpty) {
+        playlists.add(Playlist(name: folderName, tracks: tracks));
+      }
+    }
+
+    return playlists;
   }
 
   static Future<List<Playlist>> loadCuePlaylists(List<String> cueFiles) async {

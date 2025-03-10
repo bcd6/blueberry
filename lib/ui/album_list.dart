@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:blueberry/domain/album.dart';
 import 'package:blueberry/ui/album_play.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ class _AlbumListState extends State<AlbumList> {
   final ScrollController scrollController = ScrollController();
   static const initLoad = 48;
   List<int> displayedIndices = [];
+  bool _isInitialized = false;
 
   @override
   void initState() {
@@ -26,52 +28,42 @@ class _AlbumListState extends State<AlbumList> {
     _initializeData();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _precacheImages();
-  }
-
   Future<void> _initializeData() async {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
     final appState = context.read<AppState>();
     final albumCount = appState.albums.length;
+
+    // Set initial display indices
     setState(() {
       displayedIndices = List.generate(
         math.min(initLoad, albumCount),
         (index) => index,
       );
     });
+
+    // Precache all album images in background
+    _precacheAllImages(appState.albums);
   }
 
-  Future<void> _precacheImages() async {
-    final appState = context.read<AppState>();
-    for (final index in displayedIndices) {
-      if (index < appState.albums.length) {
-        final album = appState.albums[index];
-        await precacheImage(
-          FileImage(File(album.coverPath)),
-          context,
-          size: const Size(480, 480),
-        ).onError((error, stackTrace) {
-          debugPrint('Failed to precache image: $error');
-          return;
-        });
-      }
+  Future<void> _precacheAllImages(List<Album> albums) async {
+    for (final album in albums) {
+      await precacheImage(
+        FileImage(File(album.coverPath)),
+        context,
+        size: const Size(480, 480),
+      ).onError((error, stackTrace) {
+        debugPrint('Failed to precache image: $error');
+        return;
+      });
     }
+    debugPrint('Finished precaching all album images');
   }
 
-  Future<void> _precacheNextBatch(List<int> newIndices) async {
-    final appState = context.read<AppState>();
-    for (final index in newIndices) {
-      if (index < appState.albums.length) {
-        final album = appState.albums[index];
-        await precacheImage(
-          FileImage(File(album.coverPath)),
-          context,
-          size: const Size(480, 480),
-        );
-      }
-    }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   Widget _buildAlbumCover(String coverPath) {
@@ -114,8 +106,6 @@ class _AlbumListState extends State<AlbumList> {
         setState(() {
           displayedIndices.addAll(newIndices);
         });
-        // Precache next batch of images
-        _precacheNextBatch(newIndices);
       }
     }
   }

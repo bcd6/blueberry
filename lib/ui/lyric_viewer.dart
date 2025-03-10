@@ -180,11 +180,11 @@ class _LyricViewerState extends State<LyricViewer> {
                     : 0;
             final extraSpacing = timeGap > 500 ? ' ' : '';
 
-            if (!isCurrent || !isActive) {
+            if (!isCurrent) {
               return Text(
                 part.text + extraSpacing,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white38,
                   fontSize: isCurrent ? 20 : 16,
                   fontWeight: FontWeight.normal,
                   letterSpacing: 1.0,
@@ -222,8 +222,8 @@ class _LyricViewerState extends State<LyricViewer> {
                       colors: const [
                         Colors.white,
                         Colors.white,
-                        Colors.white24,
-                        Colors.white24,
+                        Colors.white38,
+                        Colors.white38,
                       ],
                       stops: [0.0, progress, progress, 1.0],
                     ).createShader(bounds);

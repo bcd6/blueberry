@@ -16,7 +16,7 @@ class AlbumList extends StatefulWidget {
 
 class _AlbumListState extends State<AlbumList> {
   final ScrollController scrollController = ScrollController();
-  static const initLoad = 12;
+  static const initLoad = 48;
   List<int> displayedIndices = [];
 
   @override
@@ -101,7 +101,7 @@ class _AlbumListState extends State<AlbumList> {
           child: GridView.extent(
             controller: scrollController,
             physics: const NeverScrollableScrollPhysics(),
-            maxCrossAxisExtent: 960,
+            maxCrossAxisExtent: 480,
             mainAxisSpacing: 0,
             crossAxisSpacing: 0,
             children:

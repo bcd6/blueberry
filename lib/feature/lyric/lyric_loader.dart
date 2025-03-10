@@ -6,6 +6,14 @@ import 'package:flutter/foundation.dart';
 class LyricLoader {
   static const _pythonScript = 'assets/scripts/fetch_lyrics.py';
 
+  static String _sanitizeFilename(String filename) {
+    // Windows invalid characters: \ / : * ? " < > |
+    return filename
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
   static Future<String?> loadLyricContent(
     String trackPath,
     String trackTitle,
@@ -51,12 +59,14 @@ class LyricLoader {
   ) async {
     final directory = path.dirname(trackPath);
     final filename = path.basenameWithoutExtension(trackPath);
+    final sanitizedTitle = _sanitizeFilename(trackTitle);
+    final sanitizedFilename = _sanitizeFilename(filename);
 
     debugPrint('Checking local files...');
     debugPrint('Directory: $directory');
 
     // Try different filenames and extensions
-    for (final name in [trackTitle, filename]) {
+    for (final name in [sanitizedTitle, sanitizedFilename]) {
       for (final ext in ['.lrc', '.txt']) {
         final lyricPath = path.join(directory, '$name$ext');
         final lyricFile = File(lyricPath);
@@ -144,7 +154,8 @@ class LyricLoader {
   ) async {
     try {
       final directory = path.dirname(trackPath);
-      final lyricPath = path.join(directory, '$title.lrc');
+      final sanitizedTitle = _sanitizeFilename(title);
+      final lyricPath = path.join(directory, '$sanitizedTitle.lrc');
 
       debugPrint('Saving lyrics to: $lyricPath');
 
@@ -165,7 +176,8 @@ class LyricLoader {
   ) async {
     try {
       final directory = path.dirname(trackPath);
-      final lyricPath = path.join(directory, '$title.lrc');
+      final sanitizedTitle = _sanitizeFilename(title);
+      final lyricPath = path.join(directory, '$sanitizedTitle.lrc');
 
       final content = '''[00:00.00]''';
 

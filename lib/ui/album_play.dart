@@ -83,9 +83,15 @@ class _AlbumPlayState extends State<AlbumPlay> {
       if (isSameTrack) {
         debugPrint('Handling same track toggle...');
         if (_isPlaying) {
-          debugPrint('Pausing current track');
-          await _audioService.pause();
-          setState(() => _isPlaying = false);
+          // if it's the only track in the list, seek to start
+          if (_playlists[playlistIndex].tracks.length == 1) {
+            await _audioService.seek(track.startOffset);
+            setState(() => _currentPosition = Duration.zero);
+          } else {
+            debugPrint('Pausing current track');
+            await _audioService.pause();
+            setState(() => _isPlaying = false);
+          }
         } else {
           debugPrint('Resuming current track');
           await _audioService.play();

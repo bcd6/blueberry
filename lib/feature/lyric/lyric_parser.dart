@@ -133,7 +133,7 @@ class LyricParser {
       }
 
       // Treat as plain text if no timestamps found
-      allLines.add(LyricLine([LyricPart(trimmedLine, Duration.zero)]));
+      // allLines.add(LyricLine([LyricPart(trimmedLine, Duration.zero)]));
     }
 
     // Sort all lines by timestamp

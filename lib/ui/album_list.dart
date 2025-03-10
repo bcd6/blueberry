@@ -136,8 +136,7 @@ class _AlbumListState extends State<AlbumList> {
           onPointerSignal: (ps) {
             if (ps is PointerScrollEvent) {
               var duration = 100;
-              final newOffset =
-                  scrollController.offset + ps.scrollDelta.dy * 10;
+              final newOffset = scrollController.offset + ps.scrollDelta.dy * 6;
               if (ps.scrollDelta.dy.isNegative) {
                 scrollController.animateTo(
                   math.max(0, newOffset),

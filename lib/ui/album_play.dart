@@ -403,8 +403,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             children: [
                               _playlists.length > 1
                                   ? Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 24,
+                                    padding: const EdgeInsets.only(
+                                      top: 24,
+                                      bottom: 16,
                                     ),
                                     child: Text(
                                       playlist.name,
@@ -483,7 +484,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),

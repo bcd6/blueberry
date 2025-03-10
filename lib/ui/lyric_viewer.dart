@@ -153,36 +153,92 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   Widget _buildLyricLine(LyricLine line, bool isCurrent) {
-    // Apply spacing rules to all lines
     return Wrap(
-      spacing: 4, // Base spacing between characters
+      spacing: 4,
       children:
           line.parts.map((part) {
-            final isActive =
-                isCurrent && line.parts.indexOf(part) <= _currentPartIndex;
+            final partIndex = line.parts.indexOf(part);
+            final isActive = isCurrent && partIndex <= _currentPartIndex;
+
+            // Get next part from same line
             final nextPart =
-                line.parts.length > line.parts.indexOf(part) + 1
-                    ? line.parts[line.parts.indexOf(part) + 1]
+                partIndex + 1 < line.parts.length
+                    ? line.parts[partIndex + 1]
                     : null;
 
-            // Calculate time gap between this part and next part
+            // Get next line's first part timestamp if this is last part
+            final nextLineStartTime =
+                _currentIndex + 1 < _lyrics!.length
+                    ? _lyrics![_currentIndex + 1].startTime.inMilliseconds
+                    : null;
+
+            // Calculate time gap for spacing
             final timeGap =
                 nextPart != null
                     ? nextPart.timestamp.inMilliseconds -
                         part.timestamp.inMilliseconds
                     : 0;
-
-            // Add extra spacing based on time gap
             final extraSpacing = timeGap > 500 ? ' ' : '';
 
-            return Text(
-              part.text + extraSpacing,
-              style: TextStyle(
-                color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
-                fontSize: isCurrent ? 20 : 16,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                letterSpacing: 1.0, // Base letter spacing
-              ),
+            if (!isCurrent || !isActive) {
+              return Text(
+                part.text + extraSpacing,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: isCurrent ? 20 : 16,
+                  fontWeight: FontWeight.normal,
+                  letterSpacing: 1.0,
+                ),
+              );
+            }
+
+            // For active parts, create animated highlight effect
+            return StreamBuilder<Duration>(
+              stream: widget.currentPositionStream,
+              builder: (context, snapshot) {
+                final currentPosition = snapshot.data?.inMilliseconds ?? 0;
+                final partStartTime = part.timestamp.inMilliseconds;
+
+                // Use next part timestamp, or next line timestamp, or fallback to 1 second
+                final partEndTime =
+                    nextPart?.timestamp.inMilliseconds ??
+                    nextLineStartTime ??
+                    (partStartTime + 1000);
+
+                // Calculate progress within this part's duration
+                final partDuration = partEndTime - partStartTime;
+                final elapsed = currentPosition - partStartTime;
+                final progress =
+                    partDuration > 0
+                        ? (elapsed / partDuration).clamp(0.0, 1.0)
+                        : 1.0;
+
+                return ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (bounds) {
+                    return LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: const [
+                        Colors.white,
+                        Colors.white,
+                        Colors.white24,
+                        Colors.white24,
+                      ],
+                      stops: [0.0, progress, progress, 1.0],
+                    ).createShader(bounds);
+                  },
+                  child: Text(
+                    part.text + extraSpacing,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                );
+              },
             );
           }).toList(),
     );

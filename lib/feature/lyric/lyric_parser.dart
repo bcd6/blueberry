@@ -13,15 +13,18 @@ import 'package:flutter/foundation.dart';
 // 3. line with chacater in betwen [00:00.00]藤[00:00.91]宫[00:01.83]ゆ[00:02.75]き [00:03.66]- [00:04.58]Words [00:05.50]Are[00:06.41]
 // 4. line with chacater in betwen, and bracket [03:57.44] <03:57.44> 信じた <03:58.23>   <03:59.37> (光と影の中)
 class LyricParser {
-  // Changed to match individual timestamps at start
+  // Two regex patterns for different character timing formats
+  static final _textFirstRegex = RegExp(
+    r'([^\[\]<>]+?)(?:\[(\d{2}):(\d{2})\.(\d{2,3})\])',
+  );
+  static final _timestampFirstRegex = RegExp(
+    r'(?:\[(\d{2}):(\d{2})\.(\d{2,3})\]|\<(\d{2}):(\d{2})\.(\d{2,3})\>)\s*([^\[\]<>]*)',
+  );
   static final _timestampRegex = RegExp(r'\[(\d{2}):(\d{2})\.(\d{2,3})\]');
   static final _multiTimestampLineRegex = RegExp(
     r'^(\[(\d{2}):(\d{2})\.(\d{2,3})\])+(.*)$',
   );
-  // Regex for text with timestamp
-  static final _characterTimestampRegex = RegExp(
-    r'([^\[\]<>]*?)(?:\[(\d{2}):(\d{2})\.(\d{2,3})\]|\<(\d{2}):(\d{2})\.(\d{2,3})\>)',
-  );
+
   static const emptyPartText = '♪';
 
   static List<LyricLine> parse(String content) {
@@ -68,10 +71,14 @@ class LyricParser {
       // Step 2: Parse character-by-character with timestamps
       final parts = <LyricPart>[];
       var remainingLine = trimmedLine;
-      var lastEnd = 0;
+
+      // Detect format based on first character
+      final isTimestampFirst =
+          remainingLine.startsWith('[') || remainingLine.startsWith('<');
+      final regex = isTimestampFirst ? _timestampFirstRegex : _textFirstRegex;
 
       while (remainingLine.isNotEmpty) {
-        final match = _characterTimestampRegex.firstMatch(remainingLine);
+        final match = regex.firstMatch(remainingLine);
         if (match == null) {
           // Add remaining text to last part if exists
           if (parts.isNotEmpty && remainingLine.trim().isNotEmpty) {
@@ -86,20 +93,35 @@ class LyricParser {
           break;
         }
 
-        final text = match.group(1)?.trim() ?? '';
-        final timestamp = _parseTimestamp(
-          match.group(2) ?? match.group(5)!,
-          match.group(3) ?? match.group(6)!,
-          match.group(4) ?? match.group(7)!,
-        );
-
-        if (text.isNotEmpty) {
-          parts.add(LyricPart(text, timestamp));
-          debugPrint('Part: "$text" @ ${_formatDuration(timestamp)}');
+        if (isTimestampFirst) {
+          final timestamp = _parseTimestamp(
+            match.group(1) ?? match.group(4)!,
+            match.group(2) ?? match.group(5)!,
+            match.group(3) ?? match.group(6)!,
+          );
+          final text = match.group(7)?.trim() ?? '';
+          if (text.isNotEmpty) {
+            parts.add(LyricPart(text, timestamp));
+            debugPrint(
+              'Part (timestamp-first): "$text" @ ${_formatDuration(timestamp)}',
+            );
+          }
+        } else {
+          final text = match.group(1)?.trim() ?? '';
+          final timestamp = _parseTimestamp(
+            match.group(2)!,
+            match.group(3)!,
+            match.group(4)!,
+          );
+          if (text.isNotEmpty) {
+            parts.add(LyricPart(text, timestamp));
+            debugPrint(
+              'Part (text-first): "$text" @ ${_formatDuration(timestamp)}',
+            );
+          }
         }
 
-        lastEnd = match.end;
-        remainingLine = remainingLine.substring(lastEnd);
+        remainingLine = remainingLine.substring(match.end);
       }
 
       if (parts.isNotEmpty) {

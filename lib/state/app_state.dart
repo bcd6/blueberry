@@ -1,5 +1,6 @@
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/feature/cue/cue_parser.dart';
+import 'package:blueberry/service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
@@ -152,7 +153,7 @@ class AppState extends ChangeNotifier {
       try {
         final rootDirectory = Directory(folder.path);
         if (await rootDirectory.exists()) {
-          await _scanDirectory(rootDirectory);
+          await _scanDirectory(rootDirectory, rootDirectory);
         } else {
           debugPrint('Skipping non-existent root directory: ${folder.path}');
         }
@@ -162,16 +163,24 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> _scanDirectory(Directory dir, {Album? parentAlbum}) async {
+  Future<void> _scanDirectory(
+    Directory dir,
+    Directory root, {
+    Album? parentAlbum,
+  }) async {
     try {
-      final currentAlbum = await _processDirectory(dir, parentAlbum);
-      await _scanSubdirectories(dir, currentAlbum);
+      final currentAlbum = await _processDirectory(dir, root, parentAlbum);
+      await _scanSubdirectories(dir, root, currentAlbum);
     } catch (e) {
       debugPrint('Error scanning directory ${dir.path}: $e');
     }
   }
 
-  Future<Album?> _processDirectory(Directory dir, Album? parentAlbum) async {
+  Future<Album?> _processDirectory(
+    Directory dir,
+    Directory root,
+    Album? parentAlbum,
+  ) async {
     final coverFile = File('${dir.path}\\$coverFileName');
 
     if (await coverFile.exists()) {
@@ -217,18 +226,31 @@ class AppState extends ChangeNotifier {
           return album;
         }
       } else {
-        debugPrint('Empty directory: ${dir.path}');
+        debugPrint('Empty cover directory: ${dir.path}');
+      }
+    } else {
+      // check if it is a directy sub folder of a root folder, if yes then print the name of the folder
+      if (dir.parent.path == root.path) {
+        debugPrint('No cover found in folder: ${dir.path}');
+        AudioService.openInExplorer(dir.path);
       }
     }
     return parentAlbum;
   }
 
-  Future<void> _scanSubdirectories(Directory dir, Album? parentAlbum) async {
+  Future<void> _scanSubdirectories(
+    Directory dir,
+    Directory root,
+    Album? parentAlbum,
+  ) async {
     await for (final entity in dir.list()) {
       if (entity is Directory) {
         final subDir = entity;
         if (!await _isEmptyDirectory(subDir)) {
-          await _scanDirectory(subDir, parentAlbum: parentAlbum);
+          await _scanDirectory(subDir, root, parentAlbum: parentAlbum);
+        } else {
+          debugPrint('No cover found in empty folder: ${subDir.path}');
+          AudioService.openInExplorer(dir.path);
         }
       }
     }

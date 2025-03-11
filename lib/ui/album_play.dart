@@ -246,11 +246,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
     return '$minutes:$seconds';
   }
 
-  Future<void> _openInExplorer(String path) async {
-    debugPrint('Opening in explorer: $path');
-    await Process.run('explorer', [path]);
-  }
-
   void _onPositionChanged(double value) async {
     if (_currentTrackIndex != null && _currentPlaylistIndex != null) {
       final track =
@@ -288,7 +283,10 @@ class _AlbumPlayState extends State<AlbumPlay> {
                     height:
                         leftPanelWidth, // Make height equal to width for square container
                     child: GestureDetector(
-                      onTap: () => _openInExplorer(widget.album.folderPath),
+                      onTap:
+                          () => AudioService.openInExplorer(
+                            widget.album.folderPath,
+                          ),
                       child: FittedBox(
                         fit: BoxFit.contain,
                         alignment: Alignment.topCenter,

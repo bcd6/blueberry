@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:blueberry/domain/loop_mode.dart';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
@@ -68,6 +70,11 @@ class AudioService {
     return inputStream.map((position) {
       return position - startOffset;
     });
+  }
+
+  static Future<void> openInExplorer(String path) async {
+    debugPrint('Opening in explorer: $path');
+    await Process.run('explorer', [path]);
   }
 
   Future<void> dispose() async {

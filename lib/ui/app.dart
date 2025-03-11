@@ -13,9 +13,9 @@ class App extends StatelessWidget {
     final appState = context.read<AppState>();
     await appState.loadConfig();
     await appState.scanAlbums();
-    if (kReleaseMode) {
-      appState.shuffleAlbums();
-    }
+    // if (kReleaseMode) {
+    //   appState.shuffleAlbums();
+    // }
   }
 
   @override

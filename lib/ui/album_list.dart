@@ -17,7 +17,7 @@ class AlbumList extends StatefulWidget {
 
 class _AlbumListState extends State<AlbumList> {
   final ScrollController scrollController = ScrollController();
-  static const initLoad = 48;
+  static const initLoad = 9999;
   List<int> displayedIndices = [];
   bool _isInitialized = false;
 

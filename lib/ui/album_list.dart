@@ -25,6 +25,11 @@ class _AlbumListState extends State<AlbumList> {
   void initState() {
     super.initState();
     scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _initializeData();
   }
 
@@ -44,26 +49,25 @@ class _AlbumListState extends State<AlbumList> {
     });
 
     // Precache all album images in background
-    _precacheAllImages(appState.albums);
+    _precacheImages(appState.albums);
   }
 
-  Future<void> _precacheAllImages(List<Album> albums) async {
+  Future<void> _precacheImages(List<Album> albums) async {
+    debugPrint('Starting to precache ${albums.length} album images');
+
     for (final album in albums) {
-      await precacheImage(
-        FileImage(File(album.coverPath)),
-        context,
-        size: const Size(480, 480),
-      ).onError((error, stackTrace) {
-        debugPrint('Failed to precache image: $error');
-        return;
-      });
+      try {
+        await precacheImage(
+          FileImage(File(album.coverPath)),
+          context,
+          size: const Size(480, 480),
+        );
+      } catch (error) {
+        debugPrint('Failed to precache image ${album.coverPath}: $error');
+      }
     }
-    debugPrint('Finished precaching all album images');
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+    debugPrint('Finished precaching all album images');
   }
 
   Widget _buildAlbumCover(String coverPath) {

@@ -2,6 +2,14 @@
 
 A modern music player built with Flutter that focuses on album-based music playback with karaoke-style lyrics display.
 
+## Preview
+
+![Album Grid View](./preview_grid.png)
+_Album grid view with cover art display_
+
+![Playback View](./preview_player.png)
+_Music playback with karaoke-style lyrics_
+
 ## Features
 
 - 🎵 Support for multiple audio formats (FLAC, APE, MP3, M4A, AAC, OGG, WAV, etc.)

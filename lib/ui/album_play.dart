@@ -72,6 +72,8 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   Future<void> _playTrack(int playlistIndex, int trackIndex) async {
+    if (!mounted) return; // Add early return if widget is disposed
+
     final track = _playlists[playlistIndex].tracks[trackIndex];
     final isSameTrack =
         _currentPlaylistIndex == playlistIndex &&
@@ -79,22 +81,17 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
     debugPrint('\n=== Play Track Request ===');
     debugPrint('Playlist: $playlistIndex, Track: $trackIndex');
-    debugPrint(
-      'Current playlist: $_currentPlaylistIndex, Current track: $_currentTrackIndex',
-    );
-    debugPrint('Is same track: $isSameTrack');
-    debugPrint('Is currently playing: $_isPlaying');
 
     try {
       if (isSameTrack) {
-        debugPrint('Handling same track toggle...');
+        if (!mounted) return;
         if (_isPlaying) {
-          // if it's the only track in the list, seek to start
           if (_playlists[playlistIndex].tracks.length == 1) {
             await _audioService.seek(track.startOffset);
-            setState(() => _currentPosition = Duration.zero);
+            if (mounted) {
+              setState(() => _currentPosition = Duration.zero);
+            }
           } else {
-            debugPrint('Pausing current track');
             await _audioService.pause();
             setState(() => _isPlaying = false);
           }

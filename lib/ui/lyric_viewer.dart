@@ -66,6 +66,8 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   Future<void> _loadLyricFile() async {
+    if (!mounted) return; // Add this check
+
     debugPrint('\n=== Loading Lyrics ===');
     debugPrint('Track: ${widget.track.title}');
     debugPrint('Path: ${widget.track.path}');
@@ -76,6 +78,9 @@ class _LyricViewerState extends State<LyricViewer> {
       widget.track.album,
       widget.track.performer,
     );
+
+    if (!mounted) return; // Add this check after async operation
+
     if (content != null) {
       debugPrint('Lyric content loaded: ${content.length} characters');
       final lyrics = LyricParser.parse(content);
@@ -86,11 +91,14 @@ class _LyricViewerState extends State<LyricViewer> {
         debugPrint('First timestamp: ${lyrics[0].startTime}');
       }
 
-      setState(() {
-        _lyrics = lyrics;
-        _currentIndex = 0;
-        _currentPartIndex = 0;
-      });
+      if (mounted) {
+        // Add this check before setState
+        setState(() {
+          _lyrics = lyrics;
+          _currentIndex = 0;
+          _currentPartIndex = 0;
+        });
+      }
     } else {
       debugPrint('No lyrics found');
     }

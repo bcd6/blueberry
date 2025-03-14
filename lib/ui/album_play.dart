@@ -313,7 +313,10 @@ class _AlbumPlayState extends State<AlbumPlay> {
                         fit: BoxFit.contain,
                         alignment: Alignment.topCenter,
                         child: Image.file(
-                          File(widget.album.coverPath),
+                          File(
+                            _currentTrack?.albumCoverPath ??
+                                widget.album.coverPath,
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),

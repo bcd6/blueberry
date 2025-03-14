@@ -32,14 +32,12 @@ class CueSheet {
   final List<CueTrack> tracks;
   final String title;
   final String performer;
-  final Map<String, String> metadata;
 
   CueSheet({
     required this.audioFile,
     required this.tracks,
     this.title = '',
     this.performer = '',
-    this.metadata = const {},
   });
 }
 
@@ -92,7 +90,6 @@ class CueParser {
             tracks: parseState.tracks,
             title: parseState.albumTitle,
             performer: parseState.albumPerformer,
-            metadata: parseState.albumMetadata,
           )
           : null;
     } catch (e, stackTrace) {
@@ -308,6 +305,7 @@ class _CueParseState {
   String? audioFile;
   String albumTitle = '';
   String albumPerformer = '';
+  // Not using atm
   final albumMetadata = <String, String>{};
   final tracks = <CueTrack>[];
 

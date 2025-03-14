@@ -1,5 +1,9 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'playlist.dart';
 
+part 'album.g.dart';
+
+@JsonSerializable()
 class Album {
   final String folderPath;
   final String name;
@@ -16,4 +20,7 @@ class Album {
     this.regularFiles = const [],
     this.cueFiles = const [],
   });
+
+  factory Album.fromJson(Map<String, dynamic> json) => _$AlbumFromJson(json);
+  Map<String, dynamic> toJson() => _$AlbumToJson(this);
 }

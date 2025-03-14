@@ -135,8 +135,6 @@ class AppState extends ChangeNotifier {
                         ? cueSheet.title
                         : path.basenameWithoutExtension(cuePath),
                 tracks: cueTracks,
-                cuePath: cuePath,
-                metadata: cueSheet.metadata,
               ),
             );
           }

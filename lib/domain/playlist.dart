@@ -1,17 +1,16 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'track.dart';
 
+part 'playlist.g.dart';
+
+@JsonSerializable()
 class Playlist {
   final String name;
   final List<Track> tracks;
-  final String? cuePath;
-  final Map<String, String> metadata;
 
-  Playlist({
-    required this.name,
-    required this.tracks,
-    this.cuePath,
-    this.metadata = const {},
-  });
+  Playlist({required this.name, required this.tracks});
 
-  bool get isCueSheet => cuePath != null;
+  factory Playlist.fromJson(Map<String, dynamic> json) =>
+      _$PlaylistFromJson(json);
+  Map<String, dynamic> toJson() => _$PlaylistToJson(this);
 }

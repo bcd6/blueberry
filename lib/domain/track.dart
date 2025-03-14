@@ -1,3 +1,8 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'track.g.dart';
+
+@JsonSerializable()
 class Track {
   final String path;
   final String title;
@@ -18,6 +23,9 @@ class Track {
     this.metadata = const {},
     this.isCueTrack = false,
   });
+
+  factory Track.fromJson(Map<String, dynamic> json) => _$TrackFromJson(json);
+  Map<String, dynamic> toJson() => _$TrackToJson(this);
 
   String get fileName => path.split('\\').last;
 }

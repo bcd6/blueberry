@@ -239,6 +239,25 @@ class _AlbumPlayState extends State<AlbumPlay> {
     );
   }
 
+  Widget _buildFavButton() {
+    final isTrackSelected = _currentTrack != null;
+
+    return IconButton(
+      icon: Icon(
+        Icons.favorite,
+        color: isTrackSelected ? Colors.white : Colors.white24,
+      ),
+      onPressed:
+          isTrackSelected
+              ? () {
+                // TODO: Implement favorite functionality
+                debugPrint('Add to favorites: ${_currentTrack!.title}');
+              }
+              : null,
+      tooltip: 'Add to Favorites',
+    );
+  }
+
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final minutes = twoDigits(duration.inMinutes.remainder(60));
@@ -380,6 +399,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                         ],
                         const SizedBox(width: 16),
                         _buildLoopButton(),
+                        _buildFavButton(),
                       ],
                     ),
                   ),

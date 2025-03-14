@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:blueberry/domain/album.dart';
+import 'package:blueberry/state/fav_state.dart';
 import 'package:blueberry/ui/album_play.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -117,7 +118,8 @@ class _AlbumListState extends State<AlbumList> {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
-    final albums = appState.albums;
+    final favState = context.watch<FavState>();
+    final albums = [favState.favAlbum, ...appState.albums];
 
     // Safety check to prevent range errors
     displayedIndices =
@@ -157,7 +159,7 @@ class _AlbumListState extends State<AlbumList> {
             crossAxisSpacing: 0,
             children:
                 displayedIndices.map((index) {
-                  final album = appState.albums[index];
+                  final album = albums[index];
                   return Container(
                     padding: const EdgeInsets.all(36),
                     child: GestureDetector(

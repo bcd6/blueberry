@@ -58,22 +58,31 @@ class FavState extends ChangeNotifier {
 
   Future<void> toggleFavorite(Track track) async {
     if (isFavorite(track)) {
-      // Remove from favorites
-      for (var playlist in _favAlbum.playlists) {
-        playlist.tracks.removeWhere((t) => t == track);
-      }
-      // Remove empty playlists
+      // Create new playlists list with tracks removed
+      final updatedPlaylists =
+          _favAlbum.playlists
+              .map((playlist) {
+                return Playlist(
+                  name: playlist.name,
+                  tracks: playlist.tracks.where((t) => t != track).toList(),
+                );
+              })
+              .where((playlist) => playlist.tracks.isNotEmpty)
+              .toList();
+
+      // Update album with filtered playlists
       _favAlbum = Album(
         folderPath: _favAlbum.folderPath,
         name: _favAlbum.name,
         coverPath: _favAlbum.coverPath,
-        playlists:
-            _favAlbum.playlists.where((p) => p.tracks.isNotEmpty).toList(),
+        playlists: updatedPlaylists,
       );
+
       debugPrint('Removed from favorites: ${track.title}');
     } else {
       // Add to favorites
-      final albumName = track.album ?? '';
+      final albumName = track.album ?? 'Unknown Album';
+
       // Find existing playlist or create new one
       var targetPlaylist = _favAlbum.playlists.firstWhere(
         (p) => p.name == albumName,
@@ -89,9 +98,21 @@ class FavState extends ChangeNotifier {
         },
       );
 
-      // Add track to playlist
+      // Add track to playlist if not already present
       if (!targetPlaylist.tracks.contains(track)) {
-        targetPlaylist.tracks.add(track);
+        final updatedTracks = [...targetPlaylist.tracks, track];
+        targetPlaylist = Playlist(name: albumName, tracks: updatedTracks);
+
+        _favAlbum = Album(
+          folderPath: _favAlbum.folderPath,
+          name: _favAlbum.name,
+          coverPath: _favAlbum.coverPath,
+          playlists:
+              _favAlbum.playlists
+                  .map((p) => p.name == albumName ? targetPlaylist : p)
+                  .toList(),
+        );
+
         debugPrint(
           'Added to favorites: ${track.title} in playlist: $albumName',
         );

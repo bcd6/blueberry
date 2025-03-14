@@ -17,12 +17,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FavState()),
-        ChangeNotifierProxyProvider<FavState, AppState>(
-          create: (context) => AppState(context.read<FavState>()),
-          update:
-              (context, favState, previous) => previous ?? AppState(favState),
-        ),
-        // ...other providers...
+        ChangeNotifierProvider(create: (_) => AppState()),
       ],
       child: Phoenix(child: App()),
     ),

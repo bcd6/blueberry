@@ -12,7 +12,8 @@ import '../domain/track.dart';
 import 'package:metadata_god/metadata_god.dart';
 
 class AppState extends ChangeNotifier {
-  final FavState _favState;
+  AppState();
+
   Config? _config;
   final List<Album> _albums = [];
   static const String configPath = 'D:\\~\\album';
@@ -35,8 +36,6 @@ class AppState extends ChangeNotifier {
     'dsd',
   ];
 
-  AppState(this._favState);
-
   Config? get config => _config;
   List<Album> get albums => _albums;
 
@@ -56,9 +55,6 @@ class AppState extends ChangeNotifier {
       debugPrint('Error loading config: $e');
       _config = Config(folders: []);
     }
-
-    // load favorites
-    await _favState.loadFavorites();
 
     notifyListeners();
   }
@@ -263,11 +259,6 @@ class AppState extends ChangeNotifier {
         }
       }
     }
-  }
-
-  Future<void> appendFavAlbum() async {
-    _albums.insert(0, _favState.favAlbum);
-    notifyListeners();
   }
 
   // Utility methods

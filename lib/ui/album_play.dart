@@ -309,15 +309,33 @@ class _AlbumPlayState extends State<AlbumPlay> {
                           () => AudioService.openInExplorer(
                             widget.album.folderPath,
                           ),
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        alignment: Alignment.topCenter,
-                        child: Image.file(
-                          File(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        switchInCurve: Curves.easeInCubic,
+                        switchOutCurve: Curves.easeOutCubic,
+                        transitionBuilder: (
+                          Widget child,
+                          Animation<double> animation,
+                        ) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: FittedBox(
+                          key: ValueKey(
                             _currentTrack?.albumCoverPath ??
                                 widget.album.coverPath,
                           ),
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.topCenter,
+                          child: Image.file(
+                            File(
+                              _currentTrack?.albumCoverPath ??
+                                  widget.album.coverPath,
+                            ),
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),

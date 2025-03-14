@@ -13,7 +13,6 @@ class CueTrack {
   final int index;
   final String? isrc;
   final Duration? pregap;
-  final Map<String, String> metadata;
 
   CueTrack({
     required this.title,
@@ -23,7 +22,6 @@ class CueTrack {
     required this.index,
     this.isrc,
     this.pregap,
-    this.metadata = const {},
   });
 }
 
@@ -100,9 +98,7 @@ class CueParser {
   }
 
   static void _parseLine(String line, _CueParseState state) {
-    if (line.startsWith('REM ')) {
-      _parseRem(line, state);
-    } else if (line.startsWith('FILE ')) {
+    if (line.startsWith('FILE ')) {
       _parseFile(line, state);
     } else if (line.startsWith('TITLE ')) {
       _parseTitle(line, state);
@@ -114,19 +110,6 @@ class CueParser {
       state.currentIsrc = line.substring(5).trim();
     } else if (line.startsWith('INDEX ')) {
       _parseIndex(line, state);
-    }
-  }
-
-  static void _parseRem(String line, _CueParseState state) {
-    final parts = line.substring(4).split(' ');
-    if (parts.length >= 2) {
-      final key = parts[0];
-      final value = parts.sublist(1).join(' ');
-      if (!state.isInTrack) {
-        state.albumMetadata[key] = value;
-      } else {
-        state.currentMetadata[key] = value;
-      }
     }
   }
 
@@ -202,7 +185,6 @@ class CueParser {
               state.pregapStart != null
                   ? state.currentStart! - state.pregapStart!
                   : null,
-          metadata: Map.from(state.currentMetadata),
         ),
       );
     } else {
@@ -233,7 +215,6 @@ class CueParser {
         index: tracks[i].index,
         isrc: tracks[i].isrc,
         pregap: tracks[i].pregap,
-        metadata: tracks[i].metadata,
       );
     }
 
@@ -260,7 +241,6 @@ class CueParser {
         index: tracks[lastIndex].index,
         isrc: tracks[lastIndex].isrc,
         pregap: tracks[lastIndex].pregap,
-        metadata: tracks[lastIndex].metadata,
       );
     }
   }
@@ -325,6 +305,5 @@ class _CueParseState {
     currentIsrc = null;
     pregapStart = null;
     currentStart = null;
-    currentMetadata.clear();
   }
 }

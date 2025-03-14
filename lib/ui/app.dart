@@ -1,4 +1,5 @@
 import 'package:blueberry/state/app_state.dart';
+import 'package:blueberry/state/fav_state.dart';
 import 'package:blueberry/ui/album_list.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ class App extends StatelessWidget {
     final appState = context.read<AppState>();
     await appState.loadConfig();
     await appState.scanAlbums();
+    await appState.appendFavAlbum();
     // if (kReleaseMode) {
     //   appState.shuffleAlbums();
     // }

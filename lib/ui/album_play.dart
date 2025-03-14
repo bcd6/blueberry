@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/domain/track.dart';
+import 'package:blueberry/state/fav_state.dart';
 import 'package:blueberry/ui/lyric_viewer.dart';
 import 'package:blueberry/service/audio_service.dart';
 import 'package:blueberry/state/app_state.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../domain/album.dart';
 
 class AlbumPlay extends StatefulWidget {
@@ -403,7 +405,23 @@ class _AlbumPlayState extends State<AlbumPlay> {
                         ],
                         const SizedBox(width: 16),
                         _buildLoopButton(),
-                        _buildFavButton(),
+                        _currentTrack != null
+                            ? IconButton(
+                              icon: Icon(
+                                Icons.favorite,
+                                color:
+                                    context.watch<FavState>().isFavorite(
+                                          _currentTrack!,
+                                        )
+                                        ? Colors.red
+                                        : Colors.white24,
+                              ),
+                              onPressed:
+                                  () => context.read<FavState>().toggleFavorite(
+                                    _currentTrack!,
+                                  ),
+                            )
+                            : _buildFavButton(),
                       ],
                     ),
                   ),

@@ -1,6 +1,7 @@
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/feature/cue/cue_parser.dart';
 import 'package:blueberry/service/audio_service.dart';
+import 'package:blueberry/state/fav_state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
@@ -11,6 +12,7 @@ import '../domain/track.dart';
 import 'package:metadata_god/metadata_god.dart';
 
 class AppState extends ChangeNotifier {
+  final FavState _favState;
   Config? _config;
   final List<Album> _albums = [];
   static const String configPath = 'D:\\~\\album';
@@ -33,6 +35,8 @@ class AppState extends ChangeNotifier {
     'dsd',
   ];
 
+  AppState(this._favState);
+
   Config? get config => _config;
   List<Album> get albums => _albums;
 
@@ -52,6 +56,10 @@ class AppState extends ChangeNotifier {
       debugPrint('Error loading config: $e');
       _config = Config(folders: []);
     }
+
+    // load favorites
+    await _favState.loadFavorites();
+
     notifyListeners();
   }
 
@@ -126,7 +134,6 @@ class AppState extends ChangeNotifier {
                       performer: t.performer,
                       duration: t.duration,
                       startOffset: t.start,
-                      metadata: t.metadata,
                     ),
                   )
                   .toList();
@@ -256,6 +263,11 @@ class AppState extends ChangeNotifier {
         }
       }
     }
+  }
+
+  Future<void> appendFavAlbum() async {
+    _albums.insert(0, _favState.favAlbum);
+    notifyListeners();
   }
 
   // Utility methods

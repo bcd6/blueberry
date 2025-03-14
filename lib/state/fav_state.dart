@@ -8,9 +8,11 @@ import '../domain/track.dart';
 class FavState extends ChangeNotifier {
   static const String _favFileName = '~fav.json';
   static const String _favFolderPath = 'D:\\~\\album';
-  final List<Album> _favorites = [];
-
-  List<Track> get favorites => List.unmodifiable(_favorites);
+  final Album _favAlbum = Album(
+    folderPath: _favFolderPath,
+    name: 'Favorites',
+    coverPath: path.join(_favFolderPath, 'folder.jpg'),
+  );
 
   String get _favFilePath => path.join(_favFolderPath, _favFileName);
 }

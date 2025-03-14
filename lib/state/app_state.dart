@@ -70,6 +70,7 @@ class AppState extends ChangeNotifier {
 
   static Future<List<Playlist>> loadRegularPlaylist(
     List<String> regularFiles,
+    String albumCoverPath,
   ) async {
     // Group files by parent folder
     final Map<String, List<String>> filesByFolder = {};
@@ -89,7 +90,7 @@ class AppState extends ChangeNotifier {
 
       // Create tracks for this folder's files
       final tracks = await Future.wait(
-        folderFiles.map((f) => _createTrackFromFile(f)),
+        folderFiles.map((f) => _createTrackFromFile(f, albumCoverPath)),
       );
 
       if (tracks.isNotEmpty) {
@@ -100,7 +101,10 @@ class AppState extends ChangeNotifier {
     return playlists;
   }
 
-  static Future<List<Playlist>> loadCuePlaylists(List<String> cueFiles) async {
+  static Future<List<Playlist>> loadCuePlaylists(
+    List<String> cueFiles,
+    String albumCoverPath,
+  ) async {
     final List<Playlist> cuePlaylists = [];
 
     for (final cuePath in cueFiles) {
@@ -118,11 +122,11 @@ class AppState extends ChangeNotifier {
                       path: audioPath,
                       title: t.title,
                       album: cueSheet.title,
+                      albumCoverPath: albumCoverPath,
                       performer: t.performer,
                       duration: t.duration,
                       startOffset: t.start,
                       metadata: t.metadata,
-                      isCueTrack: true,
                     ),
                   )
                   .toList();
@@ -279,7 +283,10 @@ class AppState extends ChangeNotifier {
     return validFileTypes.any((type) => extension.endsWith(type));
   }
 
-  static Future<Track> _createTrackFromFile(String filePath) async {
+  static Future<Track> _createTrackFromFile(
+    String filePath,
+    String albumCoverPath,
+  ) async {
     String title = path.basenameWithoutExtension(filePath);
     String? album;
     String? performer;
@@ -300,6 +307,7 @@ class AppState extends ChangeNotifier {
       path: filePath,
       title: title,
       album: album,
+      albumCoverPath: albumCoverPath,
       performer: performer,
       duration: duration,
     );

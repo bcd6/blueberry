@@ -51,10 +51,14 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
     final regularPlaylist = await AppState.loadRegularPlaylist(
       widget.album.regularFiles,
+      widget.album.coverPath,
     );
     _playlists.addAll(regularPlaylist);
 
-    final cuePlaylists = await AppState.loadCuePlaylists(widget.album.cueFiles);
+    final cuePlaylists = await AppState.loadCuePlaylists(
+      widget.album.cueFiles,
+      widget.album.coverPath,
+    );
     _playlists.addAll(cuePlaylists);
 
     setState(() => _loading = false);

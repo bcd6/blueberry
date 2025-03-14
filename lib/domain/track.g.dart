@@ -24,7 +24,6 @@ Track _$TrackFromJson(Map<String, dynamic> json) => Track(
         (k, e) => MapEntry(k, e as String),
       ) ??
       const {},
-  isCueTrack: json['isCueTrack'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$TrackToJson(Track instance) => <String, dynamic>{
@@ -35,5 +34,4 @@ Map<String, dynamic> _$TrackToJson(Track instance) => <String, dynamic>{
   'duration': instance.duration?.inMicroseconds,
   'startOffset': instance.startOffset.inMicroseconds,
   'metadata': instance.metadata,
-  'isCueTrack': instance.isCueTrack,
 };

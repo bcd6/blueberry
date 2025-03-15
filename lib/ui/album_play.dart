@@ -286,39 +286,53 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   // Add this method to _AlbumPlayState class
   void _showLyricsSourceModal() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.black87,
       builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  'Select Lyrics Source',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
+        return Dialog(
+          backgroundColor: Colors.black87,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 660, maxHeight: 400),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildLyricsSourceItem('Megalobiz (Default)', 'megalobiz'),
-                    _buildLyricsSourceItem('QQ Music', 'qqmusic'),
-                    _buildLyricsSourceItem('NetEase Music', 'netease'),
-                    _buildLyricsSourceItem('Local File', 'local'),
-                    _buildLyricsSourceItem('Generate with AI', 'ai'),
+                    Text(
+                      'Select Lyrics Source',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white54),
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: 'Close',
+                    ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      _buildLyricsSourceItem(
+                        'Megalobiz (Default)',
+                        'megalobiz',
+                      ),
+                      _buildLyricsSourceItem('QQ Music', 'qqmusic'),
+                      _buildLyricsSourceItem('NetEase Music', 'netease'),
+                      _buildLyricsSourceItem('Local File', 'local'),
+                      _buildLyricsSourceItem('Generate with AI', 'ai'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -1,22 +1,33 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:ffi';
+import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
+import 'package:archive/archive.dart';
+import 'models/lyric_result.dart';
 
 // DLL function signatures
 typedef NativeDDes = Int32 Function(Pointer<Uint8>, Pointer<Utf8>, Int32);
 typedef DartDDes = int Function(Pointer<Uint8>, Pointer<Utf8>, int);
 
+enum SearchType { song, album, playlist }
+
 class QQMusicService {
+  static const String _baseUrl = 'https://c.y.qq.com';
+  // Dictionary for XML mapping
+  static const Map<String, String> _xmlMappingDict = {
+    'content': 'orig', // Original lyrics
+    'contentts': 'ts', // Translation
+    'contentroma': 'roma', // Romanization
+    'Lyric_1': 'lyric', // Decompressed content
+  };
   static final _dllPath = path.join(
     Directory.current.path,
     r'assets\dlls\QQMusicVerbatim.dll',
   );
-  static const String _baseUrl = 'https://c.y.qq.com';
-  static final DateTime _epoch = DateTime(1970, 1, 1, 8, 0, 0);
 
   late final DynamicLibrary _dll;
   late final DartDDes _funcDDes;
@@ -50,58 +61,11 @@ class QQMusicService {
     }
   }
 
-  Future<Map<String, dynamic>> processLyricContent(String hexContent) async {
-    try {
-      // Convert hex string to bytes
-      final List<int> bytes = [];
-      for (int i = 0; i < hexContent.length; i += 2) {
-        bytes.add(int.parse(hexContent.substring(i, i + 2), radix: 16));
-      }
-
-      // Allocate native memory
-      final dataLength = bytes.length;
-      final nativeData = calloc<Uint8>(dataLength);
-
-      // Copy data to native memory
-      for (int i = 0; i < dataLength; i++) {
-        nativeData[i] = bytes[i];
-      }
-
-      // Process the data
-      _processMusicData(nativeData, dataLength);
-
-      // Copy processed data back
-      final processedBytes = List<int>.generate(
-        dataLength,
-        (i) => nativeData[i],
-      );
-
-      // Free native memory
-      calloc.free(nativeData);
-
-      // Convert processed bytes to string
-      final decodedContent = utf8.decode(processedBytes);
-
-      return {'lyrics': decodedContent};
-    } catch (e) {
-      debugPrint('Error processing lyric content: $e');
-      return {'error': e.toString()};
-    }
-  }
-
-  static const Map<String, String> _xmlMappingDict = {
-    'content': 'orig', // Original
-    'contentts': 'ts', // Translation
-    'contentroma': 'roma', // Romaji
-    'Lyric_1': 'lyric', // Decompressed content
-  };
-
   Future<Map<String, dynamic>> searchMusic(
     String keyword,
     SearchType type,
   ) async {
     final searchTypeNum = _getSearchTypeNumber(type);
-
     final data = {
       'req_1': {
         'method': 'DoSearchForQQMusicDesktop',
@@ -114,7 +78,6 @@ class QQMusicService {
         },
       },
     };
-
     final response = await _postJson(
       'https://u.y.qq.com/cgi-bin/musicu.fcg',
       data,
@@ -122,89 +85,140 @@ class QQMusicService {
     return response;
   }
 
-  Future<Map<String, dynamic>> getLyric(String songMid) async {
-    final currentMillis = DateTime.now().difference(_epoch).inMilliseconds;
-    const callback = 'MusicJsonCallback_lrc';
+  Future<LyricResult> getVerbatimLyric(String songId) async {
+    try {
+      final response = await _post('/qqmusic/fcgi-bin/lyric_download.fcg', {
+        'version': '15',
+        'miniversion': '82',
+        'lrctype': '4',
+        'musicid': songId,
+      });
+      debugPrint(response);
+      // Remove XML comments
+      final cleanXml = response
+          .replaceAll('<!--', '')
+          .replaceAll('-->', '')
+          .replaceAll('<miniversion="1" />', '');
+      debugPrint(cleanXml);
 
-    final data = {
-      'callback': callback,
-      'pcachetime': currentMillis.toString(),
-      'songmid': songMid,
-      'g_tk': '5381',
-      'jsonpCallback': callback,
-      'loginUin': '0',
-      'hostUin': '0',
-      'format': 'jsonp',
-      'inCharset': 'utf8',
-      'outCharset': 'utf8',
-      'notice': '0',
-      'platform': 'yqq',
-      'needNewCode': '0',
-    };
+      // Parse XML and create node dictionary
+      final document = XmlDocument.parse(cleanXml);
+      final dict = <String, XmlNode>{};
+      _findXmlElements(document.rootElement, _xmlMappingDict, dict);
 
-    final response = await _post(
-      '/lyric/fcgi-bin/fcg_query_lyric_new.fcg',
-      data,
-    );
-    return _parseJsonpResponse(callback, response);
+      var result = LyricResult();
+
+      for (final pair in dict.entries) {
+        final text = pair.value.innerText;
+
+        if (text.isEmpty) continue;
+
+        // Convert hex string to bytes
+        final bytes = _hexStringToBytes(text);
+        if (bytes == null) continue;
+
+        // Process bytes through DLL functions
+        final processedBytes = await _processLyricBytes(bytes);
+        if (processedBytes == null) continue;
+
+        // Decompress and decode
+        final decompressedBytes = ZLibDecoder().decodeBytes(processedBytes);
+        var decompressText = utf8.decode(decompressedBytes);
+
+        // Handle BOM if present
+        if (decompressText.startsWith('\uFEFF')) {
+          decompressText = decompressText.substring(1);
+        }
+
+        String lyricContent = '';
+        if (decompressText.contains('<?xml')) {
+          // Parse inner XML
+          final innerDoc = XmlDocument.parse(decompressText);
+          final subDict = <String, XmlNode>{};
+          _findXmlElements(innerDoc.rootElement, _xmlMappingDict, subDict);
+
+          if (subDict.containsKey('lyric')) {
+            final lyricNode = subDict['lyric']!;
+            lyricContent = lyricNode.getAttribute('LyricContent') ?? '';
+          }
+        } else {
+          lyricContent = decompressText;
+        }
+
+        if (lyricContent.isNotEmpty) {
+          switch (pair.key) {
+            case 'orig':
+              result.lyric = _processVerbatimLyric(lyricContent);
+              break;
+            case 'ts':
+              result.trans = _processVerbatimLyric(lyricContent);
+              break;
+          }
+        }
+      }
+
+      return result;
+    } catch (e) {
+      debugPrint('Error getting verbatim lyric: $e');
+      return LyricResult(code: -1);
+    }
   }
 
-  Future<Map<String, dynamic>> getVerbatimLyric(String songId) async {
-    final response = await _post('/qqmusic/fcgi-bin/lyric_download.fcg', {
-      'version': '15',
-      'miniversion': '82',
-      'lrctype': '4',
-      'musicid': songId,
-    });
-
-    // Remove XML comments
-    final cleanXml = response.replaceAll('<!--', '').replaceAll('-->', '');
-
-    // Process XML and decrypt content
-    // TODO: Implement XML processing and decryption
-    return {'lyrics': cleanXml};
+  void _findXmlElements(
+    XmlNode node,
+    Map<String, String> mappings,
+    Map<String, XmlNode> result,
+  ) {
+    for (final child in node.childElements) {
+      final name = child.name.local;
+      if (mappings.containsKey(name)) {
+        result[mappings[name]!] = child;
+      }
+      _findXmlElements(child, mappings, result);
+    }
   }
 
-  Future<String> getSongLink(String songMid) async {
-    final guid = _generateGuid();
+  Uint8List? _hexStringToBytes(String hex) {
+    try {
+      final bytes = <int>[];
+      for (var i = 0; i < hex.length; i += 2) {
+        bytes.add(int.parse(hex.substring(i, i + 2), radix: 16));
+      }
+      return Uint8List.fromList(bytes);
+    } catch (e) {
+      debugPrint('Error converting hex string to bytes: $e');
+      return null;
+    }
+  }
 
-    final data = {
-      'req': {
-        'method': 'GetCdnDispatch',
-        'module': 'CDN.SrfCdnDispatchServer',
-        'param': {'guid': guid, 'calltype': '0', 'userip': ''},
-      },
-      'req_0': {
-        'method': 'CgiGetVkey',
-        'module': 'vkey.GetVkeyServer',
-        'param': {
-          'guid': '8348972662',
-          'songmid': [songMid],
-          'songtype': [1],
-          'uin': '0',
-          'loginflag': 1,
-          'platform': '20',
-        },
-      },
-      'comm': {'uin': 0, 'format': 'json', 'ct': 24, 'cv': 0},
-    };
+  Future<Uint8List?> _processLyricBytes(Uint8List input) async {
+    final length = input.length;
+    final nativeData = calloc<Uint8>(length);
 
-    final response = await _postJson(
-      'https://u.y.qq.com/cgi-bin/musicu.fcg',
-      data,
-    );
-    return _extractSongLink(response);
+    try {
+      // Copy input to native memory
+      for (var i = 0; i < length; i++) {
+        nativeData[i] = input[i];
+      }
+
+      // Process data
+      _processMusicData(nativeData, length);
+
+      // Copy result back
+      return Uint8List.fromList(
+        List<int>.generate(length, (i) => nativeData[i]),
+      );
+    } finally {
+      calloc.free(nativeData);
+    }
+  }
+
+  String _processVerbatimLyric(String input) {
+    // Add any QQ Music specific lyric processing here
+    return input.trim();
   }
 
   // Helper methods
-  Future<dynamic> _get(String endpoint, Map<String, String> params) async {
-    final uri = Uri.parse(
-      '$_baseUrl$endpoint',
-    ).replace(queryParameters: params);
-    final response = await http.get(uri, headers: _getHeaders());
-    return utf8.decode(response.bodyBytes);
-  }
-
   Future<dynamic> _post(String endpoint, Map<String, String> data) async {
     final uri = Uri.parse('$_baseUrl$endpoint');
     final response = await http.post(
@@ -240,7 +254,7 @@ class QQMusicService {
 
     // Handle potential JSONP response
     String responseBody = utf8.decode(response.bodyBytes);
-    debugPrint('Response: $responseBody');
+    // debugPrint('Response: $responseBody');
 
     if (responseBody.startsWith('callback(')) {
       responseBody = responseBody
@@ -260,39 +274,9 @@ class QQMusicService {
     'Referer': 'https://c.y.qq.com/',
     'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
-
     'Cookie':
         'pgv_pvid=5853446373; _qimei_q36=; _qimei_h38=f5f13a7ef1bd3f832354f83a0200000f017c13; qq_domain_video_guid_verify=e2289668199e59d9; fqm_pvqid=5abd1388-37bd-4edc-8c66-b73c982d9762; eas_sid=HgW2zOoQghXSUzt4pfEPn3eZpQ; pac_uid=0_E9csXFtSj8ffR; _qimei_fingerprint=b3d6ca140562d227c5dbd2d80cc2c8e4; _qimei_uuid42=1910b130530100347f4f296e15a7d836d39e0ddee0; fqm_sessionid=9b8ad51a-0fcb-43ce-b78c-0ac70df1e8c0; pgv_info=ssid=s9688118829; ts_refer=www.reddit.com/; ts_uid=353491493; _qpsvr_localtk=0.35841386714100687; RK=2JXNVHj+ff; ptcz=ff50c8cf1bf54fc5c760b1bea074d35c49ca5d919c7301b685c1823e4548daa5; login_type=1; qqmusic_key=Q_H_L_63k3N6yKLKttE2dEX4bC-zwWNt6V8rGkoGwUWG0q1uUx6KtJ3xXS_-QnPzfTL7-tczCEdkYff9RCy8TSo6Zll-A; tmeLoginType=2; psrf_musickey_createtime=1742007842; psrf_qqunionid=54157EDC14EA8FE203C14E7686C0C5BC; wxopenid=; psrf_qqopenid=77A764D8AF510E47B07070C6069C6AFE; psrf_access_token_expiresAt=1747191842; euin=oici7iEPoe-P; psrf_qqaccess_token=E405A13110C01576602FE25DA9F93FAA; wxunionid=; psrf_qqrefresh_token=F705F2F98830A6B5B25C35FFB6D5B269; music_ignore_pskey=202306271436Hn@vBj; wxrefresh_token=; qm_keyst=Q_H_L_63k3N6yKLKttE2dEX4bC-zwWNt6V8rGkoGwUWG0q1uUx6KtJ3xXS_-QnPzfTL7-tczCEdkYff9RCy8TSo6Zll-A; uin=383794024; ts_last=y.qq.com/n/ryqq/singer/004AFVlB2ZPQpj',
   };
-
-  String _generateGuid() {
-    final random = Random();
-    final buffer = StringBuffer();
-    for (var i = 0; i < 10; i++) {
-      buffer.write(random.nextInt(10));
-    }
-    return buffer.toString();
-  }
-
-  Map<String, dynamic> _parseJsonpResponse(String callback, String response) {
-    if (!response.startsWith(callback)) return {};
-
-    final jsonStr = response
-        .replaceFirst('$callback(', '')
-        .substring(0, response.length - callback.length - 2);
-
-    return jsonDecode(jsonStr);
-  }
-
-  String _extractSongLink(Map<String, dynamic> response) {
-    try {
-      final sip = response['req']['data']['sip'][0];
-      final purl = response['req_0']['data']['midurlinfo'][0]['purl'];
-      return '$sip$purl';
-    } catch (e) {
-      return '';
-    }
-  }
 
   int _getSearchTypeNumber(SearchType type) {
     switch (type) {
@@ -306,9 +290,6 @@ class QQMusicService {
   }
 }
 
-enum SearchType { song, album, playlist }
-
-// Add this at the top of the file with other imports
 void debugPrint(String message) {
-  debugPrint('[QQMusic] $message');
+  print('[QQMusic] $message');
 }

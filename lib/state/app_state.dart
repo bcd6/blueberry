@@ -1,7 +1,6 @@
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/feature/cue/cue_parser.dart';
 import 'package:blueberry/service/audio_service.dart';
-import 'package:blueberry/state/fav_state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';

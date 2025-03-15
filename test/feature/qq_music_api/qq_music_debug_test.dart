@@ -15,47 +15,17 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('Get Lyric Test', () async {
-      // First search for a song to get its songMid
-      final searchResult = await qqMusic.searchMusic(
-        'Rock over Japan Arb',
-        SearchType.song,
-      );
-      final songMid =
-          searchResult['req_1']['data']['body']['song']['list'][1]['mid'];
-
-      final lyricResult = await qqMusic.getLyric(songMid);
-      print('\nLyric Result:');
-      print(lyricResult);
-      expect(lyricResult, isNotNull);
-    });
-
-    test('Get Song Link Test', () async {
-      // Use the same song from search
-      final searchResult = await qqMusic.searchMusic(
-        'Rock over Japan Arb',
-        SearchType.song,
-      );
-      final songMid =
-          searchResult['req_1']['data']['song']['list'][0]['songmid'];
-
-      final songLink = await qqMusic.getSongLink(songMid);
-      print('\nSong Link:');
-      print(songLink);
-      expect(songLink, isNotEmpty);
-    });
-
     test('Get Verbatim Lyric Test', () async {
-      final searchResult = await qqMusic.searchMusic(
-        'Rock over Japan Arb',
-        SearchType.song,
-      );
-      final songId =
-          searchResult['req_1']['data']['body']['song']['list'][0]['mid'];
+      // final searchResult = await qqMusic.searchMusic('Angel', SearchType.song);
+      // final songId =
+      //     searchResult['req_1']['data']['body']['song']['list'][1]['mid'];
 
+      final songId = '1403288'; // Test with a known song
       final verbatimLyric = await qqMusic.getVerbatimLyric(songId);
       print('\nVerbatim Lyric:');
-      print(verbatimLyric);
+      print(verbatimLyric.code);
+      print(verbatimLyric.trans);
+      print(verbatimLyric.lyric);
       expect(verbatimLyric, isNotNull);
     });
   });

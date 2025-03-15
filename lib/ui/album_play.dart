@@ -260,7 +260,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
       onPressed:
           isTrackSelected
               ? () {
-                // TODO: Implement favorite functionality
                 debugPrint('Add to favorites: ${_currentTrack!.title}');
               }
               : null,

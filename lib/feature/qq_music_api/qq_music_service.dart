@@ -121,7 +121,7 @@ class QQMusicService {
 
     // Handle potential JSONP response
     String responseBody = utf8.decode(response.bodyBytes);
-    // debugPrint('Response: $responseBody');
+    debugPrint('Response: $responseBody');
 
     if (responseBody.startsWith('callback(')) {
       responseBody = responseBody

@@ -299,9 +299,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.black87,
+          backgroundColor: const Color.fromARGB(255, 0, 0, 0),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 660, maxHeight: 400),
+            constraints: const BoxConstraints(maxWidth: 1000, maxHeight: 600),
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -311,7 +311,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Select Lyrics Source',
+                      'Songs',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -328,7 +328,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                 Flexible(
                   child: ListView(
                     shrinkWrap: true,
-                    children: [_buildLyricsSource(songs)],
+                    children: [..._buildLyricsSource(songs)],
                   ),
                 ),
               ],
@@ -339,7 +339,27 @@ class _AlbumPlayState extends State<AlbumPlay> {
     );
   }
 
-  Widget _buildLyricsSource(List<dynamic> songs) {}
+  List<Widget> _buildLyricsSource(List<dynamic> songs) {
+    return songs.map((song) {
+      final songId = song['mid'];
+      final title = song['title'];
+      final album = song['album']['title'];
+      final singer = (song['singer'] as List<dynamic>)
+          .map((s) => s['title'])
+          .join(', ');
+
+      return ListTile(
+        title: Text(
+          '$title - $album - $singer',
+          style: const TextStyle(color: Colors.white),
+        ),
+        onTap: () {
+          _selectLyricsSource(songId);
+          Navigator.pop(context);
+        },
+      );
+    }).toList();
+  }
 
   // Placeholder method to be implemented later
   void _selectLyricsSource(String source) {

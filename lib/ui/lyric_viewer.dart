@@ -145,7 +145,7 @@ class _LyricViewerState extends State<LyricViewer> {
         for (var j = line.parts.length - 1; j >= 0; j--) {
           if (line.parts[j].timestamp.inMilliseconds <= ms) {
             if (_currentIndex != i || _currentPartIndex != j) {
-              debugPrint('Updating to line $i, part $j: ${line.parts[j].text}');
+              // debugPrint('Updating to line $i, part $j: ${line.parts[j].text}');
               setState(() {
                 _currentIndex = i;
                 _currentPartIndex = j;

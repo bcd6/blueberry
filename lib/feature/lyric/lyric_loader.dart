@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
+import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
 
 class LyricLoader {
   static const _pythonScript = 'assets/scripts/fetch_lyrics.py';
@@ -187,6 +188,39 @@ class LyricLoader {
       debugPrint('Empty LRC file created successfully');
     } catch (e) {
       debugPrint('Error creating empty LRC file: $e');
+    }
+  }
+
+  static Future<void> reloadLocalLyric(
+    String trackPath,
+    String trackTitle,
+    String songId,
+  ) async {
+    try {
+      debugPrint('\n=== Reloading Lyrics from QQ Music ===');
+      debugPrint('Path: $trackPath');
+      debugPrint('Track: $trackTitle');
+      debugPrint('SongId: $songId');
+
+      final qqMusic = QQMusicService();
+      final lyricResult = await qqMusic.getVerbatimLyric(songId);
+
+      if (lyricResult.lyric.isEmpty) {
+        debugPrint('Failed to fetch lyrics from QQ Music');
+      }
+
+      final directory = path.dirname(trackPath);
+      final sanitizedTitle = _sanitizeFilename(trackTitle);
+      final lyricPath = path.join(directory, '$sanitizedTitle.lrc');
+
+      debugPrint('Saving new lyrics to: $lyricPath');
+      final file = File(lyricPath);
+      await file.writeAsString(lyricResult.lyric, encoding: utf8);
+
+      debugPrint('Lyrics updated successfully');
+    } catch (e, stack) {
+      debugPrint('Error reloading lyrics: $e');
+      debugPrint('Stack trace: $stack');
     }
   }
 }

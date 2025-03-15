@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/domain/track.dart';
+import 'package:blueberry/feature/lyric/lyric_loader.dart';
 import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
 import 'package:blueberry/state/fav_state.dart';
 import 'package:blueberry/ui/lyric_viewer.dart';
@@ -362,10 +363,12 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   // Placeholder method to be implemented later
-  void _selectLyricsSource(String source) {
-    // TODO: Implement lyrics source selection
-    debugPrint('Changing lyrics source to: $source');
-    // Future implementation will handle switching lyrics source
+  Future<void> _selectLyricsSource(String songId) async {
+    await LyricLoader.reloadLocalLyric(
+      _currentTrack?.path ?? '',
+      _currentTrack?.title ?? '',
+      songId,
+    );
   }
 
   // Add a button to open the modal

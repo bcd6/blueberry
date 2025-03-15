@@ -22,6 +22,7 @@ void main() {
 
       final songId = '1403288'; // Test with a known song
       final verbatimLyric = await qqMusic.getVerbatimLyric(songId);
+      print(verbatimLyric.code.toString());
       print(verbatimLyric.lyric.toString());
       expect(verbatimLyric, isNotNull);
     });

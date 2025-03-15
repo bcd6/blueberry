@@ -71,7 +71,11 @@ class _AlbumPlayState extends State<AlbumPlay> {
     _audioService.setVolume(value);
   }
 
-  Future<void> _playTrack(int playlistIndex, int trackIndex) async {
+  Future<void> _playTrack(
+    int playlistIndex,
+    int trackIndex,
+    bool byClick,
+  ) async {
     if (!mounted) return; // Add early return if widget is disposed
 
     final track = _playlists[playlistIndex].tracks[trackIndex];
@@ -81,12 +85,15 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
     debugPrint('\n=== Play Track Request ===');
     debugPrint('Playlist: $playlistIndex, Track: $trackIndex');
+    debugPrint('isSameTrack: $isSameTrack');
 
     try {
       if (isSameTrack) {
+        debugPrint('mounted: $mounted');
         if (!mounted) return;
+
         if (_isPlaying) {
-          if (_playlists[playlistIndex].tracks.length == 1) {
+          if (_playlists[playlistIndex].tracks.length == 1 && !byClick) {
             await _audioService.seek(track.startOffset);
             if (mounted) {
               setState(() => _currentPosition = Duration.zero);
@@ -169,9 +176,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
     final nextTrackIndex = _currentTrackIndex! + 1;
 
     if (nextTrackIndex < playlist.tracks.length) {
-      _playTrack(_currentPlaylistIndex!, nextTrackIndex);
+      _playTrack(_currentPlaylistIndex!, nextTrackIndex, false);
     } else if (_audioService.isLoopingPlaylist) {
-      _playTrack(_currentPlaylistIndex!, 0);
+      _playTrack(_currentPlaylistIndex!, 0, false);
     }
   }
 
@@ -327,14 +334,14 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             _currentTrack?.albumCoverPath ??
                                 widget.album.coverPath,
                           ),
-                          fit: BoxFit.contain,
+                          fit: BoxFit.fill,
                           alignment: Alignment.topCenter,
                           child: Image.file(
                             File(
                               _currentTrack?.albumCoverPath ??
                                   widget.album.coverPath,
                             ),
-                            fit: BoxFit.cover,
+                            fit: BoxFit.fill,
                           ),
                         ),
                       ),
@@ -537,8 +544,11 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                     ),
                                   ),
                                   onTap:
-                                      () =>
-                                          _playTrack(playlistIndex, trackIndex),
+                                      () => _playTrack(
+                                        playlistIndex,
+                                        trackIndex,
+                                        true,
+                                      ),
                                 );
                               }),
                             ],

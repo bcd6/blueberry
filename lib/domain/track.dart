@@ -11,7 +11,6 @@ class Track {
   final String? performer;
   final Duration? duration;
   final Duration startOffset;
-  final Map<String, String> metadata;
 
   Track({
     required this.path,
@@ -21,7 +20,6 @@ class Track {
     this.performer = '',
     this.duration,
     this.startOffset = Duration.zero,
-    this.metadata = const {},
   });
 
   factory Track.fromJson(Map<String, dynamic> json) => _$TrackFromJson(json);

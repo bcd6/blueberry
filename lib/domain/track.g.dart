@@ -20,11 +20,6 @@ Track _$TrackFromJson(Map<String, dynamic> json) => Track(
       json['startOffset'] == null
           ? Duration.zero
           : Duration(microseconds: (json['startOffset'] as num).toInt()),
-  metadata:
-      (json['metadata'] as Map<String, dynamic>?)?.map(
-        (k, e) => MapEntry(k, e as String),
-      ) ??
-      const {},
 );
 
 Map<String, dynamic> _$TrackToJson(Track instance) => <String, dynamic>{
@@ -35,5 +30,4 @@ Map<String, dynamic> _$TrackToJson(Track instance) => <String, dynamic>{
   'performer': instance.performer,
   'duration': instance.duration?.inMicroseconds,
   'startOffset': instance.startOffset.inMicroseconds,
-  'metadata': instance.metadata,
 };

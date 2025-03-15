@@ -284,6 +284,81 @@ class _AlbumPlayState extends State<AlbumPlay> {
     }
   }
 
+  // Add this method to _AlbumPlayState class
+  void _showLyricsSourceModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black87,
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  'Select Lyrics Source',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    _buildLyricsSourceItem('Megalobiz (Default)', 'megalobiz'),
+                    _buildLyricsSourceItem('QQ Music', 'qqmusic'),
+                    _buildLyricsSourceItem('NetEase Music', 'netease'),
+                    _buildLyricsSourceItem('Local File', 'local'),
+                    _buildLyricsSourceItem('Generate with AI', 'ai'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Helper method to build each item in the lyrics source list
+  Widget _buildLyricsSourceItem(String title, String source) {
+    return ListTile(
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      onTap: () {
+        // Placeholder for future implementation
+        debugPrint('Selected lyrics source: $source');
+        // Call your method here with the source
+        _selectLyricsSource(source);
+        // Close the modal
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  // Placeholder method to be implemented later
+  void _selectLyricsSource(String source) {
+    // TODO: Implement lyrics source selection
+    debugPrint('Changing lyrics source to: $source');
+    // Future implementation will handle switching lyrics source
+  }
+
+  // Add a button to open the modal
+  Widget _buildLyricsSourceButton() {
+    return IconButton(
+      icon: Icon(
+        Icons.lyrics,
+        color: _currentTrack != null ? Colors.white : Colors.white24,
+      ),
+      onPressed: _currentTrack != null ? _showLyricsSourceModal : null,
+      tooltip: 'Reload Lyrics',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -352,6 +427,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Row(
                       children: [
+                        // Add lyrics source button before volume control
+                        _buildLyricsSourceButton(),
+                        const SizedBox(width: 16),
                         // Volume control
                         const Icon(
                           Icons.volume_up,
@@ -375,10 +453,8 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             ),
                           ),
                         ),
-
                         // Position control
                         ...[
-                          const SizedBox(width: 16),
                           Text(
                             _formatDuration(_currentPosition),
                             style: const TextStyle(

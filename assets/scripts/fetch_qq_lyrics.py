@@ -1,161 +1,80 @@
+import asyncio
 import sys
 import json
-import base64
-import requests
-from urllib.parse import quote
-import time
+from qqmusic_api import lyric
+import ctypes
 
-def search_qq_music(title, artist=None, timeout=10):
+
+
+def parse():
+    # Load the DLL (make sure it's in the same directory or provide the full path)
+    dll = ctypes.CDLL("QQMusicVerbatim.dll")
+
+    # Define function signature (assuming it takes (char*, char*, int) and returns int)
+    dll.des_qqmusic.argtypes = (ctypes.POINTER(ctypes.c_ubyte), ctypes.POINTER(ctypes.c_ubyte), ctypes.c_int)
+    dll.des_qqmusic.restype = ctypes.c_int  # Assuming it returns an int
+
+    # Prepare input data
+    input_data = (ctypes.c_ubyte * 16)(*bytearray(b"1234567890abcdef"))  # Example 16-byte input
+    output_data = (ctypes.c_ubyte * 16)()  # Empty buffer for output
+    data_length = len(input_data)
+
+    # Call the function
+    result = dll.des_qqmusic(input_data, output_data, data_length)
+
+    # Print output
+    print("Return Value:", result)
+    print("Output Data:", bytes(output_data))
+
+
+async def get_lyric(mid):
     try:
-        # Clean up search terms
-        title = title.strip().lower()
-        artist = artist.strip().lower() if artist else None
+        print(json.dumps({
+            "status": "searching",
+            "query": mid
+        }, ensure_ascii=False).encode('utf-8-sig').decode('utf-8'), file=sys.stderr)
         
-        # Form search query
-        query = f"{artist} {title}" if artist else title
-
-        # QQ Music search API endpoint with required parameters
-        search_url = (
-            "https://c.y.qq.com/soso/fcgi-bin/client_search_cp?"
-            f"w={quote(query)}&"
-            "format=json&"
-            "p=1&"
-            "n=20&"
-            "aggr=1&"
-            "lossless=0&"
-            "cr=1&"
-            f"t={int(time.time())}"
-        )
-
-        # Headers to mimic browser request
-        headers = {
-            'Referer': 'https://y.qq.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
-            'Accept': 'application/json'
-        }
-
-        # Get search results with timeout
-        response = requests.get(search_url, headers=headers, timeout=timeout)
-        response.raise_for_status()  # Raise exception for bad status codes
-        data = response.json()
-
-        if 'data' not in data or 'song' not in data['data'] or 'list' not in data['data']['song']:
-            return {
-                'success': False, 
-                'error': 'Invalid API response',
-                'details': {'query': query}
-            }
-
-        songs = data['data']['song']['list']
-        if not songs:
-            return {
-                'success': False, 
-                'error': 'No songs found',
-                'details': {'query': query}
-            }
-
-        # Get first song's mid
-        song = songs[0]
-        song_mid = song['songmid']
-
-        # Get lyrics using song mid
-        lyric_url = (
-            "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?"
-            f"songmid={song_mid}&"
-            "format=json&"
-            "nobase64=0&"
-            f"g_tk={int(time.time())}&"
-            "loginUin=0&"
-            "hostUin=0"
-        )
-
-        # Get lyrics with timeout
-        lyric_response = requests.get(lyric_url, headers=headers, timeout=timeout)
-        lyric_response.raise_for_status()
-        
-        # Handle callback wrapper
-        content = lyric_response.text.strip()
-        if content.startswith('MusicJsonCallback('):
-            content = content[16:-1]
-        
-        lyric_data = json.loads(content)
-
-        if lyric_data.get('retcode', -1) != 0:
-            return {
-                'success': False,
-                'error': 'Failed to get lyrics',
-                'details': {
-                    'query': query,
-                    'song_mid': song_mid,
-                    'retcode': lyric_data.get('retcode')
+        result = await lyric.get_lyric(mid, True, False, False)
+        if result:
+            # Encode result with UTF-8-BOM
+            print(json.dumps({
+                "success": True,
+                "result": result
+            }, ensure_ascii=False).encode('utf-8-sig').decode('utf-8'))
+        else:
+            print(json.dumps({
+                "success": False,
+                "error": "No Songs found",
+                "details": {
+                    "query": mid,
+                    "message": "Could not find songs. Try different artist name or title."
                 }
-            }
-
-        # Decode base64 lyrics
-        if 'lyric' in lyric_data:
-            try:
-                decoded_lyric = base64.b64decode(lyric_data['lyric']).decode('utf-8')
-                
-                # Verify we got actual lyrics, not just metadata
-                if '[00:' not in decoded_lyric:
-                    return {
-                        'success': False,
-                        'error': 'No synchronized lyrics found',
-                        'details': {'query': query}
-                    }
-                
-                return {
-                    'success': True,
-                    'lyrics': decoded_lyric,
-                    'meta': {
-                        'title': song['songname'],
-                        'artist': song['singer'][0]['name'] if song['singer'] else None,
-                        'album': song['albumname'],
-                        'source': 'QQ Music'
-                    }
-                }
-            except Exception as e:
-                return {
-                    'success': False,
-                    'error': 'Failed to decode lyrics',
-                    'details': {'query': query, 'error': str(e)}
-                }
-
-        return {
-            'success': False,
-            'error': 'No lyrics in response',
-            'details': {'query': query}
-        }
-
-    except requests.Timeout:
-        return {
-            'success': False,
-            'error': 'Request timed out',
-            'details': {'query': query, 'timeout': timeout}
-        }
-    except requests.RequestException as e:
-        return {
-            'success': False,
-            'error': 'Network error',
-            'details': {'query': query, 'error': str(e)}
-        }
+            }, ensure_ascii=False).encode('utf-8-sig').decode('utf-8'))
     except Exception as e:
-        return {
-            'success': False,
-            'error': 'Unexpected error',
-            'details': {'query': query, 'error': str(e)}
-        }
+        print(json.dumps({
+            "success": False,
+            "error": str(e),
+            "details": {
+                "query": mid,
+                "exception_type": e.__class__.__name__,
+                "message": "An error occurred while fetching lyrics"
+            }
+        }, ensure_ascii=False).encode('utf-8-sig').decode('utf-8'))
 
 if __name__ == "__main__":
+    # Set stdout to use UTF-8-BOM encoding
+    sys.stdout = codecs.getwriter('utf-8-sig')(sys.stdout.buffer)
+    
     if len(sys.argv) < 2:
         print(json.dumps({
-            'success': False,
-            'error': 'No search terms provided'
+            "success": False,
+            "error": "Missing arguments",
+            "details": {
+                "expected": "python fetch_lyrics.py <title> [artist]",
+                "received": len(sys.argv) - 1,
+                "message": "Script requires at least song title argument"
+            }
         }, ensure_ascii=False))
-        sys.exit(1)
-
-    title = sys.argv[1]
-    artist = sys.argv[2] if len(sys.argv) > 2 else None
-
-    result = search_qq_music(title, artist)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        mid = sys.argv[1]
+        asyncio.run(get_lyric(mid))

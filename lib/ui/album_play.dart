@@ -309,17 +309,16 @@ class _AlbumPlayState extends State<AlbumPlay> {
                   Container(
                     padding: const EdgeInsets.all(32),
                     width: leftPanelWidth,
-                    height:
-                        leftPanelWidth, // Make height equal to width for square container
+                    height: leftPanelWidth, // Keep square aspect ratio
                     child: GestureDetector(
                       onTap:
                           () => AudioService.openInExplorer(
                             widget.album.folderPath,
                           ),
                       child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        switchInCurve: Curves.easeInCubic,
-                        switchOutCurve: Curves.easeOutCubic,
+                        duration: const Duration(milliseconds: 300),
+                        switchInCurve: Curves.easeInOut,
+                        switchOutCurve: Curves.easeInOut,
                         transitionBuilder: (
                           Widget child,
                           Animation<double> animation,
@@ -329,19 +328,21 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             child: child,
                           );
                         },
-                        child: FittedBox(
+                        child: SizedBox(
                           key: ValueKey(
                             _currentTrack?.albumCoverPath ??
                                 widget.album.coverPath,
                           ),
-                          fit: BoxFit.fill,
-                          alignment: Alignment.topCenter,
+                          width: leftPanelWidth - 64, // Account for padding
+                          height: leftPanelWidth - 64,
                           child: Image.file(
                             File(
                               _currentTrack?.albumCoverPath ??
                                   widget.album.coverPath,
                             ),
-                            fit: BoxFit.fill,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
                           ),
                         ),
                       ),

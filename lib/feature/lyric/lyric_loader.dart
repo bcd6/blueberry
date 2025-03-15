@@ -191,7 +191,7 @@ class LyricLoader {
     }
   }
 
-  static Future<void> reloadLocalLyric(
+  static Future<bool> reloadLocalLyric(
     String trackPath,
     String trackTitle,
     String songId,
@@ -207,20 +207,23 @@ class LyricLoader {
 
       if (lyricResult.lyric.isEmpty) {
         debugPrint('Failed to fetch lyrics from QQ Music');
+        return false;
       }
 
       final directory = path.dirname(trackPath);
       final sanitizedTitle = _sanitizeFilename(trackTitle);
       final lyricPath = path.join(directory, '$sanitizedTitle.lrc');
-
       debugPrint('Saving new lyrics to: $lyricPath');
+
       final file = File(lyricPath);
       await file.writeAsString(lyricResult.lyric, encoding: utf8);
 
       debugPrint('Lyrics updated successfully');
+      return true;
     } catch (e, stack) {
       debugPrint('Error reloading lyrics: $e');
       debugPrint('Stack trace: $stack');
+      return false;
     }
   }
 }

@@ -55,7 +55,7 @@ class QQMusicService {
         return LyricResult(code: -1);
       }
 
-      debugPrint('Running lyric extractor: $exePath $songId $_cookie');
+      // debugPrint('Running lyric extractor: $exePath $songId $_cookie');
 
       // Execute the command
       final process = await Process.run(

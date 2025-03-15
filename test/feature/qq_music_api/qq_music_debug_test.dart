@@ -7,7 +7,7 @@ void main() {
   group('QQ Music API Debug Tests', () {
     test('Search Music Test', () async {
       final result = await qqMusic.searchMusic(
-        'Rock over Japan Arb', // Test with a known song
+        'Rock over Japan', // Test with a known song
         SearchType.song,
       );
       print('\nSearch Result:');

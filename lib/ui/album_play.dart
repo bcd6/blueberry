@@ -294,8 +294,8 @@ class _AlbumPlayState extends State<AlbumPlay> {
     final songs =
         search['req_1']['data']['body']['song']['list'] as List<dynamic>;
 
-    debugPrint('Search Result:');
-    debugPrint(songs.toString());
+    // debugPrint('Search Result:');
+    // debugPrint(songs.toString());
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -342,11 +342,11 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   List<Widget> _buildLyricsSource(List<dynamic> songs) {
     return songs.map((song) {
-      final songId = song['mid'];
-      final title = song['title'];
-      final album = song['album']['title'];
+      final songId = song['id'].toString();
+      final title = song['title'].toString();
+      final album = song['album']['title'].toString();
       final singer = (song['singer'] as List<dynamic>)
-          .map((s) => s['title'])
+          .map((s) => s['title'].toString())
           .join(', ');
 
       return ListTile(
@@ -364,7 +364,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   // Placeholder method to be implemented later
   Future<void> _selectLyricsSource(String songId) async {
-    await LyricLoader.reloadLocalLyric(
+    final result = await LyricLoader.reloadLocalLyric(
       _currentTrack?.path ?? '',
       _currentTrack?.title ?? '',
       songId,

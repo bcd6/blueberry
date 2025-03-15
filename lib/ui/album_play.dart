@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:blueberry/domain/loop_mode.dart';
 import 'package:blueberry/domain/playlist.dart';
 import 'package:blueberry/domain/track.dart';
+import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
 import 'package:blueberry/state/fav_state.dart';
 import 'package:blueberry/ui/lyric_viewer.dart';
 import 'package:blueberry/service/audio_service.dart';
@@ -24,6 +25,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   static const double _defaultVolume = 0.6;
 
   final _audioService = AudioService();
+  final _qqMusicService = QQMusicService();
   late final List<Playlist> _playlists;
   Stream<Duration>? _currentPositionStream;
   StreamSubscription? _currentPositionSubscription;
@@ -285,7 +287,14 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   // Add this method to _AlbumPlayState class
-  void _showLyricsSourceModal() {
+  Future<void> _showLyricsSourceModal() async {
+    final keyword = '${_currentTrack?.title}  ${_currentTrack?.performer}';
+    final search = await _qqMusicService.searchMusic(keyword, SearchType.song);
+    final songs =
+        search['req_1']['data']['body']['song']['list'] as List<dynamic>;
+
+    debugPrint('Search Result:');
+    debugPrint(songs.toString());
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -319,16 +328,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                 Flexible(
                   child: ListView(
                     shrinkWrap: true,
-                    children: [
-                      _buildLyricsSourceItem(
-                        'Megalobiz (Default)',
-                        'megalobiz',
-                      ),
-                      _buildLyricsSourceItem('QQ Music', 'qqmusic'),
-                      _buildLyricsSourceItem('NetEase Music', 'netease'),
-                      _buildLyricsSourceItem('Local File', 'local'),
-                      _buildLyricsSourceItem('Generate with AI', 'ai'),
-                    ],
+                    children: [_buildLyricsSource(songs)],
                   ),
                 ),
               ],
@@ -339,20 +339,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
     );
   }
 
-  // Helper method to build each item in the lyrics source list
-  Widget _buildLyricsSourceItem(String title, String source) {
-    return ListTile(
-      title: Text(title, style: const TextStyle(color: Colors.white)),
-      onTap: () {
-        // Placeholder for future implementation
-        debugPrint('Selected lyrics source: $source');
-        // Call your method here with the source
-        _selectLyricsSource(source);
-        // Close the modal
-        Navigator.pop(context);
-      },
-    );
-  }
+  Widget _buildLyricsSource(List<dynamic> songs) {}
 
   // Placeholder method to be implemented later
   void _selectLyricsSource(String source) {

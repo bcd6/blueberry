@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'models/lyric_result.dart';
@@ -153,8 +154,4 @@ class QQMusicService {
         return 3;
     }
   }
-}
-
-void debugPrint(String message) {
-  print('[QQMusic] $message');
 }

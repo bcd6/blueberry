@@ -49,6 +49,8 @@ class PlayerState extends ChangeNotifier {
       album.coverFilePath,
     );
     _currentAlbumPlaylists.addAll(cuePlaylists);
+
+    debugPrint('SetAlbum ${_currentAlbumPlaylists.length} playlists');
     notifyListeners();
   }
 

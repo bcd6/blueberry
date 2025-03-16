@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:blueberry/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
@@ -43,8 +44,7 @@ class QQMusicService {
 
       // Path to the executable - adjust as needed
       final exePath = path.join(
-        Directory.current.path,
-        'assets',
+        Utils.getAssetPath(),
         'tools',
         'QQMusicApi.exe',
       );

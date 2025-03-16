@@ -4,6 +4,7 @@ import 'package:blueberry/album/album.dart';
 import 'package:blueberry/config/config_state.dart';
 import 'package:blueberry/player/playlist.dart';
 import 'package:blueberry/player/track.dart';
+import 'package:blueberry/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 
@@ -11,12 +12,7 @@ class FavState extends ChangeNotifier {
   final ConfigState _configState;
   final Album _favAlbum = Album(
     title: 'Favorites',
-    coverFilePath: path.join(
-      Directory.current.path,
-      'assets',
-      'images',
-      'fav_cover.png',
-    ),
+    coverFilePath: path.join(Utils.getAssetPath(), 'images', 'fav_cover.png'),
     isFavAlbum: true,
   );
   List<Playlist> _favPlaylists = [];

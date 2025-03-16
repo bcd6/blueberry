@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:blueberry/utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
 import 'package:blueberry/qq_music_api/qq_music_service.dart';
@@ -134,8 +135,7 @@ class LyricLoader {
       debugPrint('Performer: $performer');
 
       final scriptPath = path.join(
-        Directory.current.path,
-        'assets',
+        Utils.getAssetPath(),
         'scripts',
         'fetch_lyrics.py',
       );

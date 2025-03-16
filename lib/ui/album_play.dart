@@ -400,6 +400,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
         }
       } else {
         await _audioPlayer.stop();
+        await _currentPositionSubscription?.cancel();
         debugPrint('Stopping current playback');
         debugPrint('Switching to new track...');
         debugPrint('Starting new track: ${track.title}');
@@ -413,12 +414,10 @@ class _AlbumPlayState extends State<AlbumPlay> {
           _audioPlayer.positionStream,
           track.startOffset,
         );
-
-        await _currentPositionSubscription?.cancel();
         _currentPositionSubscription = currentPositionStream.listen((
           position,
         ) async {
-          if (position > Duration.zero) {
+          if (position >= Duration.zero) {
             _playerState.setPosition(position);
           }
 

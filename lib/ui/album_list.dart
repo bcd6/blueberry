@@ -35,7 +35,7 @@ class _AlbumListState extends State<AlbumList> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _precacheImages(_albums);
+    // _precacheImages(_albums);
   }
 
   @override
@@ -109,6 +109,7 @@ class _AlbumListState extends State<AlbumList> {
 
   void _init() {
     _albumState = context.read<AlbumState>();
+    _playerState = context.read<PlayerState>();
     _albums = [..._albumState.albums];
     setState(() {
       _displayedIndices = List.generate(

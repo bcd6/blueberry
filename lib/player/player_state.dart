@@ -10,16 +10,16 @@ import 'package:path/path.dart' as path;
 
 class PlayerState extends ChangeNotifier {
   final ConfigState _configState;
-  late Album _currentAlbum;
-  late List<Playlist> _currentAlbumPlaylists;
-  late bool _currentTrackPlaying;
-  late Duration _currentPosition;
+  Album _currentAlbum = Album(folderPath: '', coverFilePath: '');
+  List<Playlist> _currentAlbumPlaylists = [];
+  bool _currentTrackPlaying = false;
+  Duration _currentPosition = Duration.zero;
 
-  late Playlist? _currentPlaylist;
-  late Track? _currentTrack;
-  late Stream<Duration>? _currentPositionStream;
-  late int? _currentPlaylistIndex;
-  late int? _currentTrackIndex;
+  Playlist? _currentPlaylist;
+  Track? _currentTrack;
+  Stream<Duration>? _currentPositionStream;
+  int? _currentPlaylistIndex;
+  int? _currentTrackIndex;
 
   PlayerState(this._configState);
 
@@ -36,6 +36,7 @@ class PlayerState extends ChangeNotifier {
 
   Future<void> setAlbum(Album album) async {
     _currentAlbum = album;
+    _currentAlbumPlaylists = [];
 
     final regularPlaylist = await _loadRegularPlaylist(
       album.regularFiles,
@@ -48,10 +49,6 @@ class PlayerState extends ChangeNotifier {
       album.coverFilePath,
     );
     _currentAlbumPlaylists.addAll(cuePlaylists);
-
-    _currentPosition = Duration.zero;
-    _currentTrackPlaying = false;
-
     notifyListeners();
   }
 

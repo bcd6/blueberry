@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
-import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
+import 'package:blueberry/qq_music_api/qq_music_service.dart';
 
 class LyricLoader {
   static const _pythonScript = 'assets/scripts/fetch_lyrics.py';

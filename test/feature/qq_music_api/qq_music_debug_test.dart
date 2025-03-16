@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
+import 'package:blueberry/qq_music_api/qq_music_service.dart';
 
 void main() {
   final qqMusic = QQMusicService();

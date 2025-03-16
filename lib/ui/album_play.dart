@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:blueberry/lyric/lyric_state.dart';
 import 'package:blueberry/player/player_state.dart';
 import 'package:blueberry/lyric/lyric_loader.dart';
-import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
+import 'package:blueberry/qq_music_api/qq_music_service.dart';
 import 'package:blueberry/ui/lyric_viewer.dart';
 import 'package:blueberry/player/audio_player.dart';
 import 'package:blueberry/utils.dart';
@@ -26,6 +27,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   final _qqMusicService = QQMusicService();
 
   late PlayerState _playerState;
+  late LyricState _lyricState;
   StreamSubscription? _currentPositionSubscription;
   double _volume = _defaultVolume;
   LoopMode _loopMode = LoopMode.playlist;
@@ -331,6 +333,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   void _init() {
     _playerState = context.read<PlayerState>();
+    _lyricState = context.read<LyricState>();
     _audioPlayer.setVolume(_volume);
   }
 
@@ -639,13 +642,17 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   Future<void> _selectLyricsSource(songId) async {
+    if (_playerState.currentTrack == null) {
+      Navigator.pop(context);
+    }
     final result = await LyricLoader.reloadLocalLyric(
-      _playerState.currentTrack?.path ?? '',
-      _playerState.currentTrack?.title ?? '',
+      _playerState.currentTrack!.path,
+      _playerState.currentTrack!.title,
       songId,
     );
 
     if (result) {
+      _lyricState.load(_playerState.currentTrack!);
       if (mounted) {
         Navigator.pop(context);
       }

@@ -60,20 +60,20 @@ class LyricParser {
                 LyricPart(text.isEmpty ? emptyPartText : text, timestamp),
               ]),
             );
-            debugPrint(
-              'Multi-time line: "$text" @ ${_formatDuration(timestamp)}',
-            );
+            // debugPrint(
+            //   'Multi-time line: "$text" @ ${_formatDuration(timestamp)}',
+            // );
           }
           continue;
         }
       } else {
-        debugPrint('Single-time line: "$trimmedLine"');
+        // debugPrint('Single-time line: "$trimmedLine"');
       }
 
       // Step 2: Parse character-by-character with timestamps
       final parts = <LyricPart>[];
       var remainingLine = trimmedLine;
-      debugPrint('Step 2 line: "$trimmedLine"');
+      // debugPrint('Step 2 line: "$trimmedLine"');
 
       // Detect format based on first character
       final isTimestampFirst =

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:blueberry/lyric/lyric_part.dart';
 import 'package:blueberry/lyric/lyric_state.dart';
 import 'package:blueberry/player/player_state.dart';
+import 'package:blueberry/player/track.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +15,7 @@ class LyricViewer extends StatefulWidget {
 
 class _LyricViewerState extends State<LyricViewer> {
   StreamSubscription? _currentPositionSubscription;
+  Track? _lastTrack;
 
   @override
   void initState() {
@@ -30,20 +32,22 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   Future<void> _init() async {
-    if (!mounted) return;
-
     final playerState = context.read<PlayerState>();
-    final lyricState = context.read<LyricState>();
+    await _load(playerState.currentTrack);
+  }
 
-    if (playerState.currentTrack != null) {
-      await lyricState.load(playerState.currentTrack!);
-      _setupDurationStream(playerState);
+  Future<void> _load(Track? currentTrack) async {
+    if (_lastTrack != currentTrack && currentTrack != null) {
+      _lastTrack = currentTrack;
+      final playerState = context.read<PlayerState>();
+      final lyricState = context.read<LyricState>();
+      await lyricState.load(currentTrack);
+      await _setupDurationStream(playerState);
     }
   }
 
   Future<void> _setupDurationStream(PlayerState playerState) async {
     await _currentPositionSubscription?.cancel();
-
     _currentPositionSubscription = playerState.currentPositionStream?.listen(
       (position) {
         if (!mounted) return;
@@ -80,66 +84,72 @@ class _LyricViewerState extends State<LyricViewer> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<PlayerState, LyricState>(
-      builder: (context, playerState, lyricState, child) {
-        if (lyricState.currentLyric.isEmpty) {
-          return Container();
-        }
+    return Selector<PlayerState, Track?>(
+      selector: (_, playerState) => playerState.currentTrack,
+      builder: (context, currentTrack, child) {
+        _load(currentTrack);
+        return Consumer2<PlayerState, LyricState>(
+          builder: (context, playerState, lyricState, child) {
+            if (lyricState.currentLyric.isEmpty) {
+              return Container();
+            }
 
-        final displayLines = <Widget>[];
+            final displayLines = <Widget>[];
 
-        // Previous line
-        if (lyricState.currentIndex > 0) {
-          displayLines.add(
-            _buildLyricLine(
-              lyricState.currentLyric[lyricState.currentIndex - 1],
-              false,
-              playerState,
-              lyricState,
-            ),
-          );
-        }
+            // Previous line
+            if (lyricState.currentIndex > 0) {
+              displayLines.add(
+                _buildLyricLine(
+                  lyricState.currentLyric[lyricState.currentIndex - 1],
+                  false,
+                  playerState,
+                  lyricState,
+                ),
+              );
+            }
 
-        // Current line
-        displayLines.add(
-          _buildLyricLine(
-            lyricState.currentLyric[lyricState.currentIndex],
-            true,
-            playerState,
-            lyricState,
-          ),
-        );
+            // Current line
+            displayLines.add(
+              _buildLyricLine(
+                lyricState.currentLyric[lyricState.currentIndex],
+                true,
+                playerState,
+                lyricState,
+              ),
+            );
 
-        // Next line
-        if (lyricState.currentIndex < lyricState.currentLyric.length - 1) {
-          displayLines.add(
-            _buildLyricLine(
-              lyricState.currentLyric[lyricState.currentIndex + 1],
-              false,
-              playerState,
-              lyricState,
-            ),
-          );
-        }
+            // Next line
+            if (lyricState.currentIndex < lyricState.currentLyric.length - 1) {
+              displayLines.add(
+                _buildLyricLine(
+                  lyricState.currentLyric[lyricState.currentIndex + 1],
+                  false,
+                  playerState,
+                  lyricState,
+                ),
+              );
+            }
 
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children:
-                displayLines
-                    .map(
-                      (widget) => Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        alignment: Alignment.centerLeft,
-                        child: widget,
-                      ),
-                    )
-                    .toList(),
-          ),
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children:
+                    displayLines
+                        .map(
+                          (widget) => Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            alignment: Alignment.centerLeft,
+                            child: widget,
+                          ),
+                        )
+                        .toList(),
+              ),
+            );
+          },
         );
       },
     );

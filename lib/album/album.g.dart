@@ -7,8 +7,9 @@ part of 'album.dart';
 // **************************************************************************
 
 Album _$AlbumFromJson(Map<String, dynamic> json) => Album(
-  folderPath: json['folderPath'] as String,
   coverFilePath: json['coverFilePath'] as String,
+  folderPath: json['folderPath'] as String?,
+  title: json['title'] as String?,
   regularFiles:
       (json['regularFiles'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -20,8 +21,9 @@ Album _$AlbumFromJson(Map<String, dynamic> json) => Album(
 );
 
 Map<String, dynamic> _$AlbumToJson(Album instance) => <String, dynamic>{
-  'folderPath': instance.folderPath,
   'coverFilePath': instance.coverFilePath,
+  'folderPath': instance.folderPath,
+  'title': instance.title,
   'regularFiles': instance.regularFiles,
   'cueFiles': instance.cueFiles,
 };

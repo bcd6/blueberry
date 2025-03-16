@@ -10,7 +10,7 @@ import 'package:path/path.dart' as path;
 
 class PlayerState extends ChangeNotifier {
   final ConfigState _configState;
-  Album _currentAlbum = Album(folderPath: '', coverFilePath: '');
+  Album _currentAlbum = Album(coverFilePath: '');
   List<Playlist> _currentAlbumPlaylists = [];
   bool _currentTrackPlaying = false;
   Duration _currentPosition = Duration.zero;

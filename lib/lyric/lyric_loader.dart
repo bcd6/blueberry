@@ -5,8 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:blueberry/qq_music_api/qq_music_service.dart';
 
 class LyricLoader {
-  static const _pythonScript = 'assets/scripts/fetch_lyrics.py';
-
   static Future<String?> loadLyricContent(
     String trackPath,
     String trackTitle,
@@ -135,7 +133,12 @@ class LyricLoader {
       debugPrint('Album: $album');
       debugPrint('Performer: $performer');
 
-      final scriptPath = path.join(Directory.current.path, _pythonScript);
+      final scriptPath = path.join(
+        Directory.current.path,
+        'assets',
+        'scripts',
+        'fetch_lyrics.py',
+      );
 
       debugPrint('Script path: $scriptPath');
 

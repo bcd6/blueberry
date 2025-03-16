@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:blueberry/fav/fav_state.dart';
 import 'package:blueberry/lyric/lyric_state.dart';
 import 'package:blueberry/player/player_state.dart';
 import 'package:blueberry/lyric/lyric_loader.dart';
@@ -175,6 +176,25 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             ),
                             const SizedBox(width: 16),
                             _buildLoopButton(),
+                            playerState.currentTrack != null
+                                ? IconButton(
+                                  icon: Icon(
+                                    Icons.favorite,
+                                    color:
+                                        context.watch<FavState>().isFavorite(
+                                              playerState.currentTrack!,
+                                            )
+                                            ? Colors.red
+                                            : Colors.white24,
+                                  ),
+                                  onPressed:
+                                      () => context
+                                          .read<FavState>()
+                                          .toggleFavorite(
+                                            playerState.currentTrack!,
+                                          ),
+                                )
+                                : _buildFavButton(),
                           ],
                         );
                       },
@@ -498,7 +518,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   String _getAlbumTitle() {
     if (_playerState.currentAlbumPlaylists.length > 1) {
-      return _playerState.currentAlbum.folderName;
+      return _playerState.currentAlbum.title ?? '';
     }
 
     try {
@@ -509,9 +529,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
       final playlistName = _playerState.currentAlbumPlaylists[0].name;
       if (playlistName.isNotEmpty) return playlistName;
 
-      return _playerState.currentAlbum.folderName;
+      return _playerState.currentAlbum.title ?? '';
     } catch (_) {
-      return _playerState.currentAlbum.folderName;
+      return _playerState.currentAlbum.title ?? '';
     }
   }
 

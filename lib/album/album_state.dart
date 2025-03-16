@@ -106,8 +106,8 @@ class AlbumState extends ChangeNotifier {
         // Create album if there are any tracks or CUE files
         if (audioFiles.isNotEmpty || cueFiles.isNotEmpty) {
           final album = Album(
-            folderPath: dir.path,
             coverFilePath: coverFile.path,
+            folderPath: dir.path,
             regularFiles: audioFiles.toList(),
             cueFiles: cueFiles,
           );

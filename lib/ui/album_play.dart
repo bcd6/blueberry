@@ -2,18 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:blueberry/player/loop_mode.dart';
 import 'package:blueberry/player/player_state.dart';
-import 'package:blueberry/player/playlist.dart';
-import 'package:blueberry/player/track.dart';
 import 'package:blueberry/feature/lyric/lyric_loader.dart';
 import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
-import 'package:blueberry/state/fav_state.dart';
 import 'package:blueberry/ui/lyric_viewer.dart';
 import 'package:blueberry/player/audio_player.dart';
-import 'package:blueberry/state/app_state.dart';
 import 'package:blueberry/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../album/album.dart';
 
 class AlbumPlay extends StatefulWidget {
   const AlbumPlay({super.key});
@@ -327,7 +322,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   void _init() {
     _playerState = context.read<PlayerState>();
-    _playerState.setPosition(Duration.zero);
     _audioPlayer.setVolume(_volume);
   }
 

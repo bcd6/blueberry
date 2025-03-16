@@ -144,6 +144,7 @@ class _AlbumListState extends State<AlbumList> {
 
     for (final album in albums) {
       try {
+        if (!mounted) continue;
         await precacheImage(
           FileImage(File(album.coverFilePath)),
           context,

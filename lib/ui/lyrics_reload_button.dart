@@ -46,7 +46,8 @@ class LyricsReloadButton extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 1000, maxHeight: 600),
             padding: const EdgeInsets.all(24),

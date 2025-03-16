@@ -15,41 +15,13 @@ class LyricViewer extends StatefulWidget {
 class _LyricViewerState extends State<LyricViewer> {
   StreamSubscription? _currentPositionSubscription;
 
-  late PlayerState _playerState;
-  late LyricState _lyricState;
-
   @override
   void initState() {
     super.initState();
-    _init();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _init();
+    });
   }
-
-  // @override
-  // void didUpdateWidget(covariant LyricViewer oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //   if (widget.track != oldWidget.track) {
-  //     debugPrint('\n=== Track Changed ===');
-  //     debugPrint('Old track: ${oldWidget.track.title}');
-  //     debugPrint('New track: ${widget.track.title}');
-
-  //     // Reset state
-  //     setState(() {
-  //       _lyricState.currentLyric = null;
-  //       _lyricState.currentIndex = 0;
-  //       _lyricState.currentPartIndex = 0;
-  //     });
-
-  //     // Cancel existing subscription
-  //     _currentPositionSubscription?.cancel();
-  //     _currentPositionSubscription = null;
-
-  //     // Load new lyrics and setup stream
-  //     _loadLyricFile();
-  //     _setupDurationStream();
-
-  //     debugPrint('=== Track Change Complete ===\n');
-  //   }
-  // }
 
   @override
   void dispose() {
@@ -58,52 +30,45 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   Future<void> _init() async {
-    if (!mounted) return; // Add this check
+    if (!mounted) return;
 
-    _playerState = context.read<PlayerState>();
-    _lyricState = context.read<LyricState>();
+    final playerState = context.read<PlayerState>();
+    final lyricState = context.read<LyricState>();
 
-    if (_playerState.currentTrack != null) {
-      await _lyricState.load(_playerState.currentTrack!);
-      _setupDurationStream();
+    if (playerState.currentTrack != null) {
+      await lyricState.load(playerState.currentTrack!);
+      _setupDurationStream(playerState);
     }
   }
 
-  Future<void> _setupDurationStream() async {
-    debugPrint('\n=== Setting up position stream ===');
-
+  Future<void> _setupDurationStream(PlayerState playerState) async {
     await _currentPositionSubscription?.cancel();
 
-    _currentPositionSubscription = _playerState.currentPositionStream?.listen(
+    _currentPositionSubscription = playerState.currentPositionStream?.listen(
       (position) {
-        _updateCurrentPosition(position);
+        if (!mounted) return;
+        final lyricState = context.read<LyricState>();
+        _updateCurrentPosition(position, lyricState);
       },
       onError: (error) {
         debugPrint('Position stream error: $error');
       },
       cancelOnError: false,
     );
-
-    debugPrint('=== Position stream setup complete ===\n');
   }
 
-  void _updateCurrentPosition(Duration position) {
+  void _updateCurrentPosition(Duration position, LyricState lyricState) {
+    if (lyricState.currentLyric.isEmpty) return;
+
     final ms = position.inMilliseconds;
     var foundLine = false;
 
-    // debugPrint('Updating position: ${position.inSeconds}s');
-
-    for (var i = _lyricState.currentLyric.length - 1; i >= 0; i--) {
-      final line = _lyricState.currentLyric[i];
+    for (var i = lyricState.currentLyric.length - 1; i >= 0; i--) {
+      final line = lyricState.currentLyric[i];
       if (line.startTime.inMilliseconds <= ms) {
-        // Find current part within line
         for (var j = line.parts.length - 1; j >= 0; j--) {
           if (line.parts[j].timestamp.inMilliseconds <= ms) {
-            if (_lyricState.currentIndex != i ||
-                _lyricState.currentPartIndex != j) {
-              // debugPrint('Updating to line $i, part $j: ${line.parts[j].text}');
-              _lyricState.updateIndex(i, j);
-            }
+            lyricState.updateIndex(i, j);
             foundLine = true;
             break;
           }
@@ -113,29 +78,96 @@ class _LyricViewerState extends State<LyricViewer> {
     }
   }
 
-  Widget _buildLyricLine(LyricLine line, bool isCurrent) {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer2<PlayerState, LyricState>(
+      builder: (context, playerState, lyricState, child) {
+        if (lyricState.currentLyric.isEmpty) {
+          return Container();
+        }
+
+        final displayLines = <Widget>[];
+
+        // Previous line
+        if (lyricState.currentIndex > 0) {
+          displayLines.add(
+            _buildLyricLine(
+              lyricState.currentLyric[lyricState.currentIndex - 1],
+              false,
+              playerState,
+              lyricState,
+            ),
+          );
+        }
+
+        // Current line
+        displayLines.add(
+          _buildLyricLine(
+            lyricState.currentLyric[lyricState.currentIndex],
+            true,
+            playerState,
+            lyricState,
+          ),
+        );
+
+        // Next line
+        if (lyricState.currentIndex < lyricState.currentLyric.length - 1) {
+          displayLines.add(
+            _buildLyricLine(
+              lyricState.currentLyric[lyricState.currentIndex + 1],
+              false,
+              playerState,
+              lyricState,
+            ),
+          );
+        }
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:
+                displayLines
+                    .map(
+                      (widget) => Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        alignment: Alignment.centerLeft,
+                        child: widget,
+                      ),
+                    )
+                    .toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLyricLine(
+    LyricLine line,
+    bool isCurrent,
+    PlayerState playerState,
+    LyricState lyricState,
+  ) {
     return Wrap(
       spacing: 4,
       children:
           line.parts.map((part) {
             final partIndex = line.parts.indexOf(part);
-
-            // Get next part from same line
             final nextPart =
                 partIndex + 1 < line.parts.length
                     ? line.parts[partIndex + 1]
                     : null;
-
-            // Get next line's first part timestamp if this is last part
             final nextLineStartTime =
-                _lyricState.currentIndex + 1 < _lyricState.currentLyric.length
-                    ? _lyricState
-                        .currentLyric[_lyricState.currentIndex + 1]
+                lyricState.currentIndex + 1 < lyricState.currentLyric.length
+                    ? lyricState
+                        .currentLyric[lyricState.currentIndex + 1]
                         .startTime
                         .inMilliseconds
                     : null;
 
-            // Calculate time gap for spacing
             final timeGap =
                 nextPart != null
                     ? nextPart.timestamp.inMilliseconds -
@@ -155,20 +187,16 @@ class _LyricViewerState extends State<LyricViewer> {
               );
             }
 
-            // For active parts, create animated highlight effect
             return StreamBuilder<Duration>(
-              stream: _playerState.currentPositionStream,
+              stream: playerState.currentPositionStream,
               builder: (context, snapshot) {
                 final currentPosition = snapshot.data?.inMilliseconds ?? 0;
                 final partStartTime = part.timestamp.inMilliseconds;
-
-                // Use next part timestamp, or next line timestamp, or fallback to 1 second
                 final partEndTime =
                     nextPart?.timestamp.inMilliseconds ??
                     nextLineStartTime ??
                     (partStartTime + 1000);
 
-                // Calculate progress within this part's duration
                 final partDuration = partEndTime - partStartTime;
                 final elapsed = currentPosition - partStartTime;
                 final progress =
@@ -204,59 +232,6 @@ class _LyricViewerState extends State<LyricViewer> {
               },
             );
           }).toList(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_lyricState.currentLyric.isEmpty) {
-      return Container();
-    }
-
-    final displayLines = <Widget>[];
-
-    // Previous line
-    if (_lyricState.currentIndex > 0) {
-      displayLines.add(
-        _buildLyricLine(
-          _lyricState.currentLyric[_lyricState.currentIndex - 1],
-          false,
-        ),
-      );
-    }
-
-    // Current line
-    displayLines.add(
-      _buildLyricLine(_lyricState.currentLyric[_lyricState.currentIndex], true),
-    );
-
-    // Next line
-    if (_lyricState.currentIndex < _lyricState.currentLyric.length - 1) {
-      displayLines.add(
-        _buildLyricLine(
-          _lyricState.currentLyric[_lyricState.currentIndex + 1],
-          false,
-        ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...displayLines.map(
-            (widget) => Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              alignment: Alignment.centerLeft,
-              child: widget,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:blueberry/album/album_state.dart';
 import 'package:blueberry/config/config_state.dart';
+import 'package:blueberry/lyric/lyric_state.dart';
 import 'package:blueberry/player/player_state.dart';
 import 'package:blueberry/ui/app.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ void main() {
         ChangeNotifierProvider(
           create: (context) => PlayerState(context.read<ConfigState>()),
         ),
+        ChangeNotifierProvider(create: (context) => LyricState()),
       ],
       child: Phoenix(child: App()),
     ),

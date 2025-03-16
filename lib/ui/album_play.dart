@@ -204,99 +204,106 @@ class _AlbumPlayState extends State<AlbumPlay> {
                   children: [
                     ..._getAlbumTitleUI(),
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: _playerState.currentAlbumPlaylists.length,
-                        itemBuilder: (context, playlistIndex) {
-                          final playlist =
-                              _playerState.currentAlbumPlaylists[playlistIndex];
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _playerState.currentAlbumPlaylists.length > 1
-                                  ? Padding(
-                                    padding: const EdgeInsets.only(
-                                      top: 24,
-                                      bottom: 16,
-                                    ),
-                                    child: Text(
-                                      playlist.name,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
-                                          ?.copyWith(color: Colors.white54),
-                                    ),
-                                  )
-                                  : const SizedBox.shrink(),
-                              ...playlist.tracks.asMap().entries.map((entry) {
-                                final trackIndex = entry.key;
-                                final track = entry.value;
-                                final isCurrentTrack =
-                                    _playerState.currentPlaylistIndex ==
-                                        playlistIndex &&
-                                    _playerState.currentTrackIndex ==
-                                        trackIndex;
-
-                                return ListTile(
-                                  leading:
-                                      isCurrentTrack
-                                          ? SizedBox(
-                                            width: 10,
-                                            height: 10,
-                                            child: Center(
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 1.5,
-                                                color:
-                                                    isCurrentTrack
-                                                        ? Colors.blue
-                                                        : Colors.white54,
-                                                value:
-                                                    (isCurrentTrack &&
-                                                            _playerState
-                                                                .currentTrackPlaying)
-                                                        ? null
-                                                        : 1,
-                                              ),
-                                            ),
-                                          )
-                                          : Text(
-                                            (trackIndex + 1).toString(),
-                                            style: const TextStyle(
-                                              color: Colors.white54,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                  title: Text(
-                                    track.title,
-                                    style: TextStyle(
-                                      color:
-                                          isCurrentTrack
-                                              ? Colors.blue
-                                              : Colors.white,
-                                    ),
-                                  ),
-                                  trailing: Text(
-                                    isCurrentTrack
-                                        ? '${_formatDuration(_playerState.currentPosition)}/${_formatDuration(track.duration ?? Duration.zero)}'
-                                        : _formatDuration(
-                                          track.duration ?? Duration.zero,
+                      child: Consumer<PlayerState>(
+                        builder: (context, playerState, child) {
+                          return ListView.builder(
+                            itemCount: playerState.currentAlbumPlaylists.length,
+                            itemBuilder: (context, playlistIndex) {
+                              final playlist =
+                                  playerState
+                                      .currentAlbumPlaylists[playlistIndex];
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  playerState.currentAlbumPlaylists.length > 1
+                                      ? Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 24,
+                                          bottom: 16,
                                         ),
-                                    style: TextStyle(
-                                      color:
+                                        child: Text(
+                                          playlist.name,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge
+                                              ?.copyWith(color: Colors.white54),
+                                        ),
+                                      )
+                                      : const SizedBox.shrink(),
+                                  ...playlist.tracks.asMap().entries.map((
+                                    entry,
+                                  ) {
+                                    final trackIndex = entry.key;
+                                    final track = entry.value;
+                                    final isCurrentTrack =
+                                        playerState.currentPlaylistIndex ==
+                                            playlistIndex &&
+                                        playerState.currentTrackIndex ==
+                                            trackIndex;
+
+                                    return ListTile(
+                                      leading:
                                           isCurrentTrack
-                                              ? Colors.blue
-                                              : Colors.white54,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  onTap:
-                                      () => _playTrack(
-                                        playlistIndex,
-                                        trackIndex,
-                                        true,
+                                              ? SizedBox(
+                                                width: 10,
+                                                height: 10,
+                                                child: Center(
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 1.5,
+                                                    color:
+                                                        isCurrentTrack
+                                                            ? Colors.blue
+                                                            : Colors.white54,
+                                                    value:
+                                                        (isCurrentTrack &&
+                                                                playerState
+                                                                    .currentTrackPlaying)
+                                                            ? null
+                                                            : 1,
+                                                  ),
+                                                ),
+                                              )
+                                              : Text(
+                                                (trackIndex + 1).toString(),
+                                                style: const TextStyle(
+                                                  color: Colors.white54,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                      title: Text(
+                                        track.title,
+                                        style: TextStyle(
+                                          color:
+                                              isCurrentTrack
+                                                  ? Colors.blue
+                                                  : Colors.white,
+                                        ),
                                       ),
-                                );
-                              }),
-                            ],
+                                      trailing: Text(
+                                        isCurrentTrack
+                                            ? '${_formatDuration(playerState.currentPosition)}/${_formatDuration(track.duration ?? Duration.zero)}'
+                                            : _formatDuration(
+                                              track.duration ?? Duration.zero,
+                                            ),
+                                        style: TextStyle(
+                                          color:
+                                              isCurrentTrack
+                                                  ? Colors.blue
+                                                  : Colors.white54,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      onTap:
+                                          () => _playTrack(
+                                            playlistIndex,
+                                            trackIndex,
+                                            true,
+                                          ),
+                                    );
+                                  }),
+                                ],
+                              );
+                            },
                           );
                         },
                       ),

@@ -13,20 +13,21 @@ _Music playback with karaoke-style lyrics_
 ## Features
 
 - 🎵 Support for multiple audio formats (FLAC, APE, MP3, M4A, AAC, OGG, WAV, etc.)
-- 📝 Karaoke-style synchronized lyrics display
+- 📝 Real-time karaoke-style synchronized lyrics display
 - 💿 Album-centric organization with cover art display
 - 🎯 CUE sheet support for seamless album playback
-- 🎨 Modern, minimalist UI design
+- 🎨 Modern, minimalist dark UI design
 - 🖼️ Grid-based album view with smooth scrolling
-- 🎼 Automatic lyrics file detection and parsing
+- 🎼 Automatic lyrics detection and online lyrics search
 - 🔄 Background image caching for smooth performance
+- ❤️ Track favorites system
 
 ## Installation
 
 ### Prerequisites
 
 - Windows 10 or later
-- [Flutter](https://flutter.dev/docs/get-started/install) (2.0.0 or higher)
+- [Flutter](https://flutter.dev/docs/get-started/install) (3.0.0 or higher)
 - [Flutter Version Management (FVM)](https://fvm.app/) (optional but recommended)
 
 ### Setup
@@ -44,13 +45,7 @@ cd blueberry
 fvm flutter pub get
 ```
 
-3. Generate necessary files:
-
-```bash
-dart run build_runner build
-```
-
-4. Run the app in development mode:
+3. Run the app in development mode:
 
 ```bash
 fvm flutter run -d windows
@@ -66,32 +61,25 @@ fvm flutter build windows
 
 The built application will be available in `build/windows/runner/Release/`.
 
-## Usage
+## Configuration
 
-1. Before Launch:
+1. Create a config file at `%USERPROFILE%\AppData\Local\Blueberry\config.json`:
 
-   - Config file hardcoded at `D:\\~\\album\\~.json`
-   - Format like
-
-   ```
-   {
-    "folders": [
-            {
-                "path": "D:\\~\\album"
-            }
-        ]
+```json
+{
+  "folders": [
+    {
+      "path": "D:\\Music\\Albums"
     }
-   ```
+  ]
+}
+```
 
 2. Library Organization:
-
    - Albums are automatically organized based on folder structure
    - CUE sheets are parsed for proper track splitting
    - Lyrics files (.lrc) are automatically detected and linked
-
-3. Playback:
-   - Click on an album to start playback
-   - Lyrics will automatically display if available
+   - Online lyrics search available for missing lyrics
 
 ## Folder Structure
 
@@ -100,37 +88,23 @@ The app expects your music to be organized in the following way:
 ```
 Music Directory
 ├── Album1
-│   ├── folder.jpg
+│   ├── folder.jpg (or cover.jpg)
 │   ├── 01. Track.flac
 │   └── 01. Track.lrc
 ├── Album2
 │   ├── folder.jpg
-│   └── album.cue
+│   ├── album.cue
 │   └── album.flac
 ```
 
 ## Development
 
-To contribute to development:
+The project uses the following key packages:
 
-1. Setup development environment:
-
-```bash
-fvm install
-fvm flutter pub get
-```
-
-2. Run code generation when changing models:
-
-```bash
-dart run build_runner build
-```
-
-3. Run tests:
-
-```bash
-fvm flutter test
-```
+- `provider` for state management
+- `media_kit` for audio playback
+- `metadata_god` for audio metadata
+- `flutter_phoenix` for app restart capability
 
 ## License
 

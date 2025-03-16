@@ -1,4 +1,3 @@
-import 'package:blueberry/config/config.dart';
 import 'package:blueberry/lyric/lyric_loader.dart';
 import 'package:blueberry/lyric/lyric_parser.dart';
 import 'package:blueberry/lyric/lyric_part.dart';
@@ -41,7 +40,9 @@ class LyricState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Config defaultConfig() {
-    return Config(folders: [], coverFileName: '', favFilePath: '');
+  void updateIndex(int index, int partIndex) {
+    _currentIndex = index;
+    _currentPartIndex = partIndex;
+    notifyListeners();
   }
 }

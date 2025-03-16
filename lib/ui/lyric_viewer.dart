@@ -14,9 +14,6 @@ class LyricViewer extends StatefulWidget {
 
 class _LyricViewerState extends State<LyricViewer> {
   StreamSubscription? _currentPositionSubscription;
-  List<LyricLine>? _lyrics;
-  int _currentIndex = 0;
-  int _currentPartIndex = 0;
 
   late PlayerState _playerState;
   late LyricState _lyricState;
@@ -37,9 +34,9 @@ class _LyricViewerState extends State<LyricViewer> {
 
   //     // Reset state
   //     setState(() {
-  //       _lyrics = null;
-  //       _currentIndex = 0;
-  //       _currentPartIndex = 0;
+  //       _lyricState.currentLyric = null;
+  //       _lyricState.currentIndex = 0;
+  //       _lyricState.currentPartIndex = 0;
   //     });
 
   //     // Cancel existing subscription
@@ -79,10 +76,6 @@ class _LyricViewerState extends State<LyricViewer> {
 
     _currentPositionSubscription = _playerState.currentPositionStream?.listen(
       (position) {
-        if (_lyrics == null) {
-          // debugPrint('Position update ignored - no lyrics loaded');
-          return;
-        }
         _updateCurrentPosition(position);
       },
       onError: (error) {
@@ -95,28 +88,21 @@ class _LyricViewerState extends State<LyricViewer> {
   }
 
   void _updateCurrentPosition(Duration position) {
-    if (_lyrics == null) {
-      debugPrint('No lyrics available for position update');
-      return;
-    }
-
     final ms = position.inMilliseconds;
     var foundLine = false;
 
     // debugPrint('Updating position: ${position.inSeconds}s');
 
-    for (var i = _lyrics!.length - 1; i >= 0; i--) {
-      final line = _lyrics![i];
+    for (var i = _lyricState.currentLyric.length - 1; i >= 0; i--) {
+      final line = _lyricState.currentLyric[i];
       if (line.startTime.inMilliseconds <= ms) {
         // Find current part within line
         for (var j = line.parts.length - 1; j >= 0; j--) {
           if (line.parts[j].timestamp.inMilliseconds <= ms) {
-            if (_currentIndex != i || _currentPartIndex != j) {
+            if (_lyricState.currentIndex != i ||
+                _lyricState.currentPartIndex != j) {
               // debugPrint('Updating to line $i, part $j: ${line.parts[j].text}');
-              setState(() {
-                _currentIndex = i;
-                _currentPartIndex = j;
-              });
+              _lyricState.updateIndex(i, j);
             }
             foundLine = true;
             break;
@@ -142,8 +128,11 @@ class _LyricViewerState extends State<LyricViewer> {
 
             // Get next line's first part timestamp if this is last part
             final nextLineStartTime =
-                _currentIndex + 1 < _lyrics!.length
-                    ? _lyrics![_currentIndex + 1].startTime.inMilliseconds
+                _lyricState.currentIndex + 1 < _lyricState.currentLyric.length
+                    ? _lyricState
+                        .currentLyric[_lyricState.currentIndex + 1]
+                        .startTime
+                        .inMilliseconds
                     : null;
 
             // Calculate time gap for spacing
@@ -220,23 +209,35 @@ class _LyricViewerState extends State<LyricViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (_lyrics == null || _lyrics!.isEmpty) {
+    if (_lyricState.currentLyric.isEmpty) {
       return Container();
     }
 
     final displayLines = <Widget>[];
 
     // Previous line
-    if (_currentIndex > 0) {
-      displayLines.add(_buildLyricLine(_lyrics![_currentIndex - 1], false));
+    if (_lyricState.currentIndex > 0) {
+      displayLines.add(
+        _buildLyricLine(
+          _lyricState.currentLyric[_lyricState.currentIndex - 1],
+          false,
+        ),
+      );
     }
 
     // Current line
-    displayLines.add(_buildLyricLine(_lyrics![_currentIndex], true));
+    displayLines.add(
+      _buildLyricLine(_lyricState.currentLyric[_lyricState.currentIndex], true),
+    );
 
     // Next line
-    if (_currentIndex < _lyrics!.length - 1) {
-      displayLines.add(_buildLyricLine(_lyrics![_currentIndex + 1], false));
+    if (_lyricState.currentIndex < _lyricState.currentLyric.length - 1) {
+      displayLines.add(
+        _buildLyricLine(
+          _lyricState.currentLyric[_lyricState.currentIndex + 1],
+          false,
+        ),
+      );
     }
 
     return Container(

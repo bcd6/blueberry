@@ -1,24 +1,12 @@
-import 'package:blueberry/state/app_state.dart';
-import 'package:blueberry/state/fav_state.dart';
 import 'package:blueberry/ui/album_list.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:window_size/window_size.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
 
-  Future<void> _initializeApp(BuildContext context) async {
-    final appState = context.read<AppState>();
-    final favState = context.read<FavState>();
-    await appState.loadConfig();
-    await appState.scanAlbums();
-    await favState.loadFavorites();
-    // if (kReleaseMode) {
-    //   appState.shuffleAlbums();
-    // }
-  }
+  Future<void> _initializeApp(BuildContext context) async {}
 
   @override
   Widget build(BuildContext context) {

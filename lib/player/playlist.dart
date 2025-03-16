@@ -1,5 +1,5 @@
+import 'package:blueberry/player/track.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'track.dart';
 
 part 'playlist.g.dart';
 

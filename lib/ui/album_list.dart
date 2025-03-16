@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:blueberry/domain/album.dart';
+import 'package:blueberry/album/album.dart';
 import 'package:blueberry/state/fav_state.dart';
 import 'package:blueberry/ui/album_play.dart';
 import 'package:flutter/gestures.dart';

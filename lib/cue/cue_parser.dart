@@ -1,42 +1,36 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:blueberry/state/app_state.dart';
+import 'package:blueberry/cue/cue_sheet.dart';
+import 'package:blueberry/cue/cue_track.dart';
+import 'package:blueberry/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:metadata_god/metadata_god.dart';
 import 'package:path/path.dart' as path;
 
-class CueTrack {
-  final String title;
-  final Duration start;
-  final Duration? duration;
-  final String performer;
-  final int index;
-  final String? isrc;
-  final Duration? pregap;
+class _CueParseState {
+  String? audioFile;
+  String albumTitle = '';
+  String albumPerformer = '';
+  final albumMetadata = <String, String>{}; // Not using atm
+  final tracks = <CueTrack>[];
 
-  CueTrack({
-    required this.title,
-    required this.start,
-    this.duration,
-    required this.performer,
-    required this.index,
-    this.isrc,
-    this.pregap,
-  });
-}
+  String currentTitle = '';
+  String currentPerformer = '';
+  String? currentIsrc;
+  Duration? currentStart;
+  Duration? pregapStart;
+  int trackIndex = 1;
+  final currentMetadata = <String, String>{};
 
-class CueSheet {
-  final String audioFile;
-  final List<CueTrack> tracks;
-  final String title;
-  final String performer;
+  bool isInTrack = false;
 
-  CueSheet({
-    required this.audioFile,
-    required this.tracks,
-    this.title = '',
-    this.performer = '',
-  });
+  void resetTrackState() {
+    currentTitle = '';
+    currentPerformer = '';
+    currentIsrc = null;
+    pregapStart = null;
+    currentStart = null;
+  }
 }
 
 class CueParser {
@@ -227,7 +221,7 @@ class CueParser {
       debugPrint('Error reading metadata from $audioFilePath: $e');
     }
 
-    audioFileDuration ??= await AppState.getAudioDuration(audioFilePath);
+    audioFileDuration ??= await Utils.getAudioDurationByFF(audioFilePath);
     if (tracks.length > 1) {
       final lastIndex = tracks.length - 1;
       tracks[lastIndex] = CueTrack(
@@ -278,32 +272,5 @@ class CueParser {
     return '${(d.inMinutes).toString().padLeft(2, '0')}:'
         '${(d.inSeconds % 60).toString().padLeft(2, '0')}.'
         '${((d.inMilliseconds % 1000) / 10).round().toString().padLeft(2, '0')}';
-  }
-}
-
-class _CueParseState {
-  String? audioFile;
-  String albumTitle = '';
-  String albumPerformer = '';
-  // Not using atm
-  final albumMetadata = <String, String>{};
-  final tracks = <CueTrack>[];
-
-  String currentTitle = '';
-  String currentPerformer = '';
-  String? currentIsrc;
-  Duration? currentStart;
-  Duration? pregapStart;
-  int trackIndex = 1;
-  final currentMetadata = <String, String>{};
-
-  bool isInTrack = false;
-
-  void resetTrackState() {
-    currentTitle = '';
-    currentPerformer = '';
-    currentIsrc = null;
-    pregapStart = null;
-    currentStart = null;
   }
 }

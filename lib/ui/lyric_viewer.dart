@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:blueberry/domain/track.dart';
+import 'package:blueberry/player/track.dart';
 import 'package:blueberry/feature/lyric/lyric_loader.dart';
 import 'package:blueberry/feature/lyric/lyric_parser.dart';
 import 'package:blueberry/feature/lyric/model/lyric_part.dart';

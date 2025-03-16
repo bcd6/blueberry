@@ -5,8 +5,16 @@ part 'config.g.dart'; // Required for generated code
 @JsonSerializable()
 class Config {
   final List<Folder> folders;
+  final String coverFileName;
+  final String favFilePath;
+  final String? qqMusicCookie;
 
-  Config({required this.folders});
+  Config({
+    required this.folders,
+    required this.coverFileName,
+    required this.favFilePath,
+    this.qqMusicCookie,
+  });
 
   factory Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
   Map<String, dynamic> toJson() =>

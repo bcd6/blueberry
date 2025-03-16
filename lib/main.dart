@@ -1,9 +1,10 @@
-import 'package:blueberry/state/app_state.dart';
-import 'package:blueberry/state/fav_state.dart';
+import 'package:blueberry/album/album_state.dart';
+import 'package:blueberry/config/config_state.dart';
+import 'package:blueberry/player/player_state.dart';
 import 'package:blueberry/ui/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
-import 'package:media_kit/media_kit.dart';
+import 'package:media_kit/media_kit.dart' show MediaKit;
 import 'package:metadata_god/metadata_god.dart';
 import 'package:provider/provider.dart';
 
@@ -13,11 +14,20 @@ void main() {
   MetadataGod.initialize();
   // debugPaintSizeEnabled = true;
 
+  final configState = ConfigState();
+  final albumState = AlbumState(configState);
+  final playerState = PlayerState(configState);
+
+  configState.init().then((_) {
+    albumState.init();
+  });
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => FavState()),
-        ChangeNotifierProvider(create: (_) => AppState()),
+        ChangeNotifierProvider<ConfigState>.value(value: configState),
+        ChangeNotifierProvider<AlbumState>.value(value: albumState),
+        ChangeNotifierProvider<PlayerState>.value(value: playerState),
       ],
       child: Phoenix(child: App()),
     ),

@@ -14,20 +14,16 @@ void main() {
   MetadataGod.initialize();
   // debugPaintSizeEnabled = true;
 
-  final configState = ConfigState();
-  final albumState = AlbumState(configState);
-  final playerState = PlayerState(configState);
-
-  configState.init().then((_) {
-    albumState.init();
-  });
-
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<ConfigState>.value(value: configState),
-        ChangeNotifierProvider<AlbumState>.value(value: albumState),
-        ChangeNotifierProvider<PlayerState>.value(value: playerState),
+        ChangeNotifierProvider(create: (context) => ConfigState()),
+        ChangeNotifierProvider(
+          create: (context) => AlbumState(context.read<ConfigState>()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => PlayerState(context.read<ConfigState>()),
+        ),
       ],
       child: Phoenix(child: App()),
     ),

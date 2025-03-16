@@ -1,12 +1,20 @@
+import 'package:blueberry/album/album_state.dart';
+import 'package:blueberry/config/config_state.dart';
 import 'package:blueberry/ui/album_list.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:window_size/window_size.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
 
-  Future<void> _initializeApp(BuildContext context) async {}
+  Future<void> _initializeApp(BuildContext context) async {
+    final configState = context.read<ConfigState>();
+    final albumState = context.read<AlbumState>();
+    await configState.init();
+    await albumState.init();
+  }
 
   @override
   Widget build(BuildContext context) {

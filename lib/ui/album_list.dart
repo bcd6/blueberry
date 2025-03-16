@@ -1,13 +1,11 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:blueberry/album/album.dart';
-import 'package:blueberry/state/fav_state.dart';
-import 'package:blueberry/ui/album_play.dart';
+import 'package:blueberry/album/album_state.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:provider/provider.dart';
-import '../state/app_state.dart';
 
 class AlbumList extends StatefulWidget {
   const AlbumList({super.key});
@@ -17,58 +15,147 @@ class AlbumList extends StatefulWidget {
 }
 
 class _AlbumListState extends State<AlbumList> {
-  final ScrollController scrollController = ScrollController();
-  static const initLoad = 9999;
-  List<int> displayedIndices = [];
-  bool _isInitialized = false;
+  final ScrollController _scrollController = ScrollController();
+  final _initLoad = 48;
+  List<int> _displayedIndices = [];
+  late AlbumState _albumState;
+  List<Album> _albums = [];
+  bool _precacheDone = false;
 
   @override
   void initState() {
     super.initState();
-    scrollController.addListener(_onScroll);
+    _init();
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _initializeData();
+    _precacheImages(_albums);
   }
 
-  Future<void> _initializeData() async {
-    if (_isInitialized) return;
-    _isInitialized = true;
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-    final appState = context.read<AppState>();
-    final albumCount = appState.albums.length;
+  @override
+  Widget build(BuildContext context) {
+    // Safety check to prevent range errors
+    _displayedIndices =
+        _displayedIndices.where((index) => index < _albums.length).toList();
 
-    // Set initial display indices
+    return Scaffold(
+      appBar: null,
+      body: Center(
+        child: Listener(
+          onPointerSignal: (ps) {
+            if (ps is PointerScrollEvent) {
+              var duration = 100;
+              final newOffset =
+                  _scrollController.offset + ps.scrollDelta.dy * 6;
+              if (ps.scrollDelta.dy.isNegative) {
+                _scrollController.animateTo(
+                  math.max(0, newOffset),
+                  duration: Duration(milliseconds: duration),
+                  curve: Curves.linear,
+                );
+              } else {
+                _scrollController.animateTo(
+                  math.min(
+                    _scrollController.position.maxScrollExtent,
+                    newOffset,
+                  ),
+                  duration: Duration(milliseconds: duration),
+                  curve: Curves.linear,
+                );
+              }
+            }
+          },
+          child: GridView.extent(
+            controller: _scrollController,
+            physics: const NeverScrollableScrollPhysics(),
+            maxCrossAxisExtent: 480,
+            mainAxisSpacing: 0,
+            crossAxisSpacing: 0,
+            children:
+                _displayedIndices.map((index) {
+                  final album = _albums[index];
+                  return Container(
+                    padding: const EdgeInsets.all(36),
+                    child: GestureDetector(
+                      child: _buildAlbumCover(album.coverFilePath),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            // builder: (context) => AlbumPlay(album: album),
+                            builder: (context) => Container(),
+                          ),
+                        );
+                      },
+                      onSecondaryTap: () => _resetApp(context),
+                    ),
+                  );
+                }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _init() {
+    _albumState = context.read<AlbumState>();
+    _albums = [..._albumState.albums];
     setState(() {
-      displayedIndices = List.generate(
-        math.min(initLoad, albumCount),
+      _displayedIndices = List.generate(
+        math.min(_initLoad, _albumState.albums.length),
         (index) => index,
       );
     });
+  }
 
-    // Precache all album images in background
-    _precacheImages(appState.albums);
+  void _onScroll() {
+    final position = _scrollController.position;
+    // debugPrint('Scrolling: ${position.pixels}');
+    // debugPrint('MaxScrollExtent: ${position.maxScrollExtent}');
+    if (position.pixels >= position.maxScrollExtent * 0.8) {
+      final currentLength = _displayedIndices.length;
+      final totalAlbums = _albumState.albums.length;
+      debugPrint('CurrentLength: $currentLength');
+
+      if (currentLength < totalAlbums) {
+        final newIndices = List.generate(48, (index) => currentLength + index);
+        setState(() {
+          _displayedIndices.addAll(newIndices);
+        });
+      }
+    }
   }
 
   Future<void> _precacheImages(List<Album> albums) async {
+    if (_precacheDone) {
+      return;
+    }
+
     debugPrint('Starting to precache ${albums.length} album images');
 
     for (final album in albums) {
       try {
         await precacheImage(
-          FileImage(File(album.coverPath)),
+          FileImage(File(album.coverFilePath)),
           context,
           size: const Size(480, 480),
         );
       } catch (error) {
-        debugPrint('Failed to precache image ${album.coverPath}: $error');
+        debugPrint('Failed to precache image ${album.coverFilePath}: $error');
       }
     }
 
     debugPrint('Finished precaching all album images');
+    _precacheDone = true;
   }
 
   Widget _buildAlbumCover(String coverPath) {
@@ -90,99 +177,7 @@ class _AlbumListState extends State<AlbumList> {
     );
   }
 
-  @override
-  void dispose() {
-    scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    final position = scrollController.position;
-    // debugPrint('Scrolling: ${position.pixels}');
-    // debugPrint('MaxScrollExtent: ${position.maxScrollExtent}');
-    if (position.pixels >= position.maxScrollExtent * 0.8) {
-      final appState = context.read<AppState>();
-      final currentLength = displayedIndices.length;
-      final totalAlbums = appState.albums.length;
-      debugPrint('CurrentLength: $currentLength');
-
-      if (currentLength < totalAlbums) {
-        final newIndices = [currentLength, currentLength + 1];
-        setState(() {
-          displayedIndices.addAll(newIndices);
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final favState = context.watch<FavState>();
-    final albums = [favState.favAlbum, ...appState.albums];
-
-    // Safety check to prevent range errors
-    displayedIndices =
-        displayedIndices.where((index) => index < albums.length).toList();
-
-    return Scaffold(
-      appBar: null,
-      body: Center(
-        child: Listener(
-          onPointerSignal: (ps) {
-            if (ps is PointerScrollEvent) {
-              var duration = 100;
-              final newOffset = scrollController.offset + ps.scrollDelta.dy * 6;
-              if (ps.scrollDelta.dy.isNegative) {
-                scrollController.animateTo(
-                  math.max(0, newOffset),
-                  duration: Duration(milliseconds: duration),
-                  curve: Curves.linear,
-                );
-              } else {
-                scrollController.animateTo(
-                  math.min(
-                    scrollController.position.maxScrollExtent,
-                    newOffset,
-                  ),
-                  duration: Duration(milliseconds: duration),
-                  curve: Curves.linear,
-                );
-              }
-            }
-          },
-          child: GridView.extent(
-            controller: scrollController,
-            physics: const NeverScrollableScrollPhysics(),
-            maxCrossAxisExtent: 480,
-            mainAxisSpacing: 0,
-            crossAxisSpacing: 0,
-            children:
-                displayedIndices.map((index) {
-                  final album = albums[index];
-                  return Container(
-                    padding: const EdgeInsets.all(36),
-                    child: GestureDetector(
-                      child: _buildAlbumCover(album.coverPath),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AlbumPlay(album: album),
-                          ),
-                        );
-                      },
-                      onSecondaryTap: () => resetApp(context),
-                    ),
-                  );
-                }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void resetApp(context) {
+  void _resetApp(context) {
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
     }

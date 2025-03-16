@@ -23,7 +23,7 @@ class AlbumState extends ChangeNotifier {
     'opus',
     'dsd',
   ];
-  late List<Album> _albums;
+  final List<Album> _albums = [];
 
   AlbumState(this._configState);
 
@@ -31,6 +31,7 @@ class AlbumState extends ChangeNotifier {
 
   // Album scanning
   Future<void> init() async {
+    _albums.clear();
     await _scanConfigFolders();
     debugPrint('Scan completed. Found ${_albums.length} albums');
     notifyListeners();

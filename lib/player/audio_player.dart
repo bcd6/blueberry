@@ -1,11 +1,9 @@
-import 'package:blueberry/player/loop_mode.dart';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
 import 'dart:async';
 
 class AudioPlayer {
   final Player _player = Player();
-  LoopMode _loopMode = LoopMode.playlist;
 
   AudioPlayer() {
     _init();
@@ -48,16 +46,6 @@ class AudioPlayer {
 
   Future<void> setVolume(double volume) => _player.setVolume(volume * 100);
 
-  Future<void> toggleLoopMode() async {
-    final modes = [LoopMode.track, LoopMode.playlist];
-    final currentIndex = modes.indexOf(_loopMode);
-    _loopMode = modes[(currentIndex + 1) % modes.length];
-    debugPrint('Loop mode set to: $_loopMode');
-  }
-
-  LoopMode get loopMode => _loopMode;
-  bool get isLoopingTrack => _loopMode == LoopMode.track;
-  bool get isLoopingPlaylist => _loopMode == LoopMode.playlist;
   Stream<bool> get playerStateStream => _player.stream.playing;
   Stream<Duration> get positionStream => _player.stream.position;
   Stream<Duration> get durationStream => _player.stream.duration;

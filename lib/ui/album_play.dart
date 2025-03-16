@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:blueberry/player/loop_mode.dart';
 import 'package:blueberry/player/player_state.dart';
 import 'package:blueberry/feature/lyric/lyric_loader.dart';
 import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
@@ -9,6 +8,8 @@ import 'package:blueberry/player/audio_player.dart';
 import 'package:blueberry/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+enum LoopMode { track, playlist }
 
 class AlbumPlay extends StatefulWidget {
   const AlbumPlay({super.key});
@@ -27,6 +28,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   late PlayerState _playerState;
   StreamSubscription? _currentPositionSubscription;
   double _volume = _defaultVolume;
+  LoopMode _loopMode = LoopMode.playlist;
 
   @override
   void initState() {
@@ -408,11 +410,11 @@ class _AlbumPlayState extends State<AlbumPlay> {
               'Track completed adjustedPosition: ${position.inMilliseconds}',
             );
             debugPrint('Track completed');
-            if (_audioPlayer.isLoopingTrack) {
+            if (_loopMode == LoopMode.track) {
               await _audioPlayer.seek(track.startOffset);
               await _audioPlayer.play();
             }
-            if (!_audioPlayer.isLoopingTrack && mounted) {
+            if (_loopMode != LoopMode.track && mounted) {
               _handleTrackComplete();
             }
           }
@@ -449,7 +451,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
     if (nextTrackIndex < playlist.tracks.length) {
       _playTrack(_playerState.currentPlaylistIndex!, nextTrackIndex, false);
-    } else if (_audioPlayer.isLoopingPlaylist) {
+    } else if (_loopMode == LoopMode.playlist) {
       _playTrack(_playerState.currentPlaylistIndex!, 0, false);
     }
   }
@@ -509,7 +511,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   Widget _buildLoopButton() {
-    final (icon, tooltip) = switch (_audioPlayer.loopMode) {
+    final (icon, tooltip) = switch (_loopMode) {
       LoopMode.track => (Icons.repeat_one, 'Loop Track'),
       LoopMode.playlist => (Icons.repeat, 'Loop Playlist'),
     };
@@ -517,7 +519,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
     return IconButton(
       icon: Icon(icon, color: Colors.white),
       onPressed: () async {
-        await _audioPlayer.toggleLoopMode();
+        await _toggleLoopMode();
         setState(() {}); // Trigger rebuild to update icon
       },
       tooltip: tooltip,
@@ -665,5 +667,12 @@ class _AlbumPlayState extends State<AlbumPlay> {
           _playerState.currentTrack != null ? _showLyricsSourceModal : null,
       tooltip: 'Reload Lyrics',
     );
+  }
+
+  Future<void> _toggleLoopMode() async {
+    final modes = [LoopMode.track, LoopMode.playlist];
+    final currentIndex = modes.indexOf(_loopMode);
+    _loopMode = modes[(currentIndex + 1) % modes.length];
+    debugPrint('Loop mode set to: $_loopMode');
   }
 }

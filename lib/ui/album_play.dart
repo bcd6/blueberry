@@ -1,16 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:blueberry/config/config_state.dart';
 import 'package:blueberry/fav/fav_state.dart';
-import 'package:blueberry/lyric/lyric_state.dart';
 import 'package:blueberry/player/player_state.dart';
-import 'package:blueberry/lyric/lyric_loader.dart';
-import 'package:blueberry/qq_music_api/qq_music_service.dart';
 import 'package:blueberry/ui/lyric_viewer.dart';
 import 'package:blueberry/player/audio_player.dart';
 import 'package:blueberry/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:blueberry/ui/lyrics_reload_button.dart';
 
 enum LoopMode { track, playlist }
 
@@ -26,12 +23,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   static const double _defaultVolume = 0.6;
 
   final _audioPlayer = AudioPlayer();
-
-  late ConfigState _configState;
   late PlayerState _playerState;
-  late LyricState _lyricState;
-  late QQMusicService _qqMusicService;
-
   StreamSubscription? _currentPositionSubscription;
   double _volume = _defaultVolume;
   LoopMode _loopMode = LoopMode.playlist;
@@ -110,7 +102,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                       builder: (context, playerState, child) {
                         return Row(
                           children: [
-                            _buildLyricsSourceButton(),
+                            const LyricsReloadButton(),
                             const SizedBox(width: 16),
                             // Volume control
                             const Icon(
@@ -360,11 +352,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   void _init() {
-    _configState = context.read<ConfigState>();
     _playerState = context.read<PlayerState>();
-    _lyricState = context.read<LyricState>();
-    _qqMusicService = QQMusicService(_configState.config.qqMusicCookie ?? '');
-
     _audioPlayer.setVolume(_volume);
   }
 
@@ -595,114 +583,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
       await _audioPlayer.seek(track.startOffset + newPosition);
       _playerState.setPosition(newPosition);
     }
-  }
-
-  // Add this method to _AlbumPlayState class
-  Future<void> _showLyricsSourceModal() async {
-    final keyword =
-        '${_playerState.currentTrack?.title}  ${_playerState.currentTrack?.performer}';
-    final search = await _qqMusicService.searchMusic(keyword, SearchType.song);
-    final songs =
-        search['req_1']['data']['body']['song']['list'] as List<dynamic>;
-
-    // debugPrint('Search Result:');
-    // debugPrint(songs.toString());
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 1000, maxHeight: 600),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Songs',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white54),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: 'Close',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [..._buildLyricsSource(songs)],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  List<Widget> _buildLyricsSource(List<dynamic> songs) {
-    return songs.map((song) {
-      final songId = song['id'].toString();
-      final title = song['title'].toString();
-      final album = song['album']['title'].toString();
-      final singer = (song['singer'] as List<dynamic>)
-          .map((s) => s['title'].toString())
-          .join(', ');
-
-      return ListTile(
-        title: Text(
-          '$title - $album - $singer',
-          style: const TextStyle(color: Colors.white),
-        ),
-        onTap: () {
-          _selectLyricsSource(songId);
-        },
-      );
-    }).toList();
-  }
-
-  Future<void> _selectLyricsSource(songId) async {
-    if (_playerState.currentTrack == null) {
-      Navigator.pop(context);
-    }
-    final result = await LyricLoader.reloadLocalLyric(
-      _playerState.currentTrack!.path,
-      _playerState.currentTrack!.title,
-      songId,
-      _qqMusicService,
-    );
-
-    if (result) {
-      _lyricState.load(_playerState.currentTrack!);
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    }
-  }
-
-  // Add a button to open the modal
-  Widget _buildLyricsSourceButton() {
-    return IconButton(
-      icon: Icon(
-        Icons.lyrics,
-        color:
-            _playerState.currentTrack != null ? Colors.white : Colors.white24,
-      ),
-      onPressed:
-          _playerState.currentTrack != null ? _showLyricsSourceModal : null,
-      tooltip: 'Reload Lyrics',
-    );
   }
 
   Future<void> _toggleLoopMode() async {

@@ -356,19 +356,23 @@ class _AlbumPlayState extends State<AlbumPlay> {
         ),
         onTap: () {
           _selectLyricsSource(songId);
-          Navigator.pop(context);
         },
       );
     }).toList();
   }
 
-  // Placeholder method to be implemented later
-  Future<void> _selectLyricsSource(String songId) async {
+  Future<void> _selectLyricsSource(songId) async {
     final result = await LyricLoader.reloadLocalLyric(
       _currentTrack?.path ?? '',
       _currentTrack?.title ?? '',
       songId,
     );
+
+    if (result) {
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
   }
 
   // Add a button to open the modal

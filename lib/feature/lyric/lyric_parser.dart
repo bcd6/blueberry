@@ -105,9 +105,9 @@ class LyricParser {
           final text = match.group(7)?.trim() ?? '';
           if (text.isNotEmpty) {
             parts.add(LyricPart(text, timestamp));
-            debugPrint(
-              'Part (timestamp-first): "$text" @ ${_formatDuration(timestamp)}',
-            );
+            // debugPrint(
+            //   'Part (timestamp-first): "$text" @ ${_formatDuration(timestamp)}',
+            // );
           }
         } else {
           final text = match.group(1)?.trim() ?? '';
@@ -118,9 +118,9 @@ class LyricParser {
           );
           if (text.isNotEmpty) {
             parts.add(LyricPart(text, timestamp));
-            debugPrint(
-              'Part (text-first): "$text" @ ${_formatDuration(timestamp)}',
-            );
+            // debugPrint(
+            //   'Part (text-first): "$text" @ ${_formatDuration(timestamp)}',
+            // );
           }
         }
 

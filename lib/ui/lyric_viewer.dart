@@ -41,6 +41,7 @@ class _LyricViewerState extends State<LyricViewer> {
       _lastTrack = currentTrack;
       final playerState = context.read<PlayerState>();
       final lyricState = context.read<LyricState>();
+      lyricState.reset(currentTrack);
       await lyricState.load(currentTrack);
       await _setupDurationStream(playerState);
     }

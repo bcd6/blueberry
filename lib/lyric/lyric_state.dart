@@ -13,6 +13,13 @@ class LyricState extends ChangeNotifier {
   int get currentIndex => _currentIndex;
   int get currentPartIndex => _currentPartIndex;
 
+  void reset(Track track) {
+    _currentLyric = [];
+    _currentIndex = 0;
+    _currentPartIndex = 0;
+    notifyListeners();
+  }
+
   Future<void> load(Track track) async {
     final content = await LyricLoader.loadLyricContent(
       track.path,

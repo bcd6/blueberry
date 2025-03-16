@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:blueberry/album/album.dart';
 import 'package:blueberry/album/album_state.dart';
+import 'package:blueberry/fav/fav_state.dart';
 import 'package:blueberry/player/player_state.dart';
 import 'package:blueberry/ui/album_play.dart';
 import 'package:flutter/gestures.dart';
@@ -22,6 +23,7 @@ class _AlbumListState extends State<AlbumList> {
   List<int> _displayedIndices = [];
   late AlbumState _albumState;
   late PlayerState _playerState;
+  late FavState _favState;
   List<Album> _albums = [];
   bool _precacheDone = false;
 
@@ -110,7 +112,8 @@ class _AlbumListState extends State<AlbumList> {
   void _init() {
     _albumState = context.read<AlbumState>();
     _playerState = context.read<PlayerState>();
-    _albums = [..._albumState.albums];
+    _favState = context.read<FavState>();
+    _albums = [_favState.favAlbum, ..._albumState.albums];
     setState(() {
       _displayedIndices = List.generate(
         math.min(_initLoad, _albumState.albums.length),

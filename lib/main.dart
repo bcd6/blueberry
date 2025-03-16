@@ -24,11 +24,12 @@ void main() {
           create: (context) => AlbumState(context.read<ConfigState>()),
         ),
         ChangeNotifierProvider(
-          create: (context) => PlayerState(context.read<ConfigState>()),
-        ),
-        ChangeNotifierProvider(
           create: (context) => FavState(context.read<ConfigState>()),
         ),
+        ChangeNotifierProvider(
+          create: (context) => PlayerState(context.read<FavState>()),
+        ),
+
         ChangeNotifierProvider(create: (context) => LyricState()),
       ],
       child: Phoenix(child: App()),

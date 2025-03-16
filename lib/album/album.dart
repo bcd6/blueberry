@@ -7,6 +7,7 @@ class Album {
   final String coverFilePath;
   final String? folderPath;
   final String? title;
+  final bool isFavAlbum;
   final List<String> regularFiles;
   final List<String> cueFiles;
 
@@ -14,6 +15,7 @@ class Album {
     required this.coverFilePath,
     this.folderPath,
     this.title,
+    this.isFavAlbum = false,
     this.regularFiles = const [],
     this.cueFiles = const [],
   });

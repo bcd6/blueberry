@@ -1,5 +1,6 @@
 import 'package:blueberry/album/album_state.dart';
 import 'package:blueberry/config/config_state.dart';
+import 'package:blueberry/fav/fav_state.dart';
 import 'package:blueberry/ui/album_list.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,8 +13,10 @@ class App extends StatelessWidget {
   Future<void> _initializeApp(BuildContext context) async {
     final configState = context.read<ConfigState>();
     final albumState = context.read<AlbumState>();
+    final favState = context.read<FavState>();
     await configState.init();
     await albumState.init();
+    await favState.init();
   }
 
   @override

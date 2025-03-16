@@ -17,6 +17,7 @@ class FavState extends ChangeNotifier {
       'images',
       'fav_cover.png',
     ),
+    isFavAlbum: true,
   );
   List<Playlist> _favPlaylists = [];
 
@@ -30,7 +31,7 @@ class FavState extends ChangeNotifier {
       final file = File(_configState.config.favFilePath);
       if (!await file.exists()) {
         debugPrint('No favorites file found, creating new one');
-        // todo create a new file
+        await file.writeAsString('[]');
         return;
       }
       final content = await file.readAsString();
@@ -100,6 +101,7 @@ class FavState extends ChangeNotifier {
           targetPlaylist,
           ..._favPlaylists.where((p) => p.name != albumName),
         ];
+        _favPlaylists.sort((a, b) => a.name.compareTo(b.name));
 
         debugPrint(
           'Added to favorites: ${track.title} in playlist: $albumName',

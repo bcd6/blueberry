@@ -1,6 +1,6 @@
 import 'package:blueberry/album/album.dart';
-import 'package:blueberry/config/config_state.dart';
 import 'package:blueberry/cue/cue_parser.dart';
+import 'package:blueberry/fav/fav_state.dart';
 import 'package:blueberry/player/playlist.dart';
 import 'package:blueberry/player/track.dart';
 import 'package:blueberry/utils.dart';
@@ -9,7 +9,7 @@ import 'package:metadata_god/metadata_god.dart';
 import 'package:path/path.dart' as path;
 
 class PlayerState extends ChangeNotifier {
-  final ConfigState _configState;
+  final FavState _favState;
   Album _currentAlbum = Album(coverFilePath: '');
   List<Playlist> _currentAlbumPlaylists = [];
   bool _currentTrackPlaying = false;
@@ -21,7 +21,7 @@ class PlayerState extends ChangeNotifier {
   int? _currentPlaylistIndex;
   int? _currentTrackIndex;
 
-  PlayerState(this._configState);
+  PlayerState(this._favState);
 
   Album get currentAlbum => _currentAlbum;
   List<Playlist> get currentAlbumPlaylists => _currentAlbumPlaylists;
@@ -38,17 +38,21 @@ class PlayerState extends ChangeNotifier {
     _currentAlbum = album;
     _currentAlbumPlaylists = [];
 
-    final regularPlaylist = await _loadRegularPlaylist(
-      album.regularFiles,
-      album.coverFilePath,
-    );
-    _currentAlbumPlaylists.addAll(regularPlaylist);
+    if (album.isFavAlbum) {
+      _currentAlbumPlaylists = _favState.favPlaylists;
+    } else {
+      final regularPlaylist = await _loadRegularPlaylist(
+        album.regularFiles,
+        album.coverFilePath,
+      );
+      _currentAlbumPlaylists.addAll(regularPlaylist);
 
-    final cuePlaylists = await _loadCuePlaylists(
-      album.cueFiles,
-      album.coverFilePath,
-    );
-    _currentAlbumPlaylists.addAll(cuePlaylists);
+      final cuePlaylists = await _loadCuePlaylists(
+        album.cueFiles,
+        album.coverFilePath,
+      );
+      _currentAlbumPlaylists.addAll(cuePlaylists);
+    }
 
     debugPrint('SetAlbum ${_currentAlbumPlaylists.length} playlists');
     notifyListeners();

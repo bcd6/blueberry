@@ -145,11 +145,22 @@ class LyricsReloadButton extends StatelessWidget {
       qqMusicService,
     );
 
+    if (!context.mounted) return;
+
     if (result) {
       await lyricState.load(playerState.currentTrack!);
-      if (context.mounted) {
-        Navigator.pop(context);
-      }
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No lyrics found.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 }

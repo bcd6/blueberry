@@ -480,7 +480,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   Widget _getLyricUI() {
     if (_playerState.currentTrack == null) return const SizedBox.shrink();
-
     return LyricViewer();
   }
 

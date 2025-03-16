@@ -8,6 +8,12 @@ class Utils {
     await Process.run('explorer', [path]);
   }
 
+  static Future<void> openInExplorerByFile(String filePath) async {
+    final path = File(filePath).parent.path;
+    debugPrint('Opening in explorer: $path');
+    await Process.run('explorer', [path]);
+  }
+
   static Future<Duration> getAudioDurationByFF(String filePath) async {
     try {
       ProcessResult result = await Process.run('ffprobe', [

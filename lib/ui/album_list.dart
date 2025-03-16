@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:blueberry/album/album.dart';
 import 'package:blueberry/album/album_state.dart';
+import 'package:blueberry/player/player_state.dart';
+import 'package:blueberry/ui/album_play.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
@@ -19,6 +21,7 @@ class _AlbumListState extends State<AlbumList> {
   final _initLoad = 48;
   List<int> _displayedIndices = [];
   late AlbumState _albumState;
+  late PlayerState _playerState;
   List<Album> _albums = [];
   bool _precacheDone = false;
 
@@ -88,12 +91,10 @@ class _AlbumListState extends State<AlbumList> {
                     child: GestureDetector(
                       child: _buildAlbumCover(album.coverFilePath),
                       onTap: () {
+                        _playerState.setAlbum(album);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            // builder: (context) => AlbumPlay(album: album),
-                            builder: (context) => Container(),
-                          ),
+                          MaterialPageRoute(builder: (context) => AlbumPlay()),
                         );
                       },
                       onSecondaryTap: () => _resetApp(context),

@@ -12,15 +12,27 @@ class PlayerState extends ChangeNotifier {
   final ConfigState _configState;
   late Album _currentAlbum;
   late List<Playlist> _currentAlbumPlaylists;
-  late Playlist _currentPlaylist;
-  late Track _currentTrack;
+  late bool _currentTrackPlaying;
+  late Duration _currentPosition;
+
+  late Playlist? _currentPlaylist;
+  late Track? _currentTrack;
+  late Stream<Duration>? _currentPositionStream;
+  late int? _currentPlaylistIndex;
+  late int? _currentTrackIndex;
 
   PlayerState(this._configState);
 
   Album get currentAlbum => _currentAlbum;
   List<Playlist> get currentAlbumPlaylists => _currentAlbumPlaylists;
-  Playlist get currentPlaylist => _currentPlaylist;
-  Track get currentTrack => _currentTrack;
+  bool get currentTrackPlaying => _currentTrackPlaying;
+  Duration get currentPosition => _currentPosition;
+
+  Playlist? get currentPlaylist => _currentPlaylist;
+  Track? get currentTrack => _currentTrack;
+  Stream<Duration>? get currentPositionStream => _currentPositionStream;
+  int? get currentPlaylistIndex => _currentPlaylistIndex;
+  int? get currentTrackIndex => _currentTrackIndex;
 
   Future<void> setAlbum(Album album) async {
     _currentAlbum = album;
@@ -37,6 +49,36 @@ class PlayerState extends ChangeNotifier {
     );
     _currentAlbumPlaylists.addAll(cuePlaylists);
 
+    _currentPosition = Duration.zero;
+    _currentTrackPlaying = false;
+
+    notifyListeners();
+  }
+
+  void setPosition(Duration position) {
+    _currentPosition = position;
+    notifyListeners();
+  }
+
+  void setPlaying(bool flag) {
+    _currentTrackPlaying = flag;
+    notifyListeners();
+  }
+
+  void startNewCurrent(
+    int playlistIndex,
+    int trackIndex,
+    Track track,
+    Duration currentPosition,
+    Stream<Duration> currentPositionStream,
+    bool currentTrackPlaying,
+  ) {
+    _currentPlaylistIndex = playlistIndex;
+    _currentTrackIndex = trackIndex;
+    _currentTrack = track;
+    _currentPosition = Duration.zero;
+    _currentPositionStream = currentPositionStream;
+    _currentTrackPlaying = true;
     notifyListeners();
   }
 

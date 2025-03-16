@@ -325,9 +325,14 @@ class _AlbumPlayState extends State<AlbumPlay> {
   @override
   void dispose() {
     _currentPositionSubscription?.cancel();
-    if (_playerState.currentTrackPlaying) _audioPlayer.stop();
+    if (_playerState.currentTrackPlaying) {
+      _audioPlayer.stop();
+    }
     _audioPlayer.dispose();
-    _playerState.resetCurrent();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _playerState.resetCurrent();
+    });
+
     super.dispose();
   }
 

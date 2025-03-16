@@ -81,6 +81,16 @@ class PlayerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void resetCurrent() {
+    _currentPlaylistIndex = null;
+    _currentTrackIndex = null;
+    _currentTrack = null;
+    _currentPosition = Duration.zero;
+    _currentPositionStream = null;
+    _currentTrackPlaying = false;
+    notifyListeners();
+  }
+
   static Future<List<Playlist>> _loadRegularPlaylist(
     List<String> regularFiles,
     String albumCoverPath,

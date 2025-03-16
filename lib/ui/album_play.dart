@@ -36,7 +36,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate left panel width based on screen width
     final screenWidth = MediaQuery.of(context).size.width;
     final leftPanelWidth = screenWidth / (1 + _goldenRatio);
 
@@ -48,150 +47,141 @@ class _AlbumPlayState extends State<AlbumPlay> {
           children: [
             // Left panel with album art and info
             Container(
-              width: leftPanelWidth, // Updated width
+              width: leftPanelWidth,
               color: Colors.black87,
               child: Column(
                 children: [
+                  // Album Cover with Consumer
                   Container(
                     padding: const EdgeInsets.all(32),
                     width: leftPanelWidth,
-                    height: leftPanelWidth, // Keep square aspect ratio
-                    child: GestureDetector(
-                      onTap:
-                          () => Utils.openInExplorerByFile(
-                            _playerState.currentAlbum.coverFilePath,
-                          ),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeInOut,
-                        switchOutCurve: Curves.easeInOut,
-                        transitionBuilder: (
-                          Widget child,
-                          Animation<double> animation,
-                        ) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
-                        child: SizedBox(
-                          key: ValueKey(
-                            _playerState.currentTrack?.albumCoverPath ??
-                                _playerState.currentAlbum.coverFilePath,
-                          ),
-                          width: leftPanelWidth - 64, // Account for padding
-                          height: leftPanelWidth - 64,
-                          child: Image.file(
-                            File(
-                              _playerState.currentTrack?.albumCoverPath ??
-                                  _playerState.currentAlbum.coverFilePath,
+                    height: leftPanelWidth,
+                    child: Consumer<PlayerState>(
+                      builder: (context, playerState, child) {
+                        return GestureDetector(
+                          onTap:
+                              () => Utils.openInExplorerByFile(
+                                playerState.currentAlbum.coverFilePath,
+                              ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            switchInCurve: Curves.easeInOut,
+                            switchOutCurve: Curves.easeInOut,
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
+                            child: SizedBox(
+                              key: ValueKey(
+                                playerState.currentTrack?.albumCoverPath ??
+                                    playerState.currentAlbum.coverFilePath,
+                              ),
+                              width: leftPanelWidth - 64,
+                              height: leftPanelWidth - 64,
+                              child: Image.file(
+                                File(
+                                  playerState.currentTrack?.albumCoverPath ??
+                                      playerState.currentAlbum.coverFilePath,
+                                ),
+                                fit: BoxFit.contain,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
                             ),
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            height: double.infinity,
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
-                  // Player controls
+                  // Player controls with Consumer
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Row(
-                      children: [
-                        // Add lyrics source button before volume control
-                        _buildLyricsSourceButton(),
-                        const SizedBox(width: 16),
-                        // Volume control
-                        const Icon(
-                          Icons.volume_up,
-                          color: Colors.white54,
-                          size: 24,
-                        ),
-                        SizedBox(
-                          width: leftPanelWidth * 0.2, // 20% of panel width
-                          child: SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              activeTrackColor: Colors.white,
-                              inactiveTrackColor: Colors.white24,
-                              thumbColor: Colors.white,
-                              trackHeight: 2.0,
-                            ),
-                            child: Slider(
-                              value: _volume,
-                              min: 0.0,
-                              max: 1.0,
-                              onChanged: _onVolumeChanged,
-                            ),
-                          ),
-                        ),
-                        // Position control
-                        ...[
-                          Text(
-                            _formatDuration(_playerState.currentPosition),
-                            style: const TextStyle(
+                    child: Consumer<PlayerState>(
+                      builder: (context, playerState, child) {
+                        return Row(
+                          children: [
+                            _buildLyricsSourceButton(),
+                            const SizedBox(width: 16),
+                            // Volume control
+                            const Icon(
+                              Icons.volume_up,
                               color: Colors.white54,
-                              fontSize: 12,
+                              size: 24,
                             ),
-                          ),
-                          Expanded(
-                            child: SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                activeTrackColor: Colors.blue,
-                                inactiveTrackColor: Colors.white24,
-                                thumbColor: Colors.blue,
-                                trackHeight: 2.0,
-                              ),
-                              child: Slider(
-                                value:
-                                    _playerState.currentPosition.inMilliseconds
-                                        .toDouble(),
-                                min: 0,
-                                max:
-                                    _playerState
-                                        .currentTrack
-                                        ?.duration
-                                        ?.inMilliseconds
-                                        .toDouble() ??
-                                    0,
-                                onChanged: _onPositionChanged,
+                            SizedBox(
+                              width: leftPanelWidth * 0.2,
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  activeTrackColor: Colors.white,
+                                  inactiveTrackColor: Colors.white24,
+                                  thumbColor: Colors.white,
+                                  trackHeight: 2.0,
+                                ),
+                                child: Slider(
+                                  value: _volume,
+                                  min: 0.0,
+                                  max: 1.0,
+                                  onChanged: _onVolumeChanged,
+                                ),
                               ),
                             ),
-                          ),
-                          Text(
-                            _formatDuration(
-                              _playerState.currentTrack?.duration ??
-                                  Duration.zero,
+                            // Position control with time
+                            Text(
+                              _formatDuration(playerState.currentPosition),
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
                             ),
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 12,
+                            Expanded(
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  activeTrackColor: Colors.blue,
+                                  inactiveTrackColor: Colors.white24,
+                                  thumbColor: Colors.blue,
+                                  trackHeight: 2.0,
+                                ),
+                                child: Slider(
+                                  value:
+                                      playerState.currentPosition.inMilliseconds
+                                          .toDouble(),
+                                  min: 0,
+                                  max:
+                                      playerState
+                                          .currentTrack
+                                          ?.duration
+                                          ?.inMilliseconds
+                                          .toDouble() ??
+                                      0,
+                                  onChanged: _onPositionChanged,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                        const SizedBox(width: 16),
-                        _buildLoopButton(),
-                        // _playerState.currentTrack != null
-                        //     ? IconButton(
-                        //       icon: Icon(
-                        //         Icons.favorite,
-                        //         color:
-                        //             context.watch<FavState>().isFavorite(
-                        //                   _playerState.currentTrack!,
-                        //                 )
-                        //                 ? Colors.red
-                        //                 : Colors.white24,
-                        //       ),
-                        //       onPressed:
-                        //           () => context.read<FavState>().toggleFavorite(
-                        //             _playerState.currentTrack!,
-                        //           ),
-                        //     )
-                        //     : _buildFavButton(),
-                      ],
+                            Text(
+                              _formatDuration(
+                                playerState.currentTrack?.duration ??
+                                    Duration.zero,
+                              ),
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            _buildLoopButton(),
+                          ],
+                        );
+                      },
                     ),
                   ),
-                  _getLyricUI(),
+                  // Lyrics UI with Consumer
+                  Consumer<PlayerState>(
+                    builder: (context, playerState, child) {
+                      return _getLyricUI();
+                    },
+                  ),
                 ],
               ),
             ),
@@ -202,7 +192,16 @@ class _AlbumPlayState extends State<AlbumPlay> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ..._getAlbumTitleUI(),
+                    // Album title with Consumer
+                    Consumer<PlayerState>(
+                      builder: (context, playerState, child) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _getAlbumTitleUI(),
+                        );
+                      },
+                    ),
+                    // Playlist with Consumer (already implemented)
                     Expanded(
                       child: Consumer<PlayerState>(
                         builder: (context, playerState, child) {
@@ -324,6 +323,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
     _currentPositionSubscription?.cancel();
     if (_playerState.currentTrackPlaying) _audioPlayer.stop();
     _audioPlayer.dispose();
+    _playerState.resetCurrent();
     super.dispose();
   }
 

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:blueberry/qq_music_api/qq_music_service.dart';
 
 void main() {
-  final qqMusic = QQMusicService();
+  final qqMusic = QQMusicService('');
 
   group('QQ Music API Debug Tests', () {
     test('Search Music Test', () async {

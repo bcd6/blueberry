@@ -48,6 +48,7 @@ class LyricLoader {
     String trackPath,
     String trackTitle,
     String songId,
+    QQMusicService qqMusic,
   ) async {
     try {
       debugPrint('\n=== Reloading Lyrics from QQ Music ===');
@@ -55,7 +56,6 @@ class LyricLoader {
       debugPrint('Track: $trackTitle');
       debugPrint('SongId: $songId');
 
-      final qqMusic = QQMusicService();
       final lyricResult = await qqMusic.getVerbatimLyric(songId);
 
       if (lyricResult.lyric.isEmpty) {

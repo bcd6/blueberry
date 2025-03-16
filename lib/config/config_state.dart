@@ -25,6 +25,11 @@ class ConfigState extends ChangeNotifier {
   }
 
   Config defaultConfig() {
-    return Config(folders: [], coverFileName: '', favFilePath: '');
+    return Config(
+      folders: [],
+      coverFileName: '',
+      favFilePath: '',
+      qqMusicCookie: '',
+    );
   }
 }

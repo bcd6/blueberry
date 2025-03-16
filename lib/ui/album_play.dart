@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:blueberry/config/config_state.dart';
 import 'package:blueberry/fav/fav_state.dart';
 import 'package:blueberry/lyric/lyric_state.dart';
 import 'package:blueberry/player/player_state.dart';
@@ -25,10 +26,12 @@ class _AlbumPlayState extends State<AlbumPlay> {
   static const double _defaultVolume = 0.6;
 
   final _audioPlayer = AudioPlayer();
-  final _qqMusicService = QQMusicService();
 
+  late ConfigState _configState;
   late PlayerState _playerState;
   late LyricState _lyricState;
+  late QQMusicService _qqMusicService;
+
   StreamSubscription? _currentPositionSubscription;
   double _volume = _defaultVolume;
   LoopMode _loopMode = LoopMode.playlist;
@@ -357,8 +360,11 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   void _init() {
+    _configState = context.read<ConfigState>();
     _playerState = context.read<PlayerState>();
     _lyricState = context.read<LyricState>();
+    _qqMusicService = QQMusicService(_configState.config.qqMusicCookie ?? '');
+
     _audioPlayer.setVolume(_volume);
   }
 
@@ -674,6 +680,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
       _playerState.currentTrack!.path,
       _playerState.currentTrack!.title,
       songId,
+      _qqMusicService,
     );
 
     if (result) {

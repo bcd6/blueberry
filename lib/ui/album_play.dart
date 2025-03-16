@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:blueberry/player/player_state.dart';
-import 'package:blueberry/feature/lyric/lyric_loader.dart';
+import 'package:blueberry/lyric/lyric_loader.dart';
 import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
 import 'package:blueberry/ui/lyric_viewer.dart';
 import 'package:blueberry/player/audio_player.dart';
@@ -459,10 +459,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   Widget _getLyricUI() {
     if (_playerState.currentTrack == null) return const SizedBox.shrink();
 
-    return LyricViewer(
-      track: _playerState.currentTrack!,
-      currentPositionStream: _playerState.currentPositionStream!,
-    );
+    return LyricViewer();
   }
 
   List<Widget> _getAlbumTitleUI() {

@@ -1,19 +1,12 @@
 import 'dart:async';
-import 'package:blueberry/player/track.dart';
-import 'package:blueberry/feature/lyric/lyric_loader.dart';
-import 'package:blueberry/feature/lyric/lyric_parser.dart';
-import 'package:blueberry/feature/lyric/model/lyric_part.dart';
+import 'package:blueberry/lyric/lyric_part.dart';
+import 'package:blueberry/lyric/lyric_state.dart';
+import 'package:blueberry/player/player_state.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LyricViewer extends StatefulWidget {
-  final Track track;
-  final Stream<Duration> currentPositionStream;
-
-  const LyricViewer({
-    super.key,
-    required this.track,
-    required this.currentPositionStream,
-  });
+  const LyricViewer({super.key});
 
   @override
   State<LyricViewer> createState() => _LyricViewerState();
@@ -25,39 +18,41 @@ class _LyricViewerState extends State<LyricViewer> {
   int _currentIndex = 0;
   int _currentPartIndex = 0;
 
+  late PlayerState _playerState;
+  late LyricState _lyricState;
+
   @override
   void initState() {
     super.initState();
-    _loadLyricFile();
-    _setupDurationStream();
+    _init();
   }
 
-  @override
-  void didUpdateWidget(covariant LyricViewer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.track != oldWidget.track) {
-      debugPrint('\n=== Track Changed ===');
-      debugPrint('Old track: ${oldWidget.track.title}');
-      debugPrint('New track: ${widget.track.title}');
+  // @override
+  // void didUpdateWidget(covariant LyricViewer oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   if (widget.track != oldWidget.track) {
+  //     debugPrint('\n=== Track Changed ===');
+  //     debugPrint('Old track: ${oldWidget.track.title}');
+  //     debugPrint('New track: ${widget.track.title}');
 
-      // Reset state
-      setState(() {
-        _lyrics = null;
-        _currentIndex = 0;
-        _currentPartIndex = 0;
-      });
+  //     // Reset state
+  //     setState(() {
+  //       _lyrics = null;
+  //       _currentIndex = 0;
+  //       _currentPartIndex = 0;
+  //     });
 
-      // Cancel existing subscription
-      _currentPositionSubscription?.cancel();
-      _currentPositionSubscription = null;
+  //     // Cancel existing subscription
+  //     _currentPositionSubscription?.cancel();
+  //     _currentPositionSubscription = null;
 
-      // Load new lyrics and setup stream
-      _loadLyricFile();
-      _setupDurationStream();
+  //     // Load new lyrics and setup stream
+  //     _loadLyricFile();
+  //     _setupDurationStream();
 
-      debugPrint('=== Track Change Complete ===\n');
-    }
-  }
+  //     debugPrint('=== Track Change Complete ===\n');
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -65,44 +60,16 @@ class _LyricViewerState extends State<LyricViewer> {
     super.dispose();
   }
 
-  Future<void> _loadLyricFile() async {
+  Future<void> _init() async {
     if (!mounted) return; // Add this check
 
-    debugPrint('\n=== Loading Lyrics ===');
-    debugPrint('Track: ${widget.track.title}');
-    debugPrint('Path: ${widget.track.path}');
+    _playerState = context.read<PlayerState>();
+    _lyricState = context.read<LyricState>();
 
-    final content = await LyricLoader.loadLyricContent(
-      widget.track.path,
-      widget.track.title,
-      widget.track.album,
-      widget.track.performer,
-    );
-
-    if (!mounted) return; // Add this check after async operation
-
-    if (content != null) {
-      debugPrint('Lyric content loaded: ${content.length} characters');
-      final lyrics = LyricParser.parse(content);
-      debugPrint('Parsed ${lyrics.length} lyric lines');
-
-      if (lyrics.isNotEmpty) {
-        debugPrint('First line: ${lyrics[0].fullText}');
-        debugPrint('First timestamp: ${lyrics[0].startTime}');
-      }
-
-      if (mounted) {
-        // Add this check before setState
-        setState(() {
-          _lyrics = lyrics;
-          _currentIndex = 0;
-          _currentPartIndex = 0;
-        });
-      }
-    } else {
-      debugPrint('No lyrics found');
+    if (_playerState.currentTrack != null) {
+      await _lyricState.load(_playerState.currentTrack!);
+      _setupDurationStream();
     }
-    debugPrint('=== Lyrics Loading Complete ===\n');
   }
 
   Future<void> _setupDurationStream() async {
@@ -110,7 +77,7 @@ class _LyricViewerState extends State<LyricViewer> {
 
     await _currentPositionSubscription?.cancel();
 
-    _currentPositionSubscription = widget.currentPositionStream.listen(
+    _currentPositionSubscription = _playerState.currentPositionStream?.listen(
       (position) {
         if (_lyrics == null) {
           // debugPrint('Position update ignored - no lyrics loaded');
@@ -201,7 +168,7 @@ class _LyricViewerState extends State<LyricViewer> {
 
             // For active parts, create animated highlight effect
             return StreamBuilder<Duration>(
-              stream: widget.currentPositionStream,
+              stream: _playerState.currentPositionStream,
               builder: (context, snapshot) {
                 final currentPosition = snapshot.data?.inMilliseconds ?? 0;
                 final partStartTime = part.timestamp.inMilliseconds;

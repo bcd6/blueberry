@@ -7,14 +7,6 @@ import 'package:blueberry/feature/qq_music_api/qq_music_service.dart';
 class LyricLoader {
   static const _pythonScript = 'assets/scripts/fetch_lyrics.py';
 
-  static String _sanitizeFilename(String filename) {
-    // Windows invalid characters: \ / : * ? " < > |
-    return filename
-        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-  }
-
   static Future<String?> loadLyricContent(
     String trackPath,
     String trackTitle,
@@ -51,6 +43,42 @@ class LyricLoader {
     } catch (e) {
       debugPrint('Error in lyric loader: $e');
       return null;
+    }
+  }
+
+  static Future<bool> reloadLocalLyric(
+    String trackPath,
+    String trackTitle,
+    String songId,
+  ) async {
+    try {
+      debugPrint('\n=== Reloading Lyrics from QQ Music ===');
+      debugPrint('Path: $trackPath');
+      debugPrint('Track: $trackTitle');
+      debugPrint('SongId: $songId');
+
+      final qqMusic = QQMusicService();
+      final lyricResult = await qqMusic.getVerbatimLyric(songId);
+
+      if (lyricResult.lyric.isEmpty) {
+        debugPrint('Failed to fetch lyrics from QQ Music');
+        return false;
+      }
+
+      final directory = path.dirname(trackPath);
+      final sanitizedTitle = _sanitizeFilename(trackTitle);
+      final lyricPath = path.join(directory, '$sanitizedTitle.lrc');
+      debugPrint('Saving new lyrics to: $lyricPath');
+
+      final file = File(lyricPath);
+      await file.writeAsString(lyricResult.lyric, encoding: utf8);
+
+      debugPrint('Lyrics updated successfully');
+      return true;
+    } catch (e, stack) {
+      debugPrint('Error reloading lyrics: $e');
+      debugPrint('Stack trace: $stack');
+      return false;
     }
   }
 
@@ -191,39 +219,11 @@ class LyricLoader {
     }
   }
 
-  static Future<bool> reloadLocalLyric(
-    String trackPath,
-    String trackTitle,
-    String songId,
-  ) async {
-    try {
-      debugPrint('\n=== Reloading Lyrics from QQ Music ===');
-      debugPrint('Path: $trackPath');
-      debugPrint('Track: $trackTitle');
-      debugPrint('SongId: $songId');
-
-      final qqMusic = QQMusicService();
-      final lyricResult = await qqMusic.getVerbatimLyric(songId);
-
-      if (lyricResult.lyric.isEmpty) {
-        debugPrint('Failed to fetch lyrics from QQ Music');
-        return false;
-      }
-
-      final directory = path.dirname(trackPath);
-      final sanitizedTitle = _sanitizeFilename(trackTitle);
-      final lyricPath = path.join(directory, '$sanitizedTitle.lrc');
-      debugPrint('Saving new lyrics to: $lyricPath');
-
-      final file = File(lyricPath);
-      await file.writeAsString(lyricResult.lyric, encoding: utf8);
-
-      debugPrint('Lyrics updated successfully');
-      return true;
-    } catch (e, stack) {
-      debugPrint('Error reloading lyrics: $e');
-      debugPrint('Stack trace: $stack');
-      return false;
-    }
+  static String _sanitizeFilename(String filename) {
+    // Windows invalid characters: \ / : * ? " < > |
+    return filename
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
   }
 }

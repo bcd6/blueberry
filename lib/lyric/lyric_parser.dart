@@ -1,4 +1,4 @@
-import 'package:blueberry/feature/lyric/model/lyric_part.dart';
+import 'package:blueberry/lyric/lyric_part.dart';
 import 'package:flutter/foundation.dart';
 
 // parse line

@@ -60,7 +60,7 @@ class _AlbumListState extends State<AlbumList> {
             if (ps is PointerScrollEvent) {
               var duration = 100;
               final newOffset =
-                  _scrollController.offset + ps.scrollDelta.dy * 6;
+                  _scrollController.offset + ps.scrollDelta.dy * 10;
               if (ps.scrollDelta.dy.isNegative) {
                 _scrollController.animateTo(
                   math.max(0, newOffset),

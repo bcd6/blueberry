@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "80.0.0"
+  alphanum_comparator:
+    dependency: "direct main"
+    description:
+      name: alphanum_comparator
+      sha256: "5ea0ad0f73fc9bcbf0a3b19b103bd0bccbebffca840d8d3321b73e480e00cff2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.3"
   analyzer:
     dependency: transitive
     description:

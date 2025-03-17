@@ -8,6 +8,12 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "alphanum_comparator",
+      "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/alphanum_comparator-2.0.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "analyzer",
       "rootUri": "file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-7.3.0",
       "packageUri": "lib/",
@@ -674,7 +680,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2025-03-15T12:34:41.791379Z",
+  "generated": "2025-03-17T09:18:07.109412Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///C:/Users/youqing/fvm/versions/3.29.0",

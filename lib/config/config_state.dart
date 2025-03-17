@@ -21,7 +21,7 @@ class ConfigState extends ChangeNotifier {
         if (!await d2.exists()) {
           await d2.create();
         }
-        final file2 = File(path.join(_getConfigPath(), 'config.json'));
+        final file2 = File(path.join(_getConfigPath(), '~.json'));
         final c2 = await file2.exists();
         if (!c2) {
           _config = _defaultConfig();
@@ -50,7 +50,7 @@ class ConfigState extends ChangeNotifier {
     return Config(
       folders: [],
       coverFileName: 'folder.jpg',
-      favFilePath: path.join(_getConfigPath(), 'fav.json'),
+      favFilePath: path.join(_getConfigPath(), '~fav.json'),
       qqMusicCookie: '',
     );
   }

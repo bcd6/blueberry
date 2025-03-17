@@ -1,6 +1,7 @@
 import 'package:blueberry/album/album.dart';
 import 'package:blueberry/config/config_state.dart';
 import 'package:blueberry/utils.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
@@ -33,6 +34,9 @@ class AlbumState extends ChangeNotifier {
   Future<void> init() async {
     _albums.clear();
     await _scanConfigFolders();
+    _albums.sort(
+      (a, b) => compareNatural(a.folderPath ?? '', b.folderPath ?? ''),
+    );
     debugPrint('Scan completed. Found ${_albums.length} albums');
     notifyListeners();
   }

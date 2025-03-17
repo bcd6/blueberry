@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:blueberry/qq_music_api/qq_music_service.dart';
 
 class LyricLoader {
+  static final String _emptyLyric = '[00:00.00]';
+
   static Future<String?> loadLyricContent(
     String trackPath,
     String trackTitle,
@@ -38,7 +40,7 @@ class LyricLoader {
       // Create empty LRC file if search failed
       debugPrint('Creating empty LRC file as placeholder');
       await _createEmptyLrcFile(trackPath, trackTitle, album, performer);
-      return null;
+      return _emptyLyric;
     } catch (e) {
       debugPrint('Error in lyric loader: $e');
       return null;
@@ -211,11 +213,9 @@ class LyricLoader {
       final sanitizedTitle = _sanitizeFilename(title);
       final lyricPath = path.join(directory, '$sanitizedTitle.lrc');
 
-      final content = '''[00:00.00]''';
-
       debugPrint('Creating empty LRC at: $lyricPath');
       final file = File(lyricPath);
-      await file.writeAsString(content, encoding: utf8);
+      await file.writeAsString(_emptyLyric, encoding: utf8);
       debugPrint('Empty LRC file created successfully');
     } catch (e) {
       debugPrint('Error creating empty LRC file: $e');

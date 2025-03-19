@@ -510,7 +510,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
   String _getAlbumTitle() {
     if (_playerState.currentAlbumPlaylists.length > 1) {
-      return _playerState.currentAlbum.title ?? '';
+      return _playerState.currentAlbum.getAlbumTitle();
     }
 
     try {
@@ -521,9 +521,9 @@ class _AlbumPlayState extends State<AlbumPlay> {
       final playlistName = _playerState.currentAlbumPlaylists[0].name;
       if (playlistName.isNotEmpty) return playlistName;
 
-      return _playerState.currentAlbum.title ?? '';
+      return _playerState.currentAlbum.getAlbumTitle();
     } catch (_) {
-      return _playerState.currentAlbum.title ?? '';
+      return _playerState.currentAlbum.getAlbumTitle();
     }
   }
 

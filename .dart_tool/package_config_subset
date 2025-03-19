@@ -2,10 +2,6 @@ _fe_analyzer_shared
 3.3
 file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/_fe_analyzer_shared-80.0.0/
 file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/_fe_analyzer_shared-80.0.0/lib/
-alphanum_comparator
-2.12
-file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/alphanum_comparator-2.0.3/
-file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/alphanum_comparator-2.0.3/lib/
 analyzer
 3.3
 file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-7.3.0/
@@ -418,6 +414,10 @@ web_socket_channel
 2.15
 file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/web_socket_channel-2.4.0/
 file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/web_socket_channel-2.4.0/lib/
+win32
+3.7
+file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/win32-5.12.0/
+file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/win32-5.12.0/lib/
 window_size
 3.0
 file:///C:/Users/youqing/AppData/Local/Pub/Cache/hosted/pub.dev/window_size-0.1.0/

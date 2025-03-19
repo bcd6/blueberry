@@ -99,12 +99,26 @@ Music Directory
 
 ## Development
 
-The project uses the following key packages:
+To contribute to development:
 
-- `provider` for state management
-- `media_kit` for audio playback
-- `metadata_god` for audio metadata
-- `flutter_phoenix` for app restart capability
+1. Setup development environment:
+
+```bash
+fvm install
+fvm flutter pub get
+```
+
+2. Run code generation when changing models:
+
+```bash
+dart run build_runner build
+```
+
+3. Run tests:
+
+```bash
+fvm flutter test
+```
 
 ## License
 

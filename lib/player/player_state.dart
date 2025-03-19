@@ -1,4 +1,3 @@
-import 'package:alphanum_comparator/alphanum_comparator.dart';
 import 'package:blueberry/album/album.dart';
 import 'package:blueberry/cue/cue_parser.dart';
 import 'package:blueberry/fav/fav_state.dart';
@@ -120,7 +119,7 @@ class PlayerState extends ChangeNotifier {
       final tracks = await Future.wait(
         folderFiles.map((f) => _createTrackFromFile(f, albumCoverPath)),
       );
-      tracks.sort((a, b) => AlphanumComparator.compare(a.path, b.path));
+      tracks.sort((a, b) => Utils.windowsExplorerSort(a.path, b.path));
 
       if (tracks.isNotEmpty) {
         playlists.add(Playlist(name: folderName, tracks: tracks));

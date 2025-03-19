@@ -35,7 +35,8 @@ class AlbumState extends ChangeNotifier {
     _albums.clear();
     await _scanConfigFolders();
     _albums.sort(
-      (a, b) => compareNatural(a.folderPath ?? '', b.folderPath ?? ''),
+      (a, b) =>
+          Utils.windowsExplorerSort(a.folderPath ?? '', b.folderPath ?? ''),
     );
     debugPrint('Scan completed. Found ${_albums.length} albums');
     notifyListeners();

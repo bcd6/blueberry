@@ -85,9 +85,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                   playerState.currentTrack?.albumCoverPath ??
                                       playerState.currentAlbum.coverFilePath,
                                 ),
-                                fit: BoxFit.contain,
-                                width: double.infinity,
-                                height: double.infinity,
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),

@@ -165,13 +165,10 @@ class _AlbumListState extends State<AlbumList> {
   }
 
   Widget _buildAlbumCover(String coverPath) {
-    return FittedBox(
-      fit: BoxFit.contain,
-      alignment: Alignment.center,
+    return SizedBox(
       child: Image.file(
         File(coverPath),
         fit: BoxFit.cover,
-        cacheHeight: 480,
         filterQuality: FilterQuality.medium,
         errorBuilder: (context, error, stackTrace) {
           debugPrint('Error loading image: $error');

@@ -33,7 +33,7 @@ class ConfigState extends ChangeNotifier {
       } else {
         _config = Config.fromJson(json.decode(await file1.readAsString()));
       }
-      debugPrint('Config loaded: ${json.encode(_config.toJson())}');
+      // debugPrint('Config loaded: ${json.encode(_config.toJson())}');
     } catch (e) {
       debugPrint('Error loading config: $e');
       _config = _defaultConfig();

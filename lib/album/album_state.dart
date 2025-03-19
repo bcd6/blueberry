@@ -1,7 +1,6 @@
 import 'package:blueberry/album/album.dart';
 import 'package:blueberry/config/config_state.dart';
 import 'package:blueberry/utils.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
@@ -24,7 +23,7 @@ class AlbumState extends ChangeNotifier {
     'opus',
     'dsd',
   ];
-  final List<Album> _albums = [];
+  List<Album> _albums = [];
 
   AlbumState(this._configState);
 
@@ -38,6 +37,7 @@ class AlbumState extends ChangeNotifier {
       (a, b) =>
           Utils.windowsExplorerSort(a.folderPath ?? '', b.folderPath ?? ''),
     );
+    _albums = _albums.reversed.toList();
     debugPrint('Scan completed. Found ${_albums.length} albums');
     notifyListeners();
   }
@@ -126,6 +126,7 @@ class AlbumState extends ChangeNotifier {
         }
       } else {
         debugPrint('Empty cover directory: ${dir.path}');
+        Utils.openInExplorer(dir.path);
       }
     } else {
       // check if it is a directy sub folder of a root folder, if yes then print the name of the folder

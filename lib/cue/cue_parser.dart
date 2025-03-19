@@ -24,6 +24,10 @@ class _CueParseState {
 
   bool isInTrack = false;
 
+  String? currentAudioFile; // Add this field
+  final audioFiles =
+      <String, List<CueTrack>>{}; // Add this field to track multiple files
+
   void resetTrackState() {
     currentTitle = '';
     currentPerformer = '';
@@ -110,7 +114,19 @@ class CueParser {
   static void _parseFile(String line, _CueParseState state) {
     final match = RegExp(r'FILE "([^"]+)"').firstMatch(line);
     if (match != null) {
-      state.audioFile = match.group(1);
+      _addTrackIfValid(state); // Save any pending track
+      state.currentAudioFile = match.group(1);
+      state.audioFile ??= state.currentAudioFile;
+
+      // Reset track state when switching files
+      state.isInTrack = false;
+      state.resetTrackState();
+
+      // Initialize audio file entry if doesn't exist
+      if (!state.audioFiles.containsKey(state.currentAudioFile)) {
+        state.audioFiles[state.currentAudioFile!] = [];
+        debugPrint('New audio file: ${state.currentAudioFile}');
+      }
     }
   }
 
@@ -163,24 +179,27 @@ class CueParser {
   }
 
   static void _addTrackIfValid(_CueParseState state) {
-    if (state.isInTrack && state.currentStart != null) {
-      state.tracks.add(
-        CueTrack(
-          title:
-              state.currentTitle.isNotEmpty ? state.currentTitle : 'No Title',
-          start: state.currentStart!,
-          performer:
-              state.currentPerformer.isEmpty
-                  ? state.albumPerformer
-                  : state.currentPerformer,
-          index: state.trackIndex,
-          isrc: state.currentIsrc,
-          pregap:
-              state.pregapStart != null
-                  ? state.currentStart! - state.pregapStart!
-                  : null,
-        ),
+    if (state.isInTrack &&
+        state.currentStart != null &&
+        state.currentAudioFile != null) {
+      final track = CueTrack(
+        title: state.currentTitle.isNotEmpty ? state.currentTitle : 'No Title',
+        start: state.currentStart!,
+        performer:
+            state.currentPerformer.isEmpty
+                ? state.albumPerformer
+                : state.currentPerformer,
+        index: state.trackIndex,
+        isrc: state.currentIsrc,
+        pregap:
+            state.pregapStart != null
+                ? state.currentStart! - state.pregapStart!
+                : null,
+        audioFile: state.currentAudioFile, // Add audio file reference
       );
+
+      state.audioFiles[state.currentAudioFile!]?.add(track);
+      state.tracks.add(track);
     } else {
       debugPrint('Skipping invalid track');
     }
@@ -190,53 +209,58 @@ class CueParser {
     String cuePath,
     _CueParseState state,
   ) async {
-    final tracks = state.tracks;
-    if (tracks.isEmpty) return;
+    if (state.tracks.isEmpty) return;
 
-    // Get audio file path from CUE directory
+    debugPrint(
+      'Processing ${state.tracks.length} tracks from ${state.audioFiles.length} files',
+    );
+
     final cueDir = path.dirname(cuePath);
-    final audioFilePath = path.join(cueDir, state.audioFile ?? '');
+    final processedTracks = <CueTrack>[];
 
-    tracks.sort((a, b) => a.index.compareTo(b.index));
+    // Process tracks grouped by audio file
+    for (final entry in state.audioFiles.entries) {
+      final audioFile = entry.key;
+      final tracks = entry.value;
+      debugPrint('Processing file: $audioFile with ${tracks.length} tracks');
 
-    for (var i = 0; i < tracks.length - 1; i++) {
-      final duration = tracks[i + 1].start - tracks[i].start;
-      tracks[i] = CueTrack(
-        title: tracks[i].title,
-        start: tracks[i].start,
-        duration: duration,
-        performer: tracks[i].performer,
-        index: tracks[i].index,
-        isrc: tracks[i].isrc,
-        pregap: tracks[i].pregap,
-      );
+      // Sort tracks within this audio file
+      tracks.sort((a, b) => a.index.compareTo(b.index));
+
+      // Calculate durations for all tracks except last in this file
+      for (var i = 0; i < tracks.length - 1; i++) {
+        final duration = tracks[i + 1].start - tracks[i].start;
+        processedTracks.add(tracks[i].copyWith(duration: duration));
+      }
+
+      // Handle last track of this audio file
+      if (tracks.isNotEmpty) {
+        final lastTrack = tracks.last;
+        Duration? audioFileDuration;
+        final audioFilePath = path.join(cueDir, audioFile);
+
+        try {
+          final metadata = await MetadataGod.readMetadata(file: audioFilePath);
+          audioFileDuration = metadata.duration;
+        } catch (e) {
+          debugPrint('Error reading metadata from $audioFilePath: $e');
+        }
+
+        audioFileDuration ??= await Utils.getAudioDurationByFF(audioFilePath);
+
+        if (audioFileDuration != Duration.zero) {
+          processedTracks.add(
+            lastTrack.copyWith(duration: audioFileDuration - lastTrack.start),
+          );
+        } else {
+          processedTracks.add(lastTrack);
+        }
+      }
     }
 
-    // Handle last track duration
-    Duration? audioFileDuration;
-    try {
-      final metadata = await MetadataGod.readMetadata(file: audioFilePath);
-      audioFileDuration = metadata.duration;
-    } catch (e) {
-      debugPrint('Error reading metadata from $audioFilePath: $e');
-    }
-
-    audioFileDuration ??= await Utils.getAudioDurationByFF(audioFilePath);
-    if (tracks.length > 1) {
-      final lastIndex = tracks.length - 1;
-      tracks[lastIndex] = CueTrack(
-        title: tracks[lastIndex].title,
-        start: tracks[lastIndex].start,
-        duration:
-            audioFileDuration != Duration.zero
-                ? audioFileDuration - tracks[lastIndex].start
-                : audioFileDuration,
-        performer: tracks[lastIndex].performer,
-        index: tracks[lastIndex].index,
-        isrc: tracks[lastIndex].isrc,
-        pregap: tracks[lastIndex].pregap,
-      );
-    }
+    // Replace original tracks with processed ones
+    state.tracks.clear();
+    state.tracks.addAll(processedTracks);
   }
 
   static Duration? _parseTime(String timeStr) {

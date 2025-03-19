@@ -45,13 +45,12 @@ class PlayerState extends ChangeNotifier {
         album.regularFiles,
         album.coverFilePath,
       );
-      _currentAlbumPlaylists.addAll(regularPlaylist);
-
       final cuePlaylists = await _loadCuePlaylists(
         album.cueFiles,
         album.coverFilePath,
       );
-      _currentAlbumPlaylists.addAll(cuePlaylists);
+
+      _currentAlbumPlaylists = _mergePlaylist(regularPlaylist, cuePlaylists);
     }
 
     debugPrint('SetAlbum ${_currentAlbumPlaylists.length} playlists');
@@ -141,13 +140,19 @@ class PlayerState extends ChangeNotifier {
         if (cueSheet != null) {
           final audioDir = path.dirname(cuePath);
           final audioPath = path.join(audioDir, cueSheet.audioFile);
+          debugPrint(
+            'Loaded CUE file $cuePath with ${cueSheet.tracks.length} tracks',
+          );
 
           final cueTracks =
               cueSheet.tracks
                   .where((t) => t.title.isNotEmpty)
                   .map(
                     (t) => Track(
-                      path: audioPath,
+                      path:
+                          t.audioFile != null
+                              ? path.join(audioDir, t.audioFile)
+                              : audioPath,
                       title: t.title,
                       album: cueSheet.title,
                       albumCoverPath: albumCoverPath,
@@ -205,5 +210,45 @@ class PlayerState extends ChangeNotifier {
       performer: performer,
       duration: duration,
     );
+  }
+
+  static List<Playlist> _mergePlaylist(
+    List<Playlist> regularPlaylists,
+    List<Playlist> cuePlaylists,
+  ) {
+    // Collect all audio paths from CUE playlists
+    final Set<String> cueAudioPaths =
+        cuePlaylists
+            .expand((playlist) => playlist.tracks)
+            .map((track) => track.path)
+            .toSet();
+
+    // Filter regular playlists to remove tracks that exist in CUE playlists
+    final List<Playlist> mergedPlaylists = [];
+
+    // Add CUE playlists first
+    mergedPlaylists.addAll(cuePlaylists);
+
+    // Process regular playlists
+    for (final regularPlaylist in regularPlaylists) {
+      final nonOverlappingTracks =
+          regularPlaylist.tracks
+              .where((track) => !cueAudioPaths.contains(track.path))
+              .toList();
+
+      if (nonOverlappingTracks.isNotEmpty) {
+        mergedPlaylists.add(
+          Playlist(name: regularPlaylist.name, tracks: nonOverlappingTracks),
+        );
+      }
+    }
+
+    debugPrint(
+      'Merged ${regularPlaylists.length} regular and '
+      '${cuePlaylists.length} CUE playlists into '
+      '${mergedPlaylists.length} playlists',
+    );
+
+    return mergedPlaylists;
   }
 }

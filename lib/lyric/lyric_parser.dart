@@ -163,9 +163,4 @@ class LyricParser {
       milliseconds: millis,
     );
   }
-
-  static String _formatDuration(Duration d) {
-    return '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}'
-        '.${(d.inMilliseconds % 1000 ~/ 10).toString().padLeft(2, '0')}';
-  }
 }

@@ -1,8 +1,8 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
-import 'package:media_kit/ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
 class Utils {
@@ -38,13 +38,29 @@ class Utils {
 
   static Future<void> openInExplorer(String path) async {
     debugPrint('Opening in explorer: $path');
-    await Process.run('explorer', [path]);
+
+    // Use Win32 API to handle paths with special characters like commas
+    final pathPtr = path.toNativeUtf16();
+    final operationPtr = 'open'.toNativeUtf16();
+
+    try {
+      ShellExecute(
+        NULL,
+        operationPtr,
+        pathPtr,
+        nullptr,
+        nullptr,
+        SW_SHOWNORMAL,
+      );
+    } finally {
+      free(pathPtr);
+      free(operationPtr);
+    }
   }
 
   static Future<void> openInExplorerByFile(String filePath) async {
-    final path = File(filePath).parent.path;
-    debugPrint('Opening in explorer: $path');
-    await Process.run('explorer', [path]);
+    var path = File(filePath).parent.path;
+    await openInExplorer(path);
   }
 
   static Future<Duration> getAudioDurationByFF(String filePath) async {

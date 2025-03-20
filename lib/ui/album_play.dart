@@ -105,17 +105,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
                       builder: (context, playerState, child) {
                         return Row(
                           children: [
-                            // Add the refresh button before lyrics reload button
-                            IconButton(
-                              icon: const Icon(
-                                Icons.update,
-                                color: Colors.white54,
-                                size: 24,
-                              ),
-                              tooltip: 'Reload album',
-                              onPressed: () async => await _reloadAlbum(),
-                            ),
-                            const SizedBox(width: 16),
                             const LyricsReloadButton(),
                             const SizedBox(width: 16),
                             // Volume control
@@ -497,29 +486,24 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   List<Widget> _getAlbumTitleUI() {
-    if (_playerState.currentAlbumPlaylists.length > 1) {
-      return [
-        const SizedBox(height: 32),
-        Text(
+    var ui = [
+      const SizedBox(height: 32),
+      GestureDetector(
+        onTap: () async => await _reloadAlbum(),
+        child: Text(
           _getAlbumTitle(),
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
-      ];
-    }
-    return [
-      const SizedBox(height: 32),
-      Text(
-        _getAlbumTitle(),
-        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
       ),
-      const SizedBox(height: 24),
     ];
+
+    if (_playerState.currentAlbumPlaylists.length <= 1) {
+      ui.add(const SizedBox(height: 24));
+    }
+    return ui;
   }
 
   String _getAlbumTitle() {

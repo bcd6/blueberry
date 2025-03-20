@@ -27,6 +27,8 @@ class _AlbumPlayState extends State<AlbumPlay> {
   StreamSubscription? _currentPositionSubscription;
   double _volume = _defaultVolume;
   LoopMode _loopMode = LoopMode.playlist;
+  // Add a key to force image refresh
+  int _imageRefreshKey = 0;
 
   @override
   void initState() {
@@ -75,17 +77,20 @@ class _AlbumPlayState extends State<AlbumPlay> {
                             },
                             child: SizedBox(
                               key: ValueKey(
-                                playerState.currentTrack?.albumCoverPath ??
-                                    playerState.currentAlbum.coverFilePath,
+                                '${playerState.currentTrack?.albumCoverPath ?? playerState.currentAlbum.coverFilePath}_$_imageRefreshKey',
                               ),
                               width: leftPanelWidth - 64,
                               height: leftPanelWidth - 64,
-                              child: Image.file(
-                                File(
-                                  playerState.currentTrack?.albumCoverPath ??
-                                      playerState.currentAlbum.coverFilePath,
+                              child: Image(
+                                image: FileImage(
+                                  File(
+                                    playerState.currentTrack?.albumCoverPath ??
+                                        playerState.currentAlbum.coverFilePath,
+                                  ),
                                 ),
                                 fit: BoxFit.cover,
+                                // Disable gapless playback to ensure image is redrawn completely
+                                gaplessPlayback: false,
                               ),
                             ),
                           ),
@@ -100,6 +105,17 @@ class _AlbumPlayState extends State<AlbumPlay> {
                       builder: (context, playerState, child) {
                         return Row(
                           children: [
+                            // Add the refresh button before lyrics reload button
+                            IconButton(
+                              icon: const Icon(
+                                Icons.update,
+                                color: Colors.white54,
+                                size: 24,
+                              ),
+                              tooltip: 'Reload album',
+                              onPressed: () async => await _reloadAlbum(),
+                            ),
+                            const SizedBox(width: 16),
                             const LyricsReloadButton(),
                             const SizedBox(width: 16),
                             // Volume control
@@ -586,5 +602,19 @@ class _AlbumPlayState extends State<AlbumPlay> {
     final currentIndex = modes.indexOf(_loopMode);
     _loopMode = modes[(currentIndex + 1) % modes.length];
     debugPrint('Loop mode set to: $_loopMode');
+  }
+
+  Future<void> _reloadAlbum() async {
+    final imagePath =
+        _playerState.currentTrack?.albumCoverPath ??
+        _playerState.currentAlbum.coverFilePath;
+    final imageProvider = FileImage(File(imagePath));
+    await imageProvider.evict();
+    setState(() {
+      _imageRefreshKey++;
+    });
+
+    _playerState.resetCurrent();
+    _playerState.loadPlaylist();
   }
 }

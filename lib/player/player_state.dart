@@ -37,7 +37,11 @@ class PlayerState extends ChangeNotifier {
   Future<void> setAlbum(Album album) async {
     _currentAlbum = album;
     _currentAlbumPlaylists = [];
+    await loadPlaylist();
+  }
 
+  Future<void> loadPlaylist() async {
+    final album = _currentAlbum;
     if (album.isFavAlbum) {
       _currentAlbumPlaylists = _favState.favPlaylists;
     } else {

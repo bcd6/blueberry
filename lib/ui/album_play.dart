@@ -613,8 +613,10 @@ class _AlbumPlayState extends State<AlbumPlay> {
     setState(() {
       _imageRefreshKey++;
     });
-
-    _playerState.resetCurrent();
-    _playerState.loadPlaylist();
+    _audioPlayer.stop();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _playerState.resetCurrent();
+      _playerState.loadPlaylist();
+    });
   }
 }

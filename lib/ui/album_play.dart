@@ -602,6 +602,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
     });
     _audioPlayer.stop();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _playerState.resetCurrent();
       await _albumState.init();
       var albums = _albumState.albums;
       var album =
@@ -612,7 +613,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
               )
               .first;
       await _playerState.setAlbum(album);
-      _playerState.resetCurrent();
       await _playerState.loadPlaylist();
     });
   }

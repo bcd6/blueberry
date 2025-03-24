@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:blueberry/album/album_state.dart';
 import 'package:blueberry/fav/fav_state.dart';
 import 'package:blueberry/player/player_state.dart';
 import 'package:blueberry/ui/lyric_viewer.dart';
@@ -23,6 +24,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   static const double _defaultVolume = 0.6;
 
   final _audioPlayer = AudioPlayer();
+  late AlbumState _albumState;
   late PlayerState _playerState;
   StreamSubscription? _currentPositionSubscription;
   double _volume = _defaultVolume;
@@ -355,6 +357,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
   }
 
   void _init() {
+    _albumState = context.read<AlbumState>();
     _playerState = context.read<PlayerState>();
     _audioPlayer.setVolume(_volume);
   }
@@ -598,9 +601,19 @@ class _AlbumPlayState extends State<AlbumPlay> {
       _imageRefreshKey++;
     });
     _audioPlayer.stop();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _albumState.init();
+      var albums = _albumState.albums;
+      var album =
+          albums
+              .where(
+                (a) =>
+                    a.coverFilePath == _playerState.currentAlbum.coverFilePath,
+              )
+              .first;
+      await _playerState.setAlbum(album);
       _playerState.resetCurrent();
-      _playerState.loadPlaylist();
+      await _playerState.loadPlaylist();
     });
   }
 }

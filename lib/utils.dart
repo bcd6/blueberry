@@ -12,6 +12,16 @@ class Utils {
     int Function(Pointer<Utf16>, Pointer<Utf16>)
   >('StrCmpLogicalW');
 
+  static void preventScreenSleep() {
+    SetThreadExecutionState(
+      ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED,
+    );
+  }
+
+  static void resetScreenSleep() {
+    SetThreadExecutionState(ES_CONTINUOUS); // Reset to default behavior
+  }
+
   static int windowsExplorerSort(String a, String b) {
     final pA = a.toNativeUtf16();
     final pB = b.toNativeUtf16();

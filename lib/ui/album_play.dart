@@ -372,7 +372,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
     int trackIndex,
     bool byClick,
   ) async {
-    if (!mounted) return; // Add early return if widget is disposed
     final track =
         _playerState.currentAlbumPlaylists[playlistIndex].tracks[trackIndex];
     final isSameTrack =
@@ -385,8 +384,6 @@ class _AlbumPlayState extends State<AlbumPlay> {
 
     try {
       if (isSameTrack) {
-        if (!mounted) return;
-
         if (_playerState.currentTrackPlaying) {
           if (_playerState.currentAlbumPlaylists[playlistIndex].tracks.length ==
                   1 &&

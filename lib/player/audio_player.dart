@@ -1,3 +1,4 @@
+import 'package:blueberry/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
 import 'dart:async';
@@ -12,6 +13,12 @@ class AudioPlayer {
   void _init() {
     _player.stream.playing.listen((playing) {
       debugPrint('Player state: ${playing ? 'playing' : 'paused'}');
+
+      if (playing) {
+        Utils.preventScreenSleep();
+      } else {
+        Utils.resetScreenSleep();
+      }
     });
     _player.stream.position.listen((position) {
       // debugPrint('Position: $position');

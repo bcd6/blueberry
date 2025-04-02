@@ -50,6 +50,38 @@ class AlbumState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Filtering
+  List<Album> filterAlbums(String filterText) {
+    if (filterText.isEmpty) {
+      return _albums;
+    }
+
+    final lowerFilter = filterText.toLowerCase();
+    return _albums.where((album) {
+      // Check folder path
+      if (album.folderPath != null &&
+          album.folderPath!.toLowerCase().contains(lowerFilter)) {
+        return true;
+      }
+
+      // Check regular files
+      for (final file in album.regularFiles) {
+        if (file.toLowerCase().contains(lowerFilter)) {
+          return true;
+        }
+      }
+
+      // Check cue files
+      for (final file in album.cueFiles) {
+        if (file.toLowerCase().contains(lowerFilter)) {
+          return true;
+        }
+      }
+
+      return false;
+    }).toList();
+  }
+
   Future<void> _scanConfigFolders() async {
     for (final folder in _configState.config.folders) {
       try {

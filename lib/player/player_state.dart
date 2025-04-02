@@ -253,6 +253,9 @@ class PlayerState extends ChangeNotifier {
       '${mergedPlaylists.length} playlists',
     );
 
+    // Sort merged playlists by name
+    mergedPlaylists.sort((a, b) => Utils.windowsExplorerSort(a.name, b.name));
+
     return mergedPlaylists;
   }
 }

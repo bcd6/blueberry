@@ -90,7 +90,7 @@ class _AlbumPlayState extends State<AlbumPlay> {
                                         playerState.currentAlbum.coverFilePath,
                                   ),
                                 ),
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                                 // Disable gapless playback to ensure image is redrawn completely
                                 gaplessPlayback: false,
                               ),

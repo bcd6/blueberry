@@ -40,7 +40,7 @@ class _AlbumListState extends State<AlbumList> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // _precacheImages(_albums);
+    //_precacheImages(_albums);
   }
 
   @override
@@ -253,7 +253,7 @@ class _AlbumListState extends State<AlbumList> {
     return SizedBox(
       child: Image.file(
         File(coverPath),
-        fit: BoxFit.cover,
+        fit: BoxFit.contain,
         filterQuality: FilterQuality.medium,
         errorBuilder: (context, error, stackTrace) {
           debugPrint('Error loading image: $error');

@@ -38,7 +38,7 @@ class AlbumState extends ChangeNotifier {
       (a, b) =>
           Utils.windowsExplorerSort(a.folderPath ?? '', b.folderPath ?? ''),
     );
-    _albums = _albums.reversed.toList();
+    // _albums = _albums.reversed.toList();
     debugPrint('Scan completed. Found ${_albums.length} albums');
     notifyListeners();
   }

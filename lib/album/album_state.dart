@@ -4,6 +4,7 @@ import 'package:blueberry/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
+import 'package:metadata_god/metadata_god.dart';
 
 class AlbumState extends ChangeNotifier {
   final ConfigState _configState;
@@ -162,15 +163,34 @@ class AlbumState extends ChangeNotifier {
         Utils.openInExplorer(dir.path);
       }
     } else {
-      // check if it is a directy sub folder of a root folder, if yes then print the name of the folder
+      // check if it is a direct sub folder of a root folder
       if (dir.parent.path == root.path) {
-        // if dir.parent.path contains a '.root' file, then make it a root folder
         final rootFile = File('${dir.path}\\.root');
         if (await rootFile.exists()) {
           await _scanDirectory(dir, dir);
         } else {
-          debugPrint('No cover found in folder: ${dir.path}');
-          Utils.openInExplorer(dir.path);
+          var openInExplorer = true;
+          // Try to extract cover from first audio file
+          try {
+            final files = await _getValidFiles(dir);
+            for (final file in files) {
+              if (!file.toLowerCase().endsWith('.cue')) {
+                final metadata = await MetadataGod.readMetadata(file: file);
+                if (metadata.picture != null) {
+                  final coverPath = path.join(dir.path, 'folder.jpg');
+                  await File(coverPath).writeAsBytes(metadata.picture!.data);
+                  debugPrint('Extracted cover art to: $coverPath');
+                  openInExplorer = false;
+                }
+              }
+            }
+          } catch (e) {
+            debugPrint('Error extracting cover art: $e');
+          }
+          if (openInExplorer) {
+            debugPrint('No cover found in folder: ${dir.path}');
+            Utils.openInExplorer(dir.path);
+          }
         }
       }
     }

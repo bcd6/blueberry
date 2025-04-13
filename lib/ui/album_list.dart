@@ -201,7 +201,8 @@ class _AlbumListState extends State<AlbumList> {
     _albums = [_favState.favAlbum, ..._albumState.albums];
     setState(() {
       _displayedIndices = List.generate(
-        math.min(_initLoad, _albumState.albums.length),
+        // fav album is that +1 for
+        math.min(_initLoad, _albumState.albums.length + 1),
         (index) => index,
       );
     });

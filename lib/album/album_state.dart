@@ -25,7 +25,7 @@ class AlbumState extends ChangeNotifier {
     'dsd',
     'tta',
   ];
-  List<Album> _albums = [];
+  final List<Album> _albums = [];
 
   AlbumState(this._configState);
 
@@ -104,8 +104,15 @@ class AlbumState extends ChangeNotifier {
     Album? parentAlbum,
   }) async {
     try {
-      final currentAlbum = await _processDirectory(dir, root, parentAlbum);
-      await _scanSubdirectories(dir, root, currentAlbum);
+      // debugPrint('Scanning directory: ${dir.path}');
+      final rootFile = File('${dir.path}\\.root');
+      if (await rootFile.exists()) {
+        debugPrint('Find a sub root: ${dir.path}');
+        await _scanSubdirectories(dir, dir, null);
+      } else {
+        final currentAlbum = await _processDirectory(dir, root, parentAlbum);
+        await _scanSubdirectories(dir, root, currentAlbum);
+      }
     } catch (e) {
       debugPrint('Error scanning directory ${dir.path}: $e');
     }
@@ -116,6 +123,7 @@ class AlbumState extends ChangeNotifier {
     Directory root,
     Album? parentAlbum,
   ) async {
+    // debugPrint('Processing directory: ${dir.path}');
     final coverFile = File('${dir.path}\\${_configState.config.coverFileName}');
     if (await coverFile.exists()) {
       final files = await _getValidFiles(dir);
@@ -152,10 +160,8 @@ class AlbumState extends ChangeNotifier {
           );
           _albums.add(album);
           // debugPrint('''
-          //   Found album: ${album.name}
-          //   CUE files: ${cueFiles.length}
-          //   Regular tracks: ${regularTracks.length}
-          //   CUE matched files: ${cueMatchFiles.length}''');
+          //   Found album: ${album.getAlbumTitle()}
+          //   ''');
           return album;
         }
       } else {
@@ -165,32 +171,27 @@ class AlbumState extends ChangeNotifier {
     } else {
       // check if it is a direct sub folder of a root folder
       if (dir.parent.path == root.path) {
-        final rootFile = File('${dir.path}\\.root');
-        if (await rootFile.exists()) {
-          await _scanDirectory(dir, dir);
-        } else {
-          var openInExplorer = true;
-          // Try to extract cover from first audio file
-          try {
-            final files = await _getValidFiles(dir);
-            for (final file in files) {
-              if (!file.toLowerCase().endsWith('.cue')) {
-                final metadata = await MetadataGod.readMetadata(file: file);
-                if (metadata.picture != null) {
-                  final coverPath = path.join(dir.path, 'folder.jpg');
-                  await File(coverPath).writeAsBytes(metadata.picture!.data);
-                  debugPrint('Extracted cover art to: $coverPath');
-                  openInExplorer = false;
-                }
+        var openInExplorer = true;
+        // Try to extract cover from first audio file
+        try {
+          final files = await _getValidFiles(dir);
+          for (final file in files) {
+            if (!file.toLowerCase().endsWith('.cue')) {
+              final metadata = await MetadataGod.readMetadata(file: file);
+              if (metadata.picture != null) {
+                final coverPath = path.join(dir.path, 'folder.jpg');
+                await File(coverPath).writeAsBytes(metadata.picture!.data);
+                debugPrint('Extracted cover art to: $coverPath');
+                openInExplorer = false;
               }
             }
-          } catch (e) {
-            debugPrint('Error extracting cover art: $e');
           }
-          if (openInExplorer) {
-            debugPrint('No cover found in folder: ${dir.path}');
-            Utils.openInExplorer(dir.path);
-          }
+        } catch (e) {
+          debugPrint('Error extracting cover art: $e');
+        }
+        if (openInExplorer) {
+          debugPrint('No cover found in folder: ${dir.path}');
+          Utils.openInExplorer(dir.path);
         }
       }
     }

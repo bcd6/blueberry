@@ -164,6 +164,12 @@ class AlbumState extends ChangeNotifier {
     } else {
       // check if it is a directy sub folder of a root folder, if yes then print the name of the folder
       if (dir.parent.path == root.path) {
+        // if dir.parent.path contains a '.root' file, then make it a root folder
+        final rootFile = File('${dir.path}\\.root');
+        if (await rootFile.exists()) {
+          await _scanDirectory(dir, dir);
+        }
+
         debugPrint('No cover found in folder: ${dir.path}');
         Utils.openInExplorer(dir.path);
       }

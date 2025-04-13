@@ -168,10 +168,10 @@ class AlbumState extends ChangeNotifier {
         final rootFile = File('${dir.path}\\.root');
         if (await rootFile.exists()) {
           await _scanDirectory(dir, dir);
+        } else {
+          debugPrint('No cover found in folder: ${dir.path}');
+          Utils.openInExplorer(dir.path);
         }
-
-        debugPrint('No cover found in folder: ${dir.path}');
-        Utils.openInExplorer(dir.path);
       }
     }
     return parentAlbum;

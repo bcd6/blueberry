@@ -23,6 +23,7 @@ class AlbumState extends ChangeNotifier {
     'wma',
     'opus',
     'dsd',
+    'dsf',
     'tta',
   ];
   final List<Album> _albums = [];

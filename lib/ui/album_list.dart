@@ -108,17 +108,24 @@ class _AlbumListState extends State<AlbumList> {
                     return Container(
                       padding: const EdgeInsets.all(36),
                       child: GestureDetector(
-                        child: _buildAlbumCover(album.coverFilePath),
                         onTap: () {
-                          _playerState.setAlbum(album);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AlbumPlay(),
-                            ),
-                          );
+                          if (index != 0) {
+                            // Only handle tap for regular albums
+                            _playerState.setAlbum(album);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AlbumPlay(),
+                              ),
+                            );
+                          }
                         },
-                        onSecondaryTap: () => _resetApp(context),
+                        onSecondaryTap:
+                            index == 0 ? null : () => _resetApp(context),
+                        child:
+                            index == 0
+                                ? _buildControlPanel()
+                                : _buildAlbumCover(album.coverFilePath),
                       ),
                     );
                   }).toList(),
@@ -263,6 +270,82 @@ class _AlbumListState extends State<AlbumList> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildControlPanel() {
+    return GridView.count(
+      crossAxisCount: 2,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        // Album count
+        Center(
+          child: Text(
+            '${_albums.length - 1}',
+            style: const TextStyle(
+              fontSize: 32,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+
+        // Shuffle button
+        IconButton(
+          icon: const Icon(Icons.shuffle),
+          style: const ButtonStyle(
+            // no circle radius border
+            shape: WidgetStatePropertyAll<OutlinedBorder>(
+              RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            ),
+          ),
+          color: Colors.white,
+          iconSize: 32,
+          onPressed: () {
+            setState(() {
+              _albums.shuffle();
+            });
+          },
+        ),
+
+        // Reverse button
+        IconButton(
+          icon: const Icon(Icons.swap_vert),
+          style: const ButtonStyle(
+            // no circle radius border
+            shape: WidgetStatePropertyAll<OutlinedBorder>(
+              RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            ),
+          ),
+          color: Colors.white,
+          iconSize: 32,
+          onPressed: () {
+            setState(() {
+              _albums = _albums.reversed.toList();
+            });
+          },
+        ),
+
+        // Favorites button
+        IconButton(
+          icon: const Icon(Icons.favorite),
+          style: const ButtonStyle(
+            // no circle radius border
+            shape: WidgetStatePropertyAll<OutlinedBorder>(
+              RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            ),
+          ),
+          color: Colors.white,
+          iconSize: 32,
+          onPressed: () {
+            _playerState.setAlbum(_favState.favAlbum);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AlbumPlay()),
+            );
+          },
+        ),
+      ],
     );
   }
 

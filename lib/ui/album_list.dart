@@ -109,22 +109,17 @@ class _AlbumListState extends State<AlbumList> {
                     padding: const EdgeInsets.all(36),
                     child: GestureDetector(
                       onTap: () {
-                        if (index != 0) {
-                          // Only handle tap for regular albums
-                          _playerState.setAlbum(album);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AlbumPlay(),
-                            ),
-                          );
-                        }
+                        _playerState.setAlbum(album);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => AlbumPlay()),
+                        );
                       },
                       onSecondaryTap: () => _resetApp(context),
                       child: _buildAlbumCover(album.coverFilePath),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

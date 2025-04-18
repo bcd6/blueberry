@@ -27,7 +27,6 @@ class _AlbumListState extends State<AlbumList> {
   late FavState _favState;
   List<Album> _albums = [];
   bool _precacheDone = false;
-  String _filterText = '';
   final FocusNode _keyboardFocusNode = FocusNode();
 
   @override
@@ -102,33 +101,31 @@ class _AlbumListState extends State<AlbumList> {
               maxCrossAxisExtent: 480,
               mainAxisSpacing: 0,
               crossAxisSpacing: 0,
-              children:
-                  _displayedIndices.map((index) {
-                    final album = _albums[index];
-                    return Container(
-                      padding: const EdgeInsets.all(36),
-                      child: GestureDetector(
-                        onTap: () {
-                          if (index != 0) {
-                            // Only handle tap for regular albums
-                            _playerState.setAlbum(album);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AlbumPlay(),
-                              ),
-                            );
-                          }
-                        },
-                        onSecondaryTap:
-                            index == 0 ? null : () => _resetApp(context),
-                        child:
-                            index == 0
-                                ? _buildControlPanel()
-                                : _buildAlbumCover(album.coverFilePath),
-                      ),
-                    );
-                  }).toList(),
+              children: [
+                _buildControlPanel(),
+                ..._displayedIndices.map((index) {
+                  final album = _albums[index];
+                  return Container(
+                    padding: const EdgeInsets.all(36),
+                    child: GestureDetector(
+                      onTap: () {
+                        if (index != 0) {
+                          // Only handle tap for regular albums
+                          _playerState.setAlbum(album);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AlbumPlay(),
+                            ),
+                          );
+                        }
+                      },
+                      onSecondaryTap: () => _resetApp(context),
+                      child: _buildAlbumCover(album.coverFilePath),
+                    ),
+                  );
+                }).toList(),
+              ],
             ),
           ),
         ),
@@ -138,7 +135,7 @@ class _AlbumListState extends State<AlbumList> {
 
   void _showSearchDialog() {
     final TextEditingController controller = TextEditingController();
-    controller.text = _filterText;
+    controller.text = "";
 
     showDialog(
       context: context,
@@ -182,12 +179,11 @@ class _AlbumListState extends State<AlbumList> {
 
   void _applyFilter(String filter) {
     setState(() {
-      _filterText = filter;
       if (filter.isEmpty) {
-        _albums = [_favState.favAlbum, ..._albumState.albums];
+        _albums = [..._albumState.albums];
       } else {
         final filteredAlbums = _albumState.filterAlbums(filter);
-        _albums = [_favState.favAlbum, ...filteredAlbums];
+        _albums = [...filteredAlbums];
       }
 
       // Reset displayed indices to show the first batch of filtered results
@@ -205,11 +201,11 @@ class _AlbumListState extends State<AlbumList> {
     _albumState = context.read<AlbumState>();
     _playerState = context.read<PlayerState>();
     _favState = context.read<FavState>();
-    _albums = [_favState.favAlbum, ..._albumState.albums];
+    _albums = [..._albumState.albums];
     setState(() {
       _displayedIndices = List.generate(
         // fav album is that +1 for
-        math.min(_initLoad, _albumState.albums.length + 1),
+        math.min(_initLoad, _albums.length),
         (index) => index,
       );
     });
@@ -221,7 +217,7 @@ class _AlbumListState extends State<AlbumList> {
     // debugPrint('MaxScrollExtent: ${position.maxScrollExtent}');
     if (position.pixels >= position.maxScrollExtent * 0.8) {
       final currentLength = _displayedIndices.length;
-      final totalAlbums = _albumState.albums.length;
+      final totalAlbums = _albums.length; // +1 for fav album
       debugPrint('CurrentLength: $currentLength');
 
       if (currentLength < totalAlbums) {
@@ -281,7 +277,7 @@ class _AlbumListState extends State<AlbumList> {
         // Album count
         Center(
           child: Text(
-            '${_albums.length - 1}',
+            '${_albumState.albums.length}',
             style: const TextStyle(
               fontSize: 32,
               color: Colors.white,

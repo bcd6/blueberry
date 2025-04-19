@@ -106,8 +106,7 @@ class AlbumState extends ChangeNotifier {
   }) async {
     try {
       // debugPrint('Scanning directory: ${dir.path}');
-      final rootFile = File('${dir.path}\\.root');
-      if (await rootFile.exists()) {
+      if (await _isSubRoot(dir) && dir.parent.path == root.path) {
         debugPrint('Find a sub root: ${dir.path}');
         await _scanSubdirectories(dir, dir, null);
       } else {
@@ -116,6 +115,28 @@ class AlbumState extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error scanning directory ${dir.path}: $e');
+    }
+  }
+
+  Future<bool> _isSubRoot(Directory dir) async {
+    bool hasDirectFiles = false;
+    bool hasDirectFolders = false;
+
+    try {
+      await for (final entity in dir.list(followLinks: false)) {
+        if (entity is File) {
+          hasDirectFiles = true;
+          break;
+        } else if (entity is Directory) {
+          hasDirectFolders = true;
+        }
+      }
+
+      // It's a subroot if it has folders but no direct files
+      return !hasDirectFiles && hasDirectFolders;
+    } catch (e) {
+      debugPrint('Error checking subroot for ${dir.path}: $e');
+      return false;
     }
   }
 
